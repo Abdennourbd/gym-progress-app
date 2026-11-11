@@ -37,10 +37,21 @@ export function EntrySheet({
 
   if (!open || !exercise || !entry) return null;
 
-  const suggestion = suggestNext(exercise, previous);
+  // Once the exercise has history, or the entry has been changed from its
+  // untouched default, the target is worked out from what you have just
+  // logged. It then always answers "what should I do next time" and updates
+  // as you adjust.
+  const untouched =
+    !previous && entry.weightKg === 0 && entry.reps === exercise.targetReps.min;
+
+  const suggestion = untouched
+    ? suggestNext(exercise, null)
+    : suggestNext(exercise, { weightKg: entry.weightKg, reps: entry.reps });
+
   const delta = deltaBadge(previous, { weightKg: entry.weightKg, reps: entry.reps });
+
   const targetText =
-    suggestion.weightKg === null
+    suggestion.weightKg === null || suggestion.weightKg === 0
       ? `${suggestion.reps} reps`
       : `${suggestion.weightKg} kg × ${suggestion.reps}`;
 
@@ -79,7 +90,7 @@ export function EntrySheet({
         <div className="mb-5 flex items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
-              Target
+              Next time
             </p>
             <p className="text-lg font-bold tabular-nums">{targetText}</p>
           </div>

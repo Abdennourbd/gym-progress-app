@@ -54,3 +54,32 @@ export function eachDay(startKey: string, endKey: string): string[] {
   }
   return out;
 }
+
+/**
+ * Collapses a daily series into Monday-based weekly buckets. Used by the
+ * three-month view, where daily points are too noisy to read.
+ */
+export function rollUpWeekly<T extends { date: string; value: number | null }>(
+  points: T[],
+  mode: 'sum' | 'average',
+): { date: string; value: number | null }[] {
+  const buckets = new Map<string, number[]>();
+
+  for (const point of points) {
+    const key = weekKey(point.date);
+    const list = buckets.get(key) ?? [];
+    if (point.value !== null) list.push(point.value);
+    buckets.set(key, list);
+  }
+
+  return Array.from(buckets.entries())
+    .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+    .map(([date, values]) => ({
+      date,
+      value: values.length
+        ? mode === 'sum'
+          ? values.reduce((a, b) => a + b, 0)
+          : values.reduce((a, b) => a + b, 0) / values.length
+        : null,
+    }));
+}

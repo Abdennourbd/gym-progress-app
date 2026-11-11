@@ -13,4 +13,4 @@ if (!password) {
 
 const salt = randomBytes(16);
 const hash = scryptSync(password, salt, keylen, { N, r, p, maxmem: 64 * 1024 * 1024 });
-console.log(`scrypt$${N}$${r}$${p}$${salt.toString('base64')}$${hash.toString('base64')}`);
+console.log(`scrypt.${N}.${r}.${p}.${salt.toString('base64')}.${hash.toString('base64')}`);

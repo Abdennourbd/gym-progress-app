@@ -42,3 +42,13 @@ next-env.d.ts
 
 # brainstorming scratch
 .superpowers/
+
+# local env
+.env*.local
+
+# local data store fallback
+.data/
+
+# playwright artifacts
+test-results/
+playwright-report/

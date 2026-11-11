@@ -8,14 +8,21 @@ const KEYLEN = 64;
 // Node's own allocations, so raise it explicitly.
 const MAXMEM = 64 * 1024 * 1024;
 
+/**
+ * Stored as `scrypt.N.r.p.salt.hash`.
+ *
+ * The separator is a dot rather than a dollar sign on purpose: this value
+ * lives in an environment variable, and `$` triggers variable expansion when
+ * the env file is parsed, which would silently corrupt the hash.
+ */
 export function hashPassword(password: string): string {
   const salt = randomBytes(16);
   const hash = scryptSync(password, salt, KEYLEN, { N, r: R, p: P, maxmem: MAXMEM });
-  return `scrypt$${N}$${R}$${P}$${salt.toString('base64')}$${hash.toString('base64')}`;
+  return `scrypt.${N}.${R}.${P}.${salt.toString('base64')}.${hash.toString('base64')}`;
 }
 
 export function verifyPassword(password: string, stored: string): boolean {
-  const parts = stored.split('$');
+  const parts = stored.split('.');
   if (parts.length !== 6 || parts[0] !== 'scrypt') return false;
 
   const N = Number(parts[1]);

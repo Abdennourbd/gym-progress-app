@@ -3,6 +3,7 @@
 import { nanoid } from 'nanoid';
 import type { Session, SessionEntry } from '@/lib/types';
 import { toDateKey } from '@/lib/training/dates';
+import { lastSetBefore } from '@/lib/training/history';
 import { useStore } from './store';
 import { scheduleSessionPush } from './sync';
 
@@ -33,11 +34,18 @@ export function addEntryToSession(sessionId: string, exerciseId: string): void {
   if (!session) return;
   if (session.entries.some((e) => e.exerciseId === exerciseId)) return;
 
+  const exercise = store.exercises.find((e) => e.id === exerciseId);
+
+  // Start from the last time you did this exercise, so the row shows a
+  // meaningful number straight away and the delta badge has something to
+  // compare against. A brand new exercise starts at the bottom of its rep
+  // range with no weight.
+  const previous = lastSetBefore(exerciseId, store.sessions, sessionId);
   const entry: SessionEntry = {
     id: nanoid(),
     exerciseId,
-    weightKg: 0,
-    reps: 0,
+    weightKg: previous?.weightKg ?? 0,
+    reps: previous?.reps ?? exercise?.targetReps.min ?? 0,
     completedAt: Date.now(),
   };
 

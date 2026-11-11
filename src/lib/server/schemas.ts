@@ -11,6 +11,7 @@ export const exerciseSchema = z.object({
   switchAt: z.number().int().min(1).max(100).optional(),
   stepKg: z.number().min(0.25).max(100),
   createdAt: z.number(),
+  updatedAt: z.number().optional(),
   archivedAt: z.number().optional(),
 });
 

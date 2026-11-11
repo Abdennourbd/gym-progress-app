@@ -80,6 +80,7 @@ export function ExerciseEditor({
               targetReps: { min: Math.min(min, max), max: Math.max(min, max) },
               switchAt,
               stepKg: step,
+              updatedAt: Date.now(),
             });
             onClose();
           }}

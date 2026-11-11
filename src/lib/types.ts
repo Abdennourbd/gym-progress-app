@@ -30,6 +30,7 @@ export interface Exercise {
   switchAt?: number;
   stepKg: number;
   createdAt: number;
+  updatedAt?: number;
   archivedAt?: number;
 }
 

@@ -18,13 +18,18 @@ describe('password', () => {
 
   it('rejects a malformed stored hash', () => {
     expect(verifyPassword('x', 'garbage')).toBe(false);
-    expect(verifyPassword('x', 'scrypt$1$2$3$4$5')).toBe(false);
-    expect(verifyPassword('x', 'scrypt$a$b$c$def$ghi')).toBe(false);
+    expect(verifyPassword('x', 'scrypt.1.2.3.4.5')).toBe(false);
+    expect(verifyPassword('x', 'scrypt.a.b.c.def.ghi')).toBe(false);
   });
 
   it('stores the parameters needed to verify later', () => {
     const stored = hashPassword('pw');
-    expect(stored.split('$')[0]).toBe('scrypt');
-    expect(stored.split('$')).toHaveLength(6);
+    expect(stored.split('.')[0]).toBe('scrypt');
+    expect(stored.split('.')).toHaveLength(6);
+  });
+
+  it('survives an environment variable round trip', () => {
+    const stored = hashPassword('pw');
+    expect(stored).not.toMatch(/\$/);
   });
 });

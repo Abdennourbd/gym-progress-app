@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useStore } from '@/lib/client/store';
-import { eachDay, rangeStart, RANGE_LABEL, toDateKey, type RangeKey } from '@/lib/training/dates';
+import { eachDay, rangeStart, RANGE_LABEL, rollUpWeekly, toDateKey, type RangeKey } from '@/lib/training/dates';
 import { muscleIndexSeries, muscleSummaries, wholeBodyIndexSeries } from '@/lib/training/index';
 import { volumeSeries } from '@/lib/training/volume';
 import { MUSCLE_NAMES } from '@/lib/types';
@@ -30,17 +30,26 @@ export function ProgressTab() {
   );
 
   const chartPoints = useMemo(() => {
+    let points: { date: string; value: number | null }[];
+
     if (metric === 'volume') {
-      return volumeSeries(muscle, exercises, sessions, dates).map((p) => ({
+      points = volumeSeries(muscle, exercises, sessions, dates).map((p) => ({
         date: p.date,
         value: p.volume,
       }));
+    } else {
+      const series = muscle
+        ? muscleIndexSeries(muscle, exercises, sessions, dates)
+        : wholeBodyIndexSeries(exercises, sessions, dates);
+      points = series.map((p) => ({ date: p.date, value: p.index }));
     }
-    const series = muscle
-      ? muscleIndexSeries(muscle, exercises, sessions, dates)
-      : wholeBodyIndexSeries(exercises, sessions, dates);
-    return series.map((p) => ({ date: p.date, value: p.index }));
-  }, [metric, muscle, exercises, sessions, dates]);
+
+    // Over three months daily points are too noisy to read, so they collapse
+    // into weekly buckets.
+    return range === '3mo'
+      ? rollUpWeekly(points, metric === 'volume' ? 'sum' : 'average')
+      : points;
+  }, [metric, muscle, range, exercises, sessions, dates]);
 
   const summaries = useMemo(
     () => muscleSummaries(exercises, sessions, dates),
@@ -62,27 +71,30 @@ export function ProgressTab() {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <h1 className="text-2xl font-bold tracking-tight">Progress</h1>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 p-4 pb-0">
+        <h1 className="text-2xl font-bold tracking-tight">Progress</h1>
 
-      <RangeSelector value={range} onChange={setRange} />
+        <RangeSelector value={range} onChange={setRange} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <MetricToggle value={metric} onChange={setMetric} />
-        {latest !== null ? (
-          <p className="text-sm text-neutral-500">
-            latest{' '}
-            <span className="font-bold tabular-nums text-neutral-900">
-              {latest.toFixed(0)}
-              {metric === 'volume' ? ' kg' : ''}
-            </span>
-          </p>
-        ) : null}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <MetricToggle value={metric} onChange={setMetric} />
+          {latest !== null ? (
+            <p className="text-sm text-neutral-500">
+              latest{' '}
+              <span className="font-bold tabular-nums text-neutral-900">
+                {latest.toFixed(0)}
+                {metric === 'volume' ? ' kg' : ''}
+              </span>
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <MuscleChips active={muscle} available={availableMuscles} onChange={setMuscle} />
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-3.5">
+      <div className="flex flex-col gap-4 px-4">
+        <section className="rounded-2xl border border-neutral-200 bg-white p-3.5">
         <div className="mb-1 flex items-baseline justify-between gap-2">
           <h2 className="text-sm font-semibold">
             {muscle ? `${MUSCLE_NAMES[muscle] ?? muscle}` : 'Whole body'}
@@ -94,10 +106,16 @@ export function ProgressTab() {
         <HeroChart
           points={chartPoints}
           label={metric === 'index' ? 'Index' : 'kg'}
-          autoScale={metric === 'volume'}
+          mode={metric}
+          trendMode={metric === 'index' || range === '3mo' ? 'average' : 'sum'}
+          trendWindow={metric === 'index' ? 3 : range === '3mo' ? 4 : 7}
         />
         <p className="mt-1 text-center text-[11px] text-neutral-400">
-          Dashed line is the 7-day average
+          {metric === 'index'
+            ? 'One point per workout, the dashed line is the trend'
+            : range === '3mo'
+              ? 'Each bar is a week, the dashed line is the 4 week average'
+              : 'Each bar is a day, the dashed line is the last 7 days'}
         </p>
       </section>
 
@@ -188,6 +206,7 @@ export function ProgressTab() {
           ) : null}
         </div>
       </section>
+      </div>
     </div>
   );
 }

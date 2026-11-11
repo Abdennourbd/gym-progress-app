@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { toDateKey, rangeStart, weekKey, daysBetween, eachDay, parseDateKey } from './dates';
+import {
+  toDateKey,
+  rangeStart,
+  weekKey,
+  daysBetween,
+  eachDay,
+  parseDateKey,
+  rollUpWeekly,
+} from './dates';
 
 describe('toDateKey', () => {
   it('uses local time, not UTC', () => {
@@ -59,5 +67,56 @@ describe('eachDay', () => {
 describe('parseDateKey', () => {
   it('round trips', () => {
     expect(toDateKey(parseDateKey('2026-05-09'))).toBe('2026-05-09');
+  });
+});
+
+describe('rollUpWeekly', () => {
+  it('groups points into Monday based weeks', () => {
+    const points = [
+      { date: '2026-01-14', value: 10 },
+      { date: '2026-01-15', value: 20 },
+      { date: '2026-01-18', value: 30 },
+      { date: '2026-01-21', value: 40 },
+    ];
+    const rolled = rollUpWeekly(points, 'sum');
+    expect(rolled).toHaveLength(2);
+    expect(rolled[0].date).toBe(weekKey('2026-01-14'));
+    expect(rolled[0].value).toBe(60);
+    expect(rolled[1].value).toBe(40);
+  });
+
+  it('averages for the average mode', () => {
+    const points = [
+      { date: '2026-01-14', value: 10 },
+      { date: '2026-01-15', value: 30 },
+    ];
+    expect(rollUpWeekly(points, 'average')[0].value).toBe(20);
+  });
+
+  it('ignores null values', () => {
+    const points = [
+      { date: '2026-01-14', value: null },
+      { date: '2026-01-15', value: 50 },
+    ];
+    expect(rollUpWeekly(points, 'sum')[0].value).toBe(50);
+  });
+
+  it('keeps a week with no data as null', () => {
+    const points = [
+      { date: '2026-01-14', value: 10 },
+      { date: '2026-01-21', value: null },
+    ];
+    const rolled = rollUpWeekly(points, 'sum');
+    expect(rolled[0].value).toBe(10);
+    expect(rolled[1].value).toBeNull();
+  });
+
+  it('returns buckets in date order', () => {
+    const points = [
+      { date: '2026-02-02', value: 1 },
+      { date: '2026-01-12', value: 2 },
+    ];
+    const rolled = rollUpWeekly(points, 'sum');
+    expect(rolled[0].date < rolled[1].date).toBe(true);
   });
 });

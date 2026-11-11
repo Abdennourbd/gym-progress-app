@@ -38,7 +38,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-neutral-50">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-neutral-50">
       <main className="flex-1 pb-24">
         {tab === 'workout' ? <WorkoutTab /> : null}
         {tab === 'progress' ? <ProgressTab /> : null}

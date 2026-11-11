@@ -1,4 +1,4 @@
-import type { AppState, Session } from '@/lib/types';
+import type { AppState, Exercise, Session } from '@/lib/types';
 
 /**
  * Last write wins on `updatedAt`. One user on one device makes real conflicts
@@ -18,9 +18,51 @@ export function mergeSessions(local: Session[], remote: Session[]): Session[] {
   );
 }
 
+function exerciseTime(exercise: Exercise): number {
+  return exercise.updatedAt ?? exercise.createdAt;
+}
+
+/**
+ * Unions the two exercise lists by id.
+ *
+ * This must never replace one list with the other. Picking the longer list
+ * would quietly throw away an exercise created offline, and picking the
+ * shorter one would resurrect something the user archived.
+ */
+export function mergeExercises(local: Exercise[], remote: Exercise[]): Exercise[] {
+  const byId = new Map<string, Exercise>();
+
+  for (const exercise of local) byId.set(exercise.id, exercise);
+
+  for (const exercise of remote) {
+    const existing = byId.get(exercise.id);
+    if (!existing) {
+      byId.set(exercise.id, exercise);
+      continue;
+    }
+
+    // Archiving is a deletion, so it wins over a stale unarchived copy.
+    if (existing.archivedAt && !exercise.archivedAt) {
+      byId.set(exercise.id, existing);
+      continue;
+    }
+    if (exercise.archivedAt && !existing.archivedAt) {
+      byId.set(exercise.id, exercise);
+      continue;
+    }
+
+    byId.set(
+      exercise.id,
+      exerciseTime(exercise) > exerciseTime(existing) ? exercise : existing,
+    );
+  }
+
+  return Array.from(byId.values()).sort((a, b) => a.createdAt - b.createdAt);
+}
+
 export function mergeAppState(local: AppState, remote: AppState): AppState {
   return {
-    exercises: remote.exercises.length >= local.exercises.length ? remote.exercises : local.exercises,
+    exercises: mergeExercises(local.exercises, remote.exercises),
     sessions: mergeSessions(local.sessions, remote.sessions),
     settings: remote.settings ?? local.settings,
   };

@@ -91,7 +91,9 @@ export function ExercisesTab() {
           onArchive={() => {
             setExercises(
               exercises.map((e) =>
-                e.id === editing.id ? { ...e, archivedAt: Date.now() } : e,
+                e.id === editing.id
+                  ? { ...e, archivedAt: Date.now(), updatedAt: Date.now() }
+                  : e,
               ),
             );
             scheduleExercisePush();

@@ -43,14 +43,18 @@ export function NewExerciseSheet({ open, muscleId, onClose, onCreated }: Props) 
       },
       stepKg: step,
       createdAt: Date.now(),
+      updatedAt: Date.now(),
     };
 
     setExercises([...exercises, exercise]);
     scheduleExercisePush();
 
     setName('');
-    onCreated(exercise);
+
+    // Close first, then hand the exercise over: the sheet's own close handler
+    // also changes the view, and it must not undo the switch back to the list.
     onClose();
+    onCreated(exercise);
   };
 
   return (
