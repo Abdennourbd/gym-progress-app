@@ -64,6 +64,7 @@ export function ProgressTab() {
   const openExercise = exercises.find((e) => e.id === openExerciseId) ?? null;
 
   const latest = [...chartPoints].reverse().find((p) => p.value !== null)?.value ?? null;
+  const hasData = chartPoints.some((p) => p.value !== null);
 
   const recentSessions = useMemo(
     () => [...sessions].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 12),
@@ -103,20 +104,31 @@ export function ProgressTab() {
             {metric === 'index' ? 'Overload Index' : 'Volume (kg moved)'}
           </p>
         </div>
-        <HeroChart
-          points={chartPoints}
-          label={metric === 'index' ? 'Index' : 'kg'}
-          mode={metric}
-          trendMode={metric === 'index' || range === '3mo' ? 'average' : 'sum'}
-          trendWindow={metric === 'index' ? 3 : range === '3mo' ? 4 : 7}
-        />
-        <p className="mt-1 text-center text-[11px] text-neutral-400">
-          {metric === 'index'
-            ? 'One point per workout, the dashed line is the trend'
-            : range === '3mo'
-              ? 'Each bar is a week, the dashed line is the 4 week average'
-              : 'Each bar is a day, the dashed line is the last 7 days'}
-        </p>
+        {hasData ? (
+          <>
+            <HeroChart
+              points={chartPoints}
+              label={metric === 'index' ? 'Index' : 'kg'}
+              mode={metric}
+              trendMode={metric === 'index' || range === '3mo' ? 'average' : 'sum'}
+              trendWindow={metric === 'index' ? 3 : range === '3mo' ? 4 : 7}
+            />
+            <p className="mt-1 text-center text-[11px] text-neutral-400">
+              {metric === 'index'
+                ? 'One point per workout, the dashed line is the trend'
+                : range === '3mo'
+                  ? 'Each bar is a week, the dashed line is the 4 week average'
+                  : 'Each bar is a day, the dashed line is the last 7 days'}
+            </p>
+          </>
+        ) : (
+          <div className="flex h-60 flex-col items-center justify-center gap-1 text-center">
+            <p className="text-sm font-medium text-neutral-500">Nothing to chart yet</p>
+            <p className="max-w-56 text-xs text-neutral-400">
+              Log a workout and your progress starts showing up here.
+            </p>
+          </div>
+        )}
       </section>
 
       {!muscle ? (
