@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:3210';
+
 export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/global-setup.ts',
@@ -8,7 +10,7 @@ export default defineConfig({
   fullyParallel: false,
   reporter: [['list']],
   use: {
-    baseURL: 'http://127.0.0.1:3210',
+    baseURL: BASE_URL,
     trace: 'retain-on-failure',
   },
   projects: [
@@ -22,10 +24,12 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: 'npm run start -- --port 3210',
-    port: 3210,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: process.env.BASE_URL
+    ? undefined
+    : {
+        command: 'npm run start -- --port 3210',
+        port: 3210,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      },
 });
