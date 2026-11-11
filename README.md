@@ -95,18 +95,21 @@ AUTH_SECRET=<at least 32 random characters>
 
 The app is a standard Next.js project, so Vercel works out of the box.
 
-1. Create the project and connect the repository.
-2. Add the storage: **Vercel Marketplace → Upstash Redis**. It injects
-   `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` automatically.
-3. Set `GYM_EMAIL`, `GYM_PASSWORD_HASH` and `AUTH_SECRET` as environment
-   variables.
-4. Deploy.
-
-Or, with the Vercel CLI already logged in:
-
 ```bash
+npx vercel login
+npx vercel install upstash/upstash-kv   # creates the database
+npx vercel env add GYM_EMAIL production
+npx vercel env add GYM_PASSWORD_HASH production
+npx vercel env add AUTH_SECRET production
 ./deploy.sh
 ```
+
+Or connect the GitHub repository in the Vercel dashboard and every push
+deploys on its own. The Upstash integration fills in `KV_REST_API_URL` and
+`KV_REST_API_TOKEN` for you.
+
+`npm run hash-password -- "your password"` prints the hash to paste into
+`GYM_PASSWORD_HASH`.
 
 ## Environment variables
 
@@ -115,10 +118,13 @@ Or, with the Vercel CLI already logged in:
 | `GYM_EMAIL` | The one account that can sign in |
 | `GYM_PASSWORD_HASH` | scrypt hash from `npm run hash-password` |
 | `AUTH_SECRET` | Signs the session cookie, 32+ characters |
-| `UPSTASH_REDIS_REST_URL` | Cloud store, set by the Upstash integration |
-| `UPSTASH_REDIS_REST_TOKEN` | Cloud store, set by the Upstash integration |
+| `KV_REST_API_URL` | Cloud store, set by the Upstash integration |
+| `KV_REST_API_TOKEN` | Cloud store, set by the Upstash integration |
 
-Without the Upstash variables the app falls back to a local file store, which
+`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` work as well, if you
+would rather set up Upstash yourself.
+
+Without a cloud store the app falls back to a local file on the server, which
 is only useful in development.
 
 ## Tests

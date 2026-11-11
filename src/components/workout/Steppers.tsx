@@ -28,24 +28,38 @@ export function Steppers({
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value));
+  const [syncedValue, setSyncedValue] = useState(value);
+
   const holdRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const valueRef = useRef(value);
-  valueRef.current = value;
+  const latest = useRef(value);
+
+  // Keep the typed draft in step with the value without waiting for an effect.
+  if (value !== syncedValue) {
+    setSyncedValue(value);
+    setDraft(String(value));
+  }
 
   useEffect(() => {
-    setDraft(String(value));
+    latest.current = value;
   }, [value]);
 
-  const startHold = () => {
-    holdRef.current = setInterval(() => onChange(valueRef.current + step), 120);
+  const stepBy = (delta: number) => {
+    const next = latest.current + delta;
+    latest.current = next;
+    onChange(next);
   };
+
+  const startHold = () => {
+    holdRef.current = setInterval(() => stepBy(step), 120);
+  };
+
   const stopHold = () => {
     if (holdRef.current) clearInterval(holdRef.current);
     holdRef.current = null;
   };
 
   const btn = large
-    ? 'h-14 w-14 rounded-2xl text-3xl'
+    ? 'h-12 w-12 rounded-2xl text-2xl'
     : 'h-11 w-11 rounded-xl text-2xl';
 
   if (editing) {
@@ -67,7 +81,8 @@ export function Steppers({
           onKeyDown={(e) => {
             if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
           }}
-          className={`${large ? 'w-28 text-3xl' : 'w-20 text-xl'} rounded-xl border border-neutral-300 px-2 py-1 text-center font-bold tabular-nums outline-none focus:border-neutral-900`}
+          aria-label={`${label} in ${unit}`}
+          className={`${large ? 'w-20 text-2xl' : 'w-16 text-xl'} rounded-xl border border-neutral-300 px-2 py-1 text-center font-bold tabular-nums outline-none focus:border-neutral-900`}
         />
         <span className="text-xs text-neutral-400">{unit}</span>
       </div>
@@ -79,11 +94,11 @@ export function Steppers({
       <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">
         {label}
       </span>
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-1.5">
         <button
           type="button"
           aria-label={`decrease ${label}`}
-          onClick={() => onChange(value - step)}
+          onClick={() => stepBy(-step)}
           onPointerDown={startHold}
           onPointerUp={stopHold}
           onPointerLeave={stopHold}
@@ -95,14 +110,14 @@ export function Steppers({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className={`${large ? 'min-w-24 text-4xl' : 'min-w-16 text-2xl'} text-center font-bold tabular-nums`}
+          className={`${large ? 'min-w-14 text-3xl' : 'min-w-14 text-2xl'} text-center font-bold tabular-nums`}
         >
           {Number.isInteger(value) ? value : value.toFixed(decimals)}
         </button>
         <button
           type="button"
           aria-label={`increase ${label}`}
-          onClick={() => onChange(value + step)}
+          onClick={() => stepBy(step)}
           onPointerDown={startHold}
           onPointerUp={stopHold}
           onPointerLeave={stopHold}

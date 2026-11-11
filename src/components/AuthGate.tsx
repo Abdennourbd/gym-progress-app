@@ -72,29 +72,39 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         </div>
 
         <form onSubmit={submit} className="flex flex-col gap-3">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            autoComplete="username"
-            required
-            className="h-14 rounded-2xl border border-neutral-300 bg-white px-4 text-base outline-none focus:border-neutral-900"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            autoComplete="current-password"
-            required
-            className="h-14 rounded-2xl border border-neutral-300 bg-white px-4 text-base outline-none focus:border-neutral-900"
-          />
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          <label className="block">
+            <span className="sr-only">Email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              aria-label="Email"
+              autoComplete="username"
+              required
+              className="h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-base outline-none focus:border-neutral-900"
+            />
+          </label>
+          <label className="block">
+            <span className="sr-only">Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              aria-label="Password"
+              autoComplete="current-password"
+              required
+              className="h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-base outline-none focus:border-neutral-900"
+            />
+          </label>
+          <p role="status" aria-live="polite" className="min-h-5 text-sm text-red-600">
+            {error ?? ''}
+          </p>
           <button
             type="submit"
             disabled={busy}
-            className="h-14 rounded-2xl bg-neutral-900 text-base font-semibold text-white disabled:opacity-50"
+            className="h-14 w-full rounded-2xl bg-neutral-900 text-base font-semibold text-white disabled:opacity-50"
           >
             {busy ? 'Signing in…' : 'Sign in'}
           </button>

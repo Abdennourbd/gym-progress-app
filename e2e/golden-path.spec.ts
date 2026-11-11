@@ -107,3 +107,36 @@ test('prefills a new entry with the last time you did the exercise', async ({ pa
 
   await expect(page.getByText('2.5 kg × 7')).toBeVisible();
 });
+
+test('the sheet is keyboard friendly', async ({ page }) => {
+  await signIn(page);
+
+  await page.getByRole('button', { name: 'Start workout' }).click();
+  await createExercise(page, 'Row');
+
+  await page.getByText('Row').click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+
+  // Focus moves into the sheet when it opens.
+  await page.waitForTimeout(300);
+  const focusedInsideSheet = await page.evaluate(() => {
+    const dialog = document.querySelector('[role="dialog"]');
+    return Boolean(dialog && document.activeElement && dialog.contains(document.activeElement));
+  });
+  expect(focusedInsideSheet).toBe(true);
+
+  // Escape closes it.
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  // And the entry is still there.
+  await expect(page.getByText('Row')).toBeVisible();
+});
+
+test('the rest timer counts down', async ({ page }) => {
+  await signIn(page);
+
+  await page.getByRole('button', { name: 'Start rest timer' }).click();
+  await expect(page.getByRole('button', { name: /0[01]:\d\d/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Pause rest timer' }).click();
+});

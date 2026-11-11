@@ -27,7 +27,7 @@ export default defineConfig({
   webServer: process.env.BASE_URL
     ? undefined
     : {
-        command: 'npm run start -- --port 3210',
+        command: 'bash scripts/e2e-server.sh',
         port: 3210,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

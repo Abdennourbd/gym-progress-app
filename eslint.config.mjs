@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Build output from the Vercel CLI.
+    ".vercel/**",
+    // Generated icons and local scratch.
+    "public/icon-*.png",
+    ".superpowers/**",
   ]),
 ]);
 

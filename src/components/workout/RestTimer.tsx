@@ -60,7 +60,13 @@ export function RestTimer({ defaultSec }: { defaultSec: number }) {
             setRunning(true);
           }
         }}
-        aria-label={running ? 'Pause rest timer' : 'Start rest timer'}
+        aria-label={
+          running
+            ? `Pause rest timer, ${mmss} left`
+            : remaining > 0
+              ? `Resume rest timer, ${mmss} left`
+              : 'Start rest timer'
+        }
         className="flex h-9 items-center gap-1 rounded-full px-3 font-semibold tabular-nums active:bg-neutral-100"
       >
         <span>{running ? '⏸' : '▶'}</span>

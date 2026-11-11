@@ -46,12 +46,20 @@ export function AppShell() {
       </main>
 
       {syncState === 'offline' ? (
-        <div className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-medium text-white shadow-lg">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-medium text-white shadow-lg"
+        >
           Offline — saved on this device
         </div>
       ) : null}
       {syncState === 'error' ? (
-        <div className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white shadow-lg">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white shadow-lg"
+        >
           Saved locally — will sync
         </div>
       ) : null}
