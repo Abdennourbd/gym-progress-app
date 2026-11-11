@@ -35,6 +35,7 @@ export const sessionSchema = z.object({
 export const settingsSchema = z.object({
   units: z.literal('kg'),
   restTimerSec: z.number().int().min(10).max(600),
+  updatedAt: z.number().optional(),
 });
 
 export const exercisesBodySchema = z.object({

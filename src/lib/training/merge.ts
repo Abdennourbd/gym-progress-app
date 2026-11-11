@@ -64,6 +64,9 @@ export function mergeAppState(local: AppState, remote: AppState): AppState {
   return {
     exercises: mergeExercises(local.exercises, remote.exercises),
     sessions: mergeSessions(local.sessions, remote.sessions),
-    settings: remote.settings ?? local.settings,
+    settings:
+      (remote.settings?.updatedAt ?? 0) >= (local.settings?.updatedAt ?? 0)
+        ? remote.settings
+        : local.settings,
   };
 }

@@ -5,10 +5,29 @@ import path from 'node:path';
  * A tiny file-backed stand-in for the cloud store.
  *
  * Used only when no Upstash credentials are configured, so the app runs with
- * zero configuration during local development. In production the environment
+ * zero configuration during local development, and so a deployment that has
+ * not been wired to a database yet still works. In production the environment
  * variables are always set and this is never reached.
  */
-const DIR = path.join(process.cwd(), '.data');
+
+function pickDirectory(): string {
+  const preferred = path.join(process.cwd(), '.data');
+  try {
+    mkdirSync(preferred, { recursive: true });
+    return preferred;
+  } catch {
+    // Read only filesystem, which is what a serverless runtime gives us.
+    const fallback = path.join('/tmp', 'gym-progress-app');
+    try {
+      mkdirSync(fallback, { recursive: true });
+      return fallback;
+    } catch {
+      return preferred;
+    }
+  }
+}
+
+const DIR = pickDirectory();
 
 function file(key: string): string {
   return path.join(DIR, `${key.replace(/[^a-zA-Z0-9:_-]/g, '_')}.json`);
@@ -29,10 +48,9 @@ function write<T>(key: string, value: T): void {
 
 function remove(key: string): void {
   try {
-    const fs = require('node:fs') as typeof import('node:fs');
-    fs.unlinkSync(file(key));
+    writeFileSync(file(key), JSON.stringify(null));
   } catch {
-    // Already gone.
+    // Already gone, or the filesystem refused. Nothing to do.
   }
 }
 

@@ -54,6 +54,7 @@ export interface Session {
 export interface Settings {
   units: 'kg';
   restTimerSec: number;
+  updatedAt?: number;
 }
 
 export interface AppState {

@@ -42,8 +42,9 @@ export function SettingsPanel() {
           value={settings.restTimerSec}
           onChange={(e) => {
             const restTimerSec = Math.max(10, Math.min(600, Number(e.target.value) || 90));
-            setSettings({ ...settings, restTimerSec });
-            scheduleSettingsPush({ ...settings, restTimerSec });
+            const next = { ...settings, restTimerSec, updatedAt: Date.now() };
+            setSettings(next);
+            scheduleSettingsPush(next);
           }}
           className="h-11 w-20 rounded-xl border border-neutral-300 px-3 text-right text-base tabular-nums outline-none focus:border-neutral-900"
         />
