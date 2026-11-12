@@ -10,14 +10,21 @@ import {
   updateEntryInSession,
 } from '@/lib/client/session-actions';
 import { ExerciseRow } from './ExerciseRow';
-import { EntrySheet } from './EntrySheet';
+import { EntrySheet, type SheetValues } from './EntrySheet';
 import { MuscleGrid } from './MuscleGrid';
 import { ExercisePickerList } from './ExercisePickerList';
 import { NewExerciseSheet } from './NewExerciseSheet';
 import { RestTimer } from './RestTimer';
 import { lastSetBefore } from '@/lib/training/history';
+import { MUSCLE_NAMES } from '@/lib/types';
 
-type View = 'list' | 'muscles' | 'muscle' | 'new';
+type View = { kind: 'home' } | { kind: 'muscle'; muscleId: string };
+
+interface SheetState extends SheetValues {
+  mode: 'add' | 'edit';
+  exerciseId: string;
+  entryId?: string;
+}
 
 export function WorkoutTab() {
   const exercises = useStore((s) => s.exercises);
@@ -26,9 +33,9 @@ export function WorkoutTab() {
   const activeSessionId = useStore((s) => s.activeSessionId);
   const setActiveSessionId = useStore((s) => s.setActiveSessionId);
 
-  const [view, setView] = useState<View>('list');
-  const [muscleId, setMuscleId] = useState<string | null>(null);
-  const [openEntryId, setOpenEntryId] = useState<string | null>(null);
+  const [view, setView] = useState<View>({ kind: 'home' });
+  const [sheet, setSheet] = useState<SheetState | null>(null);
+  const [creatingIn, setCreatingIn] = useState<string | null>(null);
 
   const session = useMemo(
     () => sessions.find((s) => s.id === activeSessionId) ?? null,
@@ -37,30 +44,58 @@ export function WorkoutTab() {
 
   const byId = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises]);
 
-  const recentIds = useMemo(() => {
-    const ids: string[] = [];
-    const sorted = [...sessions].sort((a, b) => (a.date < b.date ? 1 : -1));
-    for (const s of sorted) {
-      for (const e of s.entries) if (!ids.includes(e.exerciseId)) ids.push(e.exerciseId);
-      if (ids.length >= 6) break;
-    }
-    return ids;
-  }, [sessions]);
+  const loggedIds = useMemo(
+    () => (session ? session.entries.map((e) => e.exerciseId) : []),
+    [session],
+  );
 
-  const openEntry = session?.entries.find((e) => e.id === openEntryId) ?? null;
-  const openExercise = openEntry ? (byId.get(openEntry.exerciseId) ?? null) : null;
-
-  /** The previous set for an exercise, ignoring the session being edited. */
+  /** The previous set for an exercise, ignoring the workout being edited. */
   const previousFor = (exerciseId: string) =>
-    session ? lastSetBefore(exerciseId, sessions, session.id) : null;
+    lastSetBefore(exerciseId, sessions, session?.id ?? '');
 
-  const activeExercises = exercises.filter((e) => !e.archivedAt);
-
-  const addExercise = (exerciseId: string) => {
-    const id = session?.id ?? startSession();
-    addEntryToSession(id, exerciseId);
-    setView('list');
+  const openAdd = (exerciseId: string) => {
+    const previous = previousFor(exerciseId);
+    const exercise = byId.get(exerciseId);
+    setSheet({
+      mode: 'add',
+      exerciseId,
+      weightKg: previous?.weightKg ?? 0,
+      reps: previous?.reps ?? exercise?.targetReps.min ?? 0,
+    });
   };
+
+  const openEdit = (entryId: string) => {
+    const entry = session?.entries.find((e) => e.id === entryId);
+    if (!entry) return;
+    setSheet({
+      mode: 'edit',
+      exerciseId: entry.exerciseId,
+      entryId: entry.id,
+      weightKg: entry.weightKg,
+      reps: entry.reps,
+    });
+  };
+
+  const changeSheet = (values: SheetValues) => {
+    setSheet((current) => (current ? { ...current, ...values } : current));
+    // Editing an exercise that is already in the workout writes straight
+    // through, so a change is never lost.
+    if (sheet?.mode === 'edit' && sheet.entryId && session) {
+      updateEntryInSession(session.id, sheet.entryId, values);
+    }
+  };
+
+  const commitSheet = (values: SheetValues) => {
+    if (!sheet) return;
+    if (sheet.mode === 'add') {
+      const id = session?.id ?? startSession();
+      addEntryToSession(id, sheet.exerciseId, values);
+    } else if (sheet.entryId && session) {
+      updateEntryInSession(session.id, sheet.entryId, values);
+    }
+  };
+
+  const sheetExercise = sheet ? (byId.get(sheet.exerciseId) ?? null) : null;
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -70,51 +105,27 @@ export function WorkoutTab() {
           <p className="truncate text-sm text-neutral-500">
             {session
               ? `${session.date} · ${session.entries.length} ${session.entries.length === 1 ? 'exercise' : 'exercises'}`
-              : 'No active workout'}
+              : 'Pick a muscle to start'}
           </p>
         </div>
-        <RestTimer defaultSec={settings.restTimerSec} />
+        <div className="flex shrink-0 items-center gap-2">
+          <RestTimer defaultSec={settings.restTimerSec} />
+          {session ? (
+            <button
+              onClick={() => {
+                finishSessionNow(session.id);
+                setActiveSessionId(null);
+                setView({ kind: 'home' });
+              }}
+              className="h-10 rounded-xl border border-neutral-300 bg-white px-3.5 text-sm font-semibold active:bg-neutral-100"
+            >
+              Finish
+            </button>
+          ) : null}
+        </div>
       </header>
 
-      {view === 'muscles' ? (
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => setView('list')}
-            className="self-start py-1 text-sm font-medium text-neutral-500"
-          >
-            ‹ Back
-          </button>
-          <MuscleGrid
-            exercises={activeExercises}
-            recentIds={recentIds}
-            onPick={(ex) => addExercise(ex.id)}
-            onOpenMuscle={(id) => {
-              setMuscleId(id);
-              setView('muscle');
-            }}
-          />
-        </div>
-      ) : null}
-
-      {view === 'muscle' && muscleId ? (
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => setView('muscles')}
-            className="self-start py-1 text-sm font-medium text-neutral-500"
-          >
-            ‹ All muscles
-          </button>
-          <ExercisePickerList
-            muscleId={muscleId}
-            exercises={exercises}
-            sessions={sessions}
-            onPick={(ex) => addExercise(ex.id)}
-            onNew={() => setView('new')}
-          />
-        </div>
-      ) : null}
-
-      {view === 'list' ? (
+      {view.kind === 'home' ? (
         <>
           {session && session.entries.length ? (
             <div className="flex flex-col gap-2">
@@ -127,74 +138,83 @@ export function WorkoutTab() {
                     exercise={exercise}
                     entry={entry}
                     previous={previousFor(exercise.id)}
-                    onOpen={() => setOpenEntryId(entry.id)}
+                    onOpen={() => openEdit(entry.id)}
                   />
                 );
               })}
             </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-neutral-300 px-6 py-12 text-center">
-              <p className="text-sm font-medium text-neutral-500">
-                {session ? 'No exercises yet.' : 'Start a workout to begin logging.'}
-              </p>
-              <p className="mt-1 text-xs text-neutral-400">
-                Everything saves on its own — no save button.
-              </p>
-            </div>
-          )}
+          ) : null}
 
-          <div className="flex gap-2">
-            {!session ? (
-              <button
-                onClick={() => startSession()}
-                className="h-14 flex-1 rounded-2xl bg-neutral-900 text-base font-semibold text-white active:scale-[0.99]"
-              >
-                Start workout
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={() => setView('muscles')}
-                  className="h-14 flex-1 rounded-2xl border border-neutral-300 bg-white text-base font-semibold active:bg-neutral-100"
-                >
-                  + Add exercise
-                </button>
-                <button
-                  onClick={() => {
-                    finishSessionNow(session.id);
-                    setActiveSessionId(null);
-                  }}
-                  className="h-14 rounded-2xl border border-neutral-300 bg-white px-5 text-base font-semibold active:bg-neutral-100"
-                >
-                  Finish
-                </button>
-              </>
-            )}
+          <div>
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              Pick a muscle
+            </h2>
+            <MuscleGrid
+              exercises={exercises.filter((e) => !e.archivedAt)}
+              onOpenMuscle={(muscleId) => setView({ kind: 'muscle', muscleId })}
+            />
           </div>
         </>
-      ) : null}
+      ) : (
+        <>
+          <button
+            onClick={() => setView({ kind: 'home' })}
+            className="-ml-1 self-start py-1 text-sm font-medium text-neutral-500"
+          >
+            ‹ All muscles
+          </button>
+
+          <div>
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              {MUSCLE_NAMES[view.muscleId] ?? view.muscleId}
+            </h2>
+            <ExercisePickerList
+              muscleId={view.muscleId}
+              exercises={exercises}
+              sessions={sessions}
+              loggedIds={loggedIds}
+              onPick={(exercise) => {
+                if (loggedIds.includes(exercise.id)) {
+                  const entry = session?.entries.find((e) => e.exerciseId === exercise.id);
+                  if (entry) openEdit(entry.id);
+                } else {
+                  openAdd(exercise.id);
+                }
+              }}
+              onNew={() => setCreatingIn(view.muscleId)}
+            />
+          </div>
+        </>
+      )}
 
       <EntrySheet
-        open={Boolean(openEntry && openExercise && session)}
-        exercise={openExercise}
-        entry={openEntry}
-        previous={openExercise ? previousFor(openExercise.id) : null}
-        onChange={(patch) => {
-          if (!session || !openEntry) return;
-          updateEntryInSession(session.id, openEntry.id, patch);
-        }}
+        open={Boolean(sheet && sheetExercise)}
+        mode={sheet?.mode ?? 'add'}
+        exercise={sheetExercise}
+        values={{ weightKg: sheet?.weightKg ?? 0, reps: sheet?.reps ?? 0 }}
+        previous={sheet ? previousFor(sheet.exerciseId) : null}
+        onChange={changeSheet}
+        onCommit={commitSheet}
         onRemove={() => {
-          if (!session || !openEntry) return;
-          removeEntryFromSession(session.id, openEntry.id);
+          if (!session || !sheet?.entryId) return;
+          removeEntryFromSession(session.id, sheet.entryId);
         }}
-        onClose={() => setOpenEntryId(null)}
+        onClose={() => setSheet(null)}
       />
 
       <NewExerciseSheet
-        open={view === 'new'}
-        muscleId={muscleId}
-        onClose={() => setView('muscle')}
-        onCreated={(ex) => addExercise(ex.id)}
+        open={creatingIn !== null}
+        muscleId={creatingIn}
+        onClose={() => setCreatingIn(null)}
+        onCreated={(exercise) => {
+          // Straight into the sheet so the weight and reps can be set.
+          setSheet({
+            mode: 'add',
+            exerciseId: exercise.id,
+            weightKg: 0,
+            reps: exercise.targetReps.min,
+          });
+        }}
       />
     </div>
   );

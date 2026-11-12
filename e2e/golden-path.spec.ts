@@ -11,22 +11,15 @@ async function signIn(page: Page) {
   await expect(page.getByRole('heading', { name: 'Workout' })).toBeVisible();
 }
 
-async function openChestPicker(page: Page) {
-  await page.getByRole('button', { name: '+ Add exercise' }).click();
-  await page.getByRole('button', { name: /Chest/ }).first().click();
-  await expect(page.getByRole('button', { name: '+ New exercise' })).toBeVisible();
-}
-
-async function createExercise(page: Page, name: string) {
-  await openChestPicker(page);
-  await page.getByRole('button', { name: '+ New exercise' }).click();
-  await page.getByPlaceholder('Exercise name').fill(name);
-  await page.getByRole('button', { name: 'Create' }).click();
+/** The muscle grid is always on screen, so there is no button to press first. */
+async function openMuscle(page: Page, muscle: string) {
+  await page.locator(`[data-muscle="${muscle}"]`).click();
+  await expect(page.getByTestId('exercise-list')).toBeVisible();
 }
 
 async function pickExercise(page: Page, name: string) {
-  await openChestPicker(page);
-  await page.getByRole('button', { name }).click();
+  await page.locator(`[data-exercise="${name}"]`).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
 }
 
 async function logSet(page: Page, weightSteps: number, repSteps: number) {
@@ -40,84 +33,123 @@ async function logSet(page: Page, weightSteps: number, repSteps: number) {
   });
 }
 
-test('signs in, logs a set, and still has it after a reload', async ({ page }) => {
+test('picks an exercise from the muscle grid and adds it on done', async ({ page }) => {
   await signIn(page);
 
-  await page.getByRole('button', { name: 'Start workout' }).click();
-  await createExercise(page, 'Bench Press');
+  // The grid is there without pressing anything first.
+  await expect(page.getByTestId('muscle-grid')).toBeVisible();
+  await expect(page.getByRole('button', { name: '+ Add exercise' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Start workout' })).toHaveCount(0);
 
-  await expect(page.getByText('Bench Press')).toBeVisible();
+  await openMuscle(page, 'back');
+  await pickExercise(page, 'Machine Rows');
 
-  await page.getByText('Bench Press').click();
-
-  const sheet = page.getByRole('dialog');
-  await expect(sheet.getByText('Next time')).toBeVisible();
-
-  // A brand new exercise starts at the bottom of its rep range.
-  await expect(sheet.getByText('6 reps')).toBeVisible();
+  // The sheet opens straight onto the weight and reps, prefilled with the
+  // last time this was done: 70 kg x 7.
+  await expect(page.getByRole('dialog').getByText('Weight', { exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('Reps', { exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('Last time: 70 kg × 7')).toBeVisible();
 
   await logSet(page, 1, 1);
-  await sheet.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
 
-  await expect(page.getByText('2.5 kg × 7')).toBeVisible();
+  // It is now in the workout.
+  await expect(page.getByText('72.5 kg × 8')).toBeVisible();
+});
 
-  // The whole point: closing the app mid-workout must not lose anything.
-  await page.reload();
-  await expect(page.getByText('Bench Press')).toBeVisible();
-  await expect(page.getByText('2.5 kg × 7')).toBeVisible();
+test('the muscle grid has no recent section', async ({ page }) => {
+  await signIn(page);
+  await expect(page.getByText('Recent')).toHaveCount(0);
+  await expect(page.getByTestId('muscle-grid')).toBeVisible();
+});
+
+test('only the muscles that are used are listed', async ({ page }) => {
+  await signIn(page);
+  for (const muscle of ['Core', 'Traps', 'Lower back', 'Neck', 'Adductors', 'Glutes']) {
+    await expect(page.locator('[data-muscle]').filter({ hasText: muscle })).toHaveCount(0);
+  }
+  for (const muscle of [
+    'Chest',
+    'Back',
+    'Shoulders',
+    'Biceps',
+    'Triceps',
+    'Quads',
+    'Hamstrings',
+    'Calves',
+    'Forearms',
+  ]) {
+    await expect(page.locator('[data-muscle]').filter({ hasText: muscle })).toHaveCount(1);
+  }
 });
 
 test('suggests the next overload target from what you just lifted', async ({ page }) => {
   await signIn(page);
 
-  await page.getByRole('button', { name: 'Start workout' }).click();
-  await createExercise(page, 'Squat');
+  await openMuscle(page, 'back');
+  await pickExercise(page, 'Close Grip Pulldown');
 
-  await page.getByText('Squat').click();
-  const sheet = page.getByRole('dialog');
-
-  // 6 reps is the floor of the range, so the next target is one more rep.
-  await expect(sheet.getByText('6 reps')).toBeVisible();
+  // Last time 73 kg x 8, so the target is one more rep.
+  await expect(page.getByRole('dialog').getByText('73 kg × 9')).toBeVisible();
 
   await logSet(page, 0, 1);
-  await expect(sheet.getByText('8 reps')).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('73 kg × 10')).toBeVisible();
 
   // Push past the switch point at 10 reps and the target becomes heavier.
   await logSet(page, 0, 4);
-  await expect(sheet.getByText('2.5 kg × 6')).toBeVisible();
-  await expect(sheet.getByText('add weight')).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('75.5 kg × 6')).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('add weight')).toBeVisible();
 });
 
-test('prefills a new entry with the last time you did the exercise', async ({ page }) => {
+test('the next time target can be applied in one tap', async ({ page }) => {
   await signIn(page);
 
-  await page.getByRole('button', { name: 'Start workout' }).click();
-  await createExercise(page, 'Deadlift');
+  await openMuscle(page, 'back');
+  await pickExercise(page, 'Pull Ups');
 
-  await page.getByText('Deadlift').click();
+  // Last time 14 reps, so the target is 15.
+  await expect(page.getByRole('dialog').getByText('15 reps')).toBeVisible();
+
+  await page.getByRole('dialog').getByText('Next time').click();
+  await expect(page.getByRole('dialog').getByText('16 reps')).toBeVisible();
+});
+
+test('a new exercise opens straight into its weight and reps', async ({ page }) => {
+  await signIn(page);
+
+  await openMuscle(page, 'chest');
+  await page.getByRole('button', { name: '+ New exercise' }).click();
+  await page.getByPlaceholder('Exercise name').fill('Sling Shot');
+  await page.getByRole('button', { name: 'Create' }).click();
+
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('Sling Shot')).toBeVisible();
+});
+
+test('still has the set after a reload', async ({ page }) => {
+  await signIn(page);
+
+  await openMuscle(page, 'chest');
+  await pickExercise(page, 'Pec Dec');
+
+  // Last time 59 kg x 10.
   await logSet(page, 1, 1);
-  await page.getByRole('dialog').getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
 
-  await expect(page.getByText('2.5 kg × 7')).toBeVisible();
+  await expect(page.getByText('61.5 kg × 11')).toBeVisible();
 
-  // Finish, then start a new workout: the entry is prefilled with last time.
-  await page.getByRole('button', { name: 'Finish' }).click();
-  await page.getByRole('button', { name: 'Start workout' }).click();
-  await pickExercise(page, 'Deadlift');
-
-  await expect(page.getByText('2.5 kg × 7')).toBeVisible();
+  // The whole point: closing the app mid-workout must not lose anything.
+  await page.reload();
+  await expect(page.getByText('Pec Dec')).toBeVisible();
+  await expect(page.getByText('61.5 kg × 11')).toBeVisible();
 });
 
 test('the sheet is keyboard friendly', async ({ page }) => {
   await signIn(page);
 
-  await page.getByRole('button', { name: 'Start workout' }).click();
-  await createExercise(page, 'Row');
+  await openMuscle(page, 'chest');
+  await pickExercise(page, 'Dips');
 
-  await page.getByText('Row').click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-
-  // Focus moves into the sheet when it opens.
   await page.waitForTimeout(300);
   const focusedInsideSheet = await page.evaluate(() => {
     const dialog = document.querySelector('[role="dialog"]');
@@ -125,12 +157,8 @@ test('the sheet is keyboard friendly', async ({ page }) => {
   });
   expect(focusedInsideSheet).toBe(true);
 
-  // Escape closes it.
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-
-  // And the entry is still there.
-  await expect(page.getByText('Row')).toBeVisible();
 });
 
 test('the rest timer counts down', async ({ page }) => {

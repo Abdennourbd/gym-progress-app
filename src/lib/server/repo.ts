@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS } from '@/lib/types';
 import { KEYS } from './redis';
 import { getStore } from './store';
 import { mergeExercises } from '@/lib/training/merge';
+import { migrateExercises } from '@/lib/training/migrate';
 
 interface SessionSummary {
   id: string;
@@ -24,7 +25,7 @@ export async function loadState(): Promise<AppState> {
   const sessions = await Promise.all(list.map((s) => store.get<Session>(KEYS.session(s.id))));
 
   return {
-    exercises: exercises ?? [],
+    exercises: migrateExercises(exercises ?? []),
     sessions: sessions.filter((s): s is Session => Boolean(s)),
     settings: settings ?? DEFAULT_SETTINGS,
   };

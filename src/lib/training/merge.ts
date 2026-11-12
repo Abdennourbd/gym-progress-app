@@ -1,4 +1,5 @@
 import type { AppState, Exercise, Session } from '@/lib/types';
+import { migrateExercises } from './migrate';
 
 /**
  * Last write wins on `updatedAt`. One user on one device makes real conflicts
@@ -57,7 +58,10 @@ export function mergeExercises(local: Exercise[], remote: Exercise[]): Exercise[
     );
   }
 
-  return Array.from(byId.values()).sort((a, b) => a.createdAt - b.createdAt);
+  // Any list that comes out of here is in line with the current muscles.
+  return migrateExercises(
+    Array.from(byId.values()).sort((a, b) => a.createdAt - b.createdAt),
+  );
 }
 
 export function mergeAppState(local: AppState, remote: AppState): AppState {

@@ -50,5 +50,8 @@ const fileStore: Store = {
 };
 
 export function getStore(): Store {
+  // An explicit choice always wins, so a test run can never reach the real
+  // database by accident.
+  if (process.env.GYM_STORE === 'local') return fileStore;
   return getRedis() ? redisStore : fileStore;
 }

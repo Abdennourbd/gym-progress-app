@@ -11,12 +11,9 @@ cd "$(dirname "$0")/.."
 
 HASH=$(node scripts/hash-password.mjs "test-password")
 
+export GYM_STORE="local"
 export GYM_EMAIL="test@example.com"
 export GYM_PASSWORD_HASH="$HASH"
 export AUTH_SECRET="test-secret-test-secret-test-secret-1234"
-export KV_REST_API_URL=""
-export KV_REST_API_TOKEN=""
-export UPSTASH_REDIS_REST_URL=""
-export UPSTASH_REDIS_REST_TOKEN=""
 
 exec npm run start -- --port "${PORT:-3210}"

@@ -28,7 +28,11 @@ export function startSession(): string {
   return session.id;
 }
 
-export function addEntryToSession(sessionId: string, exerciseId: string): void {
+export function addEntryToSession(
+  sessionId: string,
+  exerciseId: string,
+  values?: { weightKg: number; reps: number },
+): void {
   const store = useStore.getState();
   const session = store.sessions.find((s) => s.id === sessionId);
   if (!session) return;
@@ -36,16 +40,15 @@ export function addEntryToSession(sessionId: string, exerciseId: string): void {
 
   const exercise = store.exercises.find((e) => e.id === exerciseId);
 
-  // Start from the last time you did this exercise, so the row shows a
-  // meaningful number straight away and the delta badge has something to
-  // compare against. A brand new exercise starts at the bottom of its rep
-  // range with no weight.
+  // Start from the last time you did this exercise, so the sheet opens on a
+  // meaningful number and the delta badge has something to compare against.
+  // A brand new exercise starts at the bottom of its rep range with no weight.
   const previous = lastSetBefore(exerciseId, store.sessions, sessionId);
   const entry: SessionEntry = {
     id: nanoid(),
     exerciseId,
-    weightKg: previous?.weightKg ?? 0,
-    reps: previous?.reps ?? exercise?.targetReps.min ?? 0,
+    weightKg: values?.weightKg ?? previous?.weightKg ?? 0,
+    reps: values?.reps ?? previous?.reps ?? exercise?.targetReps.min ?? 0,
     completedAt: Date.now(),
   };
 

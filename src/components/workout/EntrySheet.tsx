@@ -1,18 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import type { Exercise, SessionEntry } from '@/lib/types';
+import type { Exercise } from '@/lib/types';
 import { Sheet } from '../Sheet';
 import { Steppers } from './Steppers';
 import { REASON_LABEL, suggestNext } from '@/lib/training/suggest';
 import { deltaBadge } from '@/lib/training/delta';
 
+export interface SheetValues {
+  weightKg: number;
+  reps: number;
+}
+
 interface Props {
   open: boolean;
+  /** `add` means the exercise is not in the workout yet, `edit` means it is. */
+  mode: 'add' | 'edit';
   exercise: Exercise | null;
-  entry: SessionEntry | null;
+  values: SheetValues;
   previous: { weightKg: number; reps: number } | null;
-  onChange: (patch: Partial<SessionEntry>) => void;
+  onChange: (values: SheetValues) => void;
+  onCommit: (values: SheetValues) => void;
   onRemove: () => void;
   onClose: () => void;
 }
@@ -23,41 +31,42 @@ interface Props {
  */
 export function EntrySheet({
   open,
+  mode,
   exercise,
-  entry,
+  values,
   previous,
   onChange,
+  onCommit,
   onRemove,
   onClose,
 }: Props) {
   const [confirmRemove, setConfirmRemove] = useState(false);
-  const [wasOpen, setWasOpen] = useState(open);
 
-  // Closing the sheet resets the remove confirmation for next time.
-  if (open !== wasOpen) {
-    setWasOpen(open);
-    if (!open) setConfirmRemove(false);
-  }
+  if (!open || !exercise) return null;
 
-  if (!open || !exercise || !entry) return null;
-
-  // Once the exercise has history, or the entry has been changed from its
-  // untouched default, the target is worked out from what you have just
-  // logged. It then always answers "what should I do next time" and updates
-  // as you adjust.
+  // Once the exercise has history, or the values have moved off their
+  // starting point, the target is worked out from what you have just logged.
+  // It then always answers "what should I do next time".
   const untouched =
-    !previous && entry.weightKg === 0 && entry.reps === exercise.targetReps.min;
+    !previous && values.weightKg === 0 && values.reps === exercise.targetReps.min;
 
   const suggestion = untouched
     ? suggestNext(exercise, null)
-    : suggestNext(exercise, { weightKg: entry.weightKg, reps: entry.reps });
+    : suggestNext(exercise, values);
 
-  const delta = deltaBadge(previous, { weightKg: entry.weightKg, reps: entry.reps });
+  const delta = deltaBadge(previous, values);
 
   const targetText =
     suggestion.weightKg === null || suggestion.weightKg === 0
       ? `${suggestion.reps} reps`
       : `${suggestion.weightKg} kg × ${suggestion.reps}`;
+
+  const applyTarget = () => {
+    onChange({
+      weightKg: suggestion.weightKg ?? values.weightKg,
+      reps: suggestion.reps,
+    });
+  };
 
   return (
     <Sheet
@@ -84,35 +93,38 @@ export function EntrySheet({
         </button>
       </div>
 
-      <div className="mb-5 flex items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3">
+      <button
+        onClick={applyTarget}
+        className="mb-5 flex w-full items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 text-left active:bg-neutral-200"
+      >
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
             Next time
           </p>
           <p className="text-lg font-bold tabular-nums">{targetText}</p>
         </div>
-        <p className="rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-600">
+        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-600">
           {REASON_LABEL[suggestion.reason]}
-        </p>
-      </div>
+        </span>
+      </button>
 
       <div className="mb-6 flex flex-wrap justify-center gap-x-4 gap-y-6">
         <Steppers
           label="Weight"
           unit="kg"
           large
-          value={entry.weightKg}
+          value={values.weightKg}
           step={exercise.stepKg}
-          onChange={(weightKg) => onChange({ weightKg: Math.max(0, weightKg) })}
+          onChange={(weightKg) => onChange({ ...values, weightKg: Math.max(0, weightKg) })}
         />
         <Steppers
           label="Reps"
           unit="reps"
           large
-          value={entry.reps}
+          value={values.reps}
           step={1}
           decimals={0}
-          onChange={(reps) => onChange({ reps: Math.max(0, Math.round(reps)) })}
+          onChange={(reps) => onChange({ ...values, reps: Math.max(0, Math.round(reps)) })}
         />
       </div>
 
@@ -134,13 +146,16 @@ export function EntrySheet({
       ) : null}
 
       <button
-        onClick={onClose}
+        onClick={() => {
+          onCommit(values);
+          onClose();
+        }}
         className="h-14 w-full rounded-2xl bg-neutral-900 text-base font-semibold text-white active:scale-[0.99]"
       >
-        Done
+        {mode === 'add' ? 'Done — add it' : 'Done'}
       </button>
 
-      {confirmRemove ? (
+      {mode === 'edit' && confirmRemove ? (
         <button
           onClick={() => {
             onRemove();
@@ -150,14 +165,14 @@ export function EntrySheet({
         >
           Remove from this workout
         </button>
-      ) : (
+      ) : mode === 'edit' ? (
         <button
           onClick={() => setConfirmRemove(true)}
           className="mt-1 h-11 w-full text-sm text-neutral-400"
         >
           Remove exercise
         </button>
-      )}
+      ) : null}
     </Sheet>
   );
 }

@@ -1,0 +1,41 @@
+[
+  { "name": "Leg Curl", "muscles": ["hamstrings"], "weightKg": 77, "reps": 6 },
+  { "name": "Romanian Deadlift", "muscles": ["hamstrings"], "weightKg": 50, "reps": 9 },
+  { "name": "Belt Squat", "muscles": ["quads", "hamstrings"], "weightKg": 60, "reps": 10 },
+  { "name": "Leg Extension Free", "muscles": ["quads"], "weightKg": 90, "reps": 7 },
+  { "name": "Leg Extension One Leg", "muscles": ["quads"], "weightKg": 25, "reps": 8 },
+  { "name": "Hip Thrust", "muscles": ["hamstrings"], "weightKg": 70, "reps": 9 },
+  { "name": "Calf Raises", "muscles": ["calves"], "weightKg": 60, "reps": 7 },
+
+  { "name": "Pull Ups", "muscles": ["back"], "weightKg": 0, "reps": 14, "targetReps": { "min": 8, "max": 16 }, "switchAt": 16 },
+  { "name": "Lat Pulldown", "muscles": ["back"], "weightKg": 73, "reps": 9 },
+  { "name": "Close Grip Pulldown", "muscles": ["back"], "weightKg": 73, "reps": 8 },
+  { "name": "Machine Rows", "muscles": ["back"], "weightKg": 70, "reps": 7 },
+  { "name": "T-Bar Row", "muscles": ["back"], "weightKg": 45, "reps": 10 },
+
+  { "name": "Triceps Extension", "muscles": ["triceps"], "weightKg": 50, "reps": 7 },
+  { "name": "V Extension", "muscles": ["triceps"], "weightKg": 54, "reps": 12, "targetReps": { "min": 10, "max": 15 } },
+  { "name": "One Arm Pushdown", "muscles": ["triceps"], "weightKg": 18, "reps": 9 },
+  { "name": "V Overhead Extension", "muscles": ["triceps"], "weightKg": 41, "reps": 10 },
+  { "name": "Overhead Extension", "muscles": ["triceps"], "weightKg": 36, "reps": 0 },
+  { "name": "One Arm Overhead Extension", "muscles": ["triceps"], "weightKg": 18, "reps": 8 },
+
+  { "name": "Incline Smith Machine", "muscles": ["chest"], "weightKg": 50, "reps": 12 },
+  { "name": "Machine Press", "muscles": ["chest"], "weightKg": 113, "reps": 12 },
+  { "name": "Pec Dec", "muscles": ["chest"], "weightKg": 59, "reps": 10 },
+  { "name": "Dips", "muscles": ["chest"], "weightKg": 0, "reps": 9 },
+
+  { "name": "Preacher Machine Curl", "muscles": ["biceps"], "weightKg": 50, "reps": 8 },
+  { "name": "Hammer Curl", "muscles": ["biceps"], "weightKg": 17.5, "reps": 10 },
+  { "name": "Recline Curl", "muscles": ["biceps"], "weightKg": 15, "reps": 5 },
+  { "name": "Underhand Cable Curl", "muscles": ["biceps"], "weightKg": 45, "reps": 6 },
+
+  { "name": "DB Lateral Raise", "muscles": ["shoulders"], "weightKg": 12.5, "reps": 6 },
+  { "name": "Cable Lateral Raise", "muscles": ["shoulders"], "weightKg": 14, "reps": 10 },
+  { "name": "Y Raise", "muscles": ["shoulders"], "weightKg": 14, "reps": 6 },
+  { "name": "Machine Lateral Cable", "muscles": ["shoulders"], "weightKg": 53, "reps": 9 },
+  { "name": "Machine Military Press", "muscles": ["shoulders"], "weightKg": 30, "reps": 9 },
+
+  { "name": "One Hand Wrist Curl", "muscles": ["forearms"], "weightKg": 11, "reps": 9 },
+  { "name": "Wrist Curl", "muscles": ["forearms"], "weightKg": 0, "reps": 0 }
+]

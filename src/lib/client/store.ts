@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import type { Exercise, Session, Settings } from '@/lib/types';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import { LOCAL_KEYS, readLocal, writeLocal } from './db';
+import { migrateExercises } from '@/lib/training/migrate';
 
 export type SyncState = 'idle' | 'syncing' | 'offline' | 'error';
 
@@ -35,13 +36,17 @@ export const useStore = create<Store>((set, get) => ({
   syncState: 'idle',
 
   hydrate: async () => {
-    const [exercises, sessions, settings, activeSessionId] = await Promise.all([
+    const [rawExercises, sessions, settings, activeSessionId] = await Promise.all([
       readLocal<Exercise[]>(LOCAL_KEYS.exercises, []),
       readLocal<Session[]>(LOCAL_KEYS.sessions, []),
       readLocal<Settings>(LOCAL_KEYS.settings, DEFAULT_SETTINGS),
       readLocal<string | null>(LOCAL_KEYS.activeSession, null),
     ]);
+
+    // Old exercises may point at muscles that no longer exist.
+    const exercises = migrateExercises(rawExercises);
     set({ exercises, sessions, settings, activeSessionId, hydrated: true });
+    void writeLocal(LOCAL_KEYS.exercises, exercises);
   },
 
   upsertExercise: (exercise) => {

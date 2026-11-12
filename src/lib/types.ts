@@ -7,15 +7,9 @@ export const MUSCLES: { id: MuscleId; name: string; emoji: string }[] = [
   { id: 'biceps', name: 'Biceps', emoji: '💪' },
   { id: 'triceps', name: 'Triceps', emoji: '💪' },
   { id: 'quads', name: 'Quads', emoji: '🦵' },
-  { id: 'hamstrings', name: 'Hamstrings', emoji: '🦵' },
-  { id: 'glutes', name: 'Glutes', emoji: '🍑' },
-  { id: 'calves', name: 'Calves', emoji: '🦵' },
-  { id: 'core', name: 'Core', emoji: '🔥' },
+  { id: 'hamstrings', name: 'Hamstrings', emoji: '🍑' },
+  { id: 'calves', name: 'Calves', emoji: '🦶' },
   { id: 'forearms', name: 'Forearms', emoji: '✊' },
-  { id: 'traps', name: 'Traps', emoji: '🔺' },
-  { id: 'lowerback', name: 'Lower back', emoji: '🛡️' },
-  { id: 'neck', name: 'Neck', emoji: '🧣' },
-  { id: 'adductors', name: 'Adductors', emoji: '🦵' },
 ];
 
 export const MUSCLE_NAMES: Record<string, string> = Object.fromEntries(

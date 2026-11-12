@@ -6,95 +6,51 @@
  *
  *   node scripts/import-log.mjs
  *
+ * The log itself lives in scripts/log-data.json.
+ *
  * Environment:
  *   BASE_URL   default https://gym-progress-app-liart.vercel.app
  *   GYM_EMAIL  the account to log in with
  *   E2E_PASSWORD the password for that account
  */
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 const BASE = process.env.BASE_URL ?? 'https://gym-progress-app-liart.vercel.app';
 const EMAIL = process.env.GYM_EMAIL ?? 'nounoubendji@gmail.com';
 const PASSWORD = process.env.E2E_PASSWORD ?? 'gym-progressive-2026';
 
-const DATE = '2026-11-11';
-const SESSION_ID = 'import-2026-11-11';
+const DATE = process.env.LOG_DATE ?? '2026-11-11';
+const SESSION_ID = `import-${DATE}`;
 const STARTED_AT = Date.parse(`${DATE}T20:33:00`);
 
 const DEFAULT_REPS = { min: 6, max: 12 };
+const STEP_KG = 2.5;
 
-/**
- * name, muscle(s), weight, reps, optional rep range.
- * The first muscle is the primary one.
- */
-const LOG = [
-  // Legs -> quads, hamstrings, glutes, calves
-  ['Leg Curl', ['hamstrings'], 77, 6],
-  ['Romanian Deadlift', ['hamstrings', 'glutes'], 50, 9],
-  ['Belt Squat', ['quads', 'glutes'], 60, 10],
-  ['Leg Extension Free', ['quads'], 90, 7],
-  ['Leg Extension One Leg', ['quads'], 25, 8],
-  ['Hip Thrust', ['glutes'], 70, 9],
-  ['Calf Raises', ['calves'], 60, 7],
+const LOG = JSON.parse(readFileSync(path.join(HERE, 'log-data.json'), 'utf8'));
 
-  // Back
-  ['Pull Ups', ['back'], 0, 14, { min: 8, max: 16, switchAt: 16 }],
-  ['Lat Pulldown', ['back'], 73, 9],
-  ['Close Grip Pulldown', ['back'], 73, 8],
-  ['Machine Rows', ['back'], 70, 7],
-  ['T-Bar Row', ['back'], 45, 10],
-
-  // Triceps
-  ['Triceps Extension', ['triceps'], 50, 7],
-  ['V Extension', ['triceps'], 54, 12, { min: 10, max: 15 }],
-  ['One Arm Pushdown', ['triceps'], 18, 9],
-  ['V Overhead Extension', ['triceps'], 41, 10],
-  ['Overhead Extension', ['triceps'], 36, 0],
-  ['One Arm Overhead Extension', ['triceps'], 18, 8],
-
-  // Chest
-  ['Incline Smith Machine', ['chest'], 50, 12],
-  ['Machine Press', ['chest'], 113, 12],
-  ['Pec Dec', ['chest'], 59, 10],
-  ['Dips', ['chest'], 0, 9],
-
-  // Biceps
-  ['Preacher Machine Curl', ['biceps'], 50, 8],
-  ['Hammer Curl', ['biceps'], 17.5, 10],
-  ['Recline Curl', ['biceps'], 15, 5],
-  ['Underhand Cable Curl', ['biceps'], 45, 6],
-
-  // Shoulders
-  ['DB Lateral Raise', ['shoulders'], 12.5, 6],
-  ['Cable Lateral Raise', ['shoulders'], 14, 10],
-  ['Y Raise', ['shoulders'], 14, 6],
-  ['Machine Lateral Cable', ['shoulders'], 53, 9],
-  ['Machine Military Press', ['shoulders'], 30, 9],
-
-  // Forearms
-  ['One Hand Wrist Curl', ['forearms'], 11, 9],
-  ['Wrist Curl', ['forearms'], 0, 0],
-];
-
-function build() {
-  const exercises = LOG.map(([name, muscleIds, , , range]) => ({
+function buildExercises() {
+  return LOG.map((entry) => ({
     id: randomUUID(),
-    name,
-    muscleIds,
-    targetReps: range ?? DEFAULT_REPS,
-    stepKg: 2.5,
+    name: entry.name,
+    muscleIds: entry.muscles,
+    targetReps: entry.targetReps ?? DEFAULT_REPS,
+    switchAt: entry.switchAt,
+    stepKg: STEP_KG,
     createdAt: STARTED_AT,
   }));
-
-  return { exercises };
 }
 
 function buildSession(exercises) {
-  const entries = LOG.map(([, , weightKg, reps], i) => ({
+  const entries = LOG.map((entry, i) => ({
     id: randomUUID(),
     exerciseId: exercises[i].id,
-    weightKg,
-    reps,
+    weightKg: entry.weightKg,
+    reps: entry.reps,
     completedAt: STARTED_AT,
   }));
 
@@ -109,7 +65,7 @@ function buildSession(exercises) {
 }
 
 async function main() {
-  const { exercises } = build();
+  const exercises = buildExercises();
 
   const login = await fetch(`${BASE}/api/auth/login`, {
     method: 'POST',
@@ -154,7 +110,6 @@ async function main() {
   // at an exercise that actually exists.
   const session = buildSession(exercises);
 
-  // Replace the imported session if it is already there.
   const putSession = await fetch(`${BASE}/api/sessions/${SESSION_ID}`, {
     method: 'PUT',
     headers,
