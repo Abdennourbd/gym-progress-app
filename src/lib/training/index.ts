@@ -1,4 +1,4 @@
-import type { Exercise, Session } from '@/lib/types';
+import type { Exercise, Session, SessionEntry } from '@/lib/types';
 import { strength } from './strength';
 import { daysBetween } from './dates';
 
@@ -20,6 +20,14 @@ interface DayEntry {
   score: number;
 }
 
+/**
+ * A set with no reps is not a set, so it is left out rather than counted as a
+ * zero, which would drag the whole muscle down.
+ */
+function isRealSet(entry: SessionEntry): boolean {
+  return entry.reps > 0;
+}
+
 function entriesByDate(exercises: Exercise[], sessions: Session[]): Map<string, DayEntry[]> {
   const byId = new Map(exercises.map((e) => [e.id, e]));
   const out = new Map<string, DayEntry[]>();
@@ -29,6 +37,7 @@ function entriesByDate(exercises: Exercise[], sessions: Session[]): Map<string, 
     for (const entry of session.entries) {
       const ex = byId.get(entry.exerciseId);
       if (!ex) continue;
+      if (!isRealSet(entry)) continue;
       list.push({ exerciseId: entry.exerciseId, score: strength(entry.weightKg, entry.reps) });
     }
     if (list.length) out.set(session.date, list);

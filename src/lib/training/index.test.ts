@@ -4,6 +4,7 @@ import { makeExercise, makeEntry, makeSession } from '@/test/fixtures';
 
 const bench = makeExercise({ id: 'ex-bench', name: 'Bench Press', muscleIds: ['chest'] });
 const row = makeExercise({ id: 'ex-row', name: 'Barbell Row', muscleIds: ['back'] });
+const fly = makeExercise({ id: 'ex-fly', name: 'Cable Fly', muscleIds: ['chest'] });
 
 describe('muscleIndexSeries', () => {
   it('scores a day against the trailing best for that exercise', () => {
@@ -97,5 +98,16 @@ describe('muscleSummaries', () => {
     ];
     const [chest] = muscleSummaries([bench], sessions, ['2026-01-01']);
     expect(chest.bestExercise?.name).toBe('Bench Press');
+  });
+
+  it('ignores a set with no reps instead of counting it as zero', () => {
+    const sessions = [
+      makeSession('2026-01-01', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 100, reps: 5 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 36, reps: 0 }),
+      ]),
+    ];
+    const points = muscleIndexSeries('chest', [bench, fly], sessions, ['2026-01-01']);
+    expect(points[0].index).toBeCloseTo(100, 1);
   });
 });
