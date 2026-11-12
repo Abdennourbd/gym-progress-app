@@ -24,10 +24,14 @@ export function ExercisesTab() {
   const grouped = useMemo(() => {
     const map = new Map<string, Exercise[]>();
     for (const ex of visible) {
-      const key = ex.muscleIds[0] ?? 'other';
-      const list = map.get(key) ?? [];
-      list.push(ex);
-      map.set(key, list);
+      // An exercise appears under every muscle it trains, so the counts here
+      // match the counts on the muscle grid.
+      const muscles = ex.muscleIds.length ? ex.muscleIds : ['other'];
+      for (const muscle of muscles) {
+        const list = map.get(muscle) ?? [];
+        list.push(ex);
+        map.set(muscle, list);
+      }
     }
     return Array.from(map.entries());
   }, [visible]);
@@ -59,7 +63,12 @@ export function ExercisesTab() {
                   onClick={() => setEditingId(ex.id)}
                   className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left transition active:bg-neutral-100"
                 >
-                  <span className="min-w-0 flex-1 truncate font-medium">{ex.name}</span>
+                  <span className="min-w-0 flex-1 truncate font-medium">
+                    {ex.name}
+                    {ex.muscleIds.length > 1 && muscle !== ex.muscleIds[0] ? (
+                      <span className="ml-2 text-[10px] text-neutral-400">also</span>
+                    ) : null}
+                  </span>
                   <span className="shrink-0 text-xs tabular-nums text-neutral-400">
                     {ex.targetReps.min}–{ex.targetReps.max} reps · {ex.stepKg} kg step
                   </span>

@@ -86,6 +86,10 @@ function build() {
     createdAt: STARTED_AT,
   }));
 
+  return { exercises };
+}
+
+function buildSession(exercises) {
   const entries = LOG.map(([, , weightKg, reps], i) => ({
     id: randomUUID(),
     exerciseId: exercises[i].id,
@@ -94,7 +98,7 @@ function build() {
     completedAt: STARTED_AT,
   }));
 
-  const session = {
+  return {
     id: SESSION_ID,
     date: DATE,
     startedAt: STARTED_AT,
@@ -102,12 +106,10 @@ function build() {
     entries,
     updatedAt: Date.now(),
   };
-
-  return { exercises, session };
 }
 
 async function main() {
-  const { exercises, session } = build();
+  const { exercises } = build();
 
   const login = await fetch(`${BASE}/api/auth/login`, {
     method: 'POST',
@@ -148,6 +150,10 @@ async function main() {
   if (!putExercises.ok) throw new Error(`exercises failed: ${putExercises.status}`);
   console.log(`exercises: ${merged.length}`);
 
+  // The session is built after the ids are reconciled, so every entry points
+  // at an exercise that actually exists.
+  const session = buildSession(exercises);
+
   // Replace the imported session if it is already there.
   const putSession = await fetch(`${BASE}/api/sessions/${SESSION_ID}`, {
     method: 'PUT',
@@ -158,10 +164,15 @@ async function main() {
   console.log(`session ${SESSION_ID}: ${session.entries.length} entries`);
 
   const state = await (await fetch(`${BASE}/api/state`, { headers })).json();
+  const orphans = state.sessions
+    .flatMap((s) => s.entries)
+    .filter((entry) => !state.exercises.some((e) => e.id === entry.exerciseId));
+
   console.log('verified:', {
     exercises: state.exercises.length,
     sessions: state.sessions.length,
     entries: state.sessions.find((s) => s.id === SESSION_ID)?.entries.length,
+    orphanedEntries: orphans.length,
   });
 }
 
