@@ -84,18 +84,28 @@ async function main() {
   const existing = await (await fetch(`${BASE}/api/state`, { headers })).json();
   const byName = new Map(existing.exercises.map((e) => [e.name.toLowerCase(), e]));
 
+  const merged = [...existing.exercises];
+
   for (const exercise of exercises) {
     const found = byName.get(exercise.name.toLowerCase());
-    if (found) {
-      exercise.id = found.id;
-      console.log(`existing: ${exercise.name}`);
+    if (!found) {
+      merged.push(exercise);
+      continue;
     }
-  }
 
-  const merged = [...existing.exercises];
-  const known = new Set(merged.map((e) => e.id));
-  for (const exercise of exercises) {
-    if (!known.has(exercise.id)) merged.push(exercise);
+    // Same exercise, so keep the id and anything the user has set themselves,
+    // but fill in a switch point the log knows about and the app has not got.
+    exercise.id = found.id;
+    const index = merged.findIndex((e) => e.id === found.id);
+    merged[index] = {
+      ...found,
+      ...exercise,
+      id: found.id,
+      targetReps: found.targetReps ?? exercise.targetReps,
+      switchAt: found.switchAt ?? exercise.switchAt,
+      stepKg: found.stepKg ?? exercise.stepKg,
+    };
+    console.log(`existing: ${exercise.name}`);
   }
 
   const putExercises = await fetch(`${BASE}/api/exercises`, {

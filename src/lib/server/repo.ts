@@ -56,6 +56,12 @@ export async function saveExercise(exercise: Exercise): Promise<void> {
 export async function saveSession(session: Session): Promise<void> {
   const store = getStore();
 
+  // A workout with nothing in it is not a workout.
+  if (session.entries.length === 0) {
+    await deleteSession(session.id);
+    return;
+  }
+
   await store.set(KEYS.session(session.id), session);
 
   const summaries = (await store.get<SessionSummary[]>(KEYS.sessions)) ?? [];
