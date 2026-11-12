@@ -42,20 +42,14 @@ export function mergeExercises(local: Exercise[], remote: Exercise[]): Exercise[
       continue;
     }
 
-    // Archiving is a deletion, so it wins over a stale unarchived copy.
-    if (existing.archivedAt && !exercise.archivedAt) {
-      byId.set(exercise.id, existing);
-      continue;
-    }
-    if (exercise.archivedAt && !existing.archivedAt) {
+    // The newer copy wins. That covers archiving and restoring alike, and it
+    // stops a stale copy from undoing either one.
+    if (exerciseTime(exercise) > exerciseTime(existing)) {
       byId.set(exercise.id, exercise);
       continue;
     }
 
-    byId.set(
-      exercise.id,
-      exerciseTime(exercise) > exerciseTime(existing) ? exercise : existing,
-    );
+    byId.set(exercise.id, existing);
   }
 
   // Any list that comes out of here is in line with the current muscles.

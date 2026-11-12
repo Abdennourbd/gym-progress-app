@@ -63,15 +63,28 @@ describe('mergeExercises', () => {
   });
 
   it('keeps the archived copy even when the other side is not archived', () => {
-    const local = [makeExercise({ id: 'e1', archivedAt: 500 })];
-    const remote = [makeExercise({ id: 'e1' })];
+    const local = [makeExercise({ id: 'e1', archivedAt: 500, updatedAt: 500 })];
+    const remote = [makeExercise({ id: 'e1', updatedAt: 100 })];
     expect(mergeExercises(local, remote)[0].archivedAt).toBe(500);
   });
 
   it('archives when only the remote copy is archived', () => {
-    const local = [makeExercise({ id: 'e1' })];
-    const remote = [makeExercise({ id: 'e1', archivedAt: 500 })];
+    const local = [makeExercise({ id: 'e1', updatedAt: 100 })];
+    const remote = [makeExercise({ id: 'e1', archivedAt: 500, updatedAt: 500 })];
     expect(mergeExercises(local, remote)[0].archivedAt).toBe(500);
+  });
+
+  it('restores an archived exercise when the newer copy says so', () => {
+    const local = [makeExercise({ id: 'e1', archivedAt: 500, updatedAt: 500 })];
+    const remote = [makeExercise({ id: 'e1', updatedAt: 900 })];
+    const merged = mergeExercises(local, remote)[0];
+    expect(merged.archivedAt).toBeUndefined();
+  });
+
+  it('keeps the archived copy when the incoming copy is older', () => {
+    const local = [makeExercise({ id: 'e1', archivedAt: 900, updatedAt: 900 })];
+    const remote = [makeExercise({ id: 'e1', updatedAt: 100 })];
+    expect(mergeExercises(local, remote)[0].archivedAt).toBe(900);
   });
 
   it('falls back to createdAt when there is no updatedAt', () => {
