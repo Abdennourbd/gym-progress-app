@@ -42,6 +42,11 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(session),
     }),
+  putSessions: (sessions: Session[]) =>
+    request<{ ok: true }>('/api/sessions', {
+      method: 'PUT',
+      body: JSON.stringify({ sessions }),
+    }),
   deleteSession: (id: string) =>
     request<{ ok: true }>(`/api/sessions/${id}`, { method: 'DELETE' }),
   putSettings: (settings: Settings) =>

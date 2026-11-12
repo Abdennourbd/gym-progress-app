@@ -53,28 +53,41 @@ export async function saveExercise(exercise: Exercise): Promise<void> {
   await store.set(KEYS.exercises, mergeExercises(existing, [exercise]));
 }
 
-export async function saveSession(session: Session): Promise<void> {
+export async function saveSessions(sessions: Session[]): Promise<void> {
   const store = getStore();
+  const summaries = (await store.get<SessionSummary[]>(KEYS.sessions)) ?? [];
 
-  // A workout with nothing in it is not a workout.
-  if (session.entries.length === 0) {
-    await deleteSession(session.id);
-    return;
+  for (const session of sessions) {
+    if (!session.entries.length) {
+      await deleteSession(session.id);
+      continue;
+    }
+
+    // Newest wins, so a device that has been offline for a while cannot
+    // overwrite a newer copy with an old one.
+    const stored = await store.get<Session>(KEYS.session(session.id));
+    const winner =
+      stored && stored.updatedAt > session.updatedAt ? stored : session;
+
+    await store.set(KEYS.session(winner.id), winner);
+
+    const index = summaries.findIndex((s) => s.id === winner.id);
+    const summary = {
+      id: winner.id,
+      date: winner.date,
+      entryCount: winner.entries.length,
+      updatedAt: winner.updatedAt,
+    };
+    if (index === -1) summaries.push(summary);
+    else summaries[index] = summary;
   }
 
-  await store.set(KEYS.session(session.id), session);
+  summaries.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  await store.set(KEYS.sessions, summaries);
+}
 
-  const summaries = (await store.get<SessionSummary[]>(KEYS.sessions)) ?? [];
-  const next = summaries.filter((s) => s.id !== session.id);
-  next.push({
-    id: session.id,
-    date: session.date,
-    entryCount: session.entries.length,
-    updatedAt: session.updatedAt,
-  });
-  next.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-
-  await store.set(KEYS.sessions, next);
+export async function saveSession(session: Session): Promise<void> {
+  await saveSessions([session]);
 }
 
 /**

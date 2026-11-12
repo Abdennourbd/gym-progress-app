@@ -311,3 +311,46 @@ test('the rest timer counts down', async ({ page }) => {
   await expect(page.getByRole('button', { name: /0[0-9]:\d\d|1[0-9]:\d\d|2[0-9]:\d\d/ })).toBeVisible();
   await page.getByRole('button', { name: 'Pause rest timer' }).click();
 });
+
+// Last, because it takes the app offline for the rest of the run.
+test('keeps working offline and syncs when the signal comes back', async ({ page, context }) => {
+  await signIn(page);
+
+  // The service worker has to be in charge before the network is cut.
+  await page.waitForFunction(() => navigator.serviceWorker?.controller !== null, {
+    timeout: 15000,
+  });
+
+  const countSessions = () =>
+    page.evaluate(async () => {
+      const r = await fetch('/api/state', { credentials: 'include' });
+      const d = await r.json();
+      return d.sessions.length;
+    });
+
+  const before = await countSessions();
+
+  await context.setOffline(true);
+
+  // The app still opens, straight into the workout, with the data it has.
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Workout' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sign in' })).toHaveCount(0);
+
+  // A set can be logged with no signal at all.
+  await page.locator('[data-muscle="back"]').click();
+  await page.locator('[data-exercise="Machine Rows"]').click();
+  await page.getByRole('dialog').getByRole('button', { name: 'increase Weight' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
+  await expect(page.getByTestId('session-list')).toBeVisible();
+
+  // And it is still there after an offline reload.
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByTestId('session-list')).toBeVisible();
+
+  // Back online, it reaches the server.
+  await context.setOffline(false);
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+
+  await expect.poll(countSessions, { timeout: 15000 }).toBeGreaterThan(before);
+});

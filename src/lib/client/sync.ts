@@ -4,19 +4,19 @@ import { api, UnauthorizedError } from './api';
 import { useStore } from './store';
 import { LOCAL_KEYS, writeLocal } from './db';
 import { mergeAppState } from '@/lib/training/merge';
+import { announceUnauthorized } from './auth-state';
 import type { Exercise } from '@/lib/types';
 
 let exerciseTimer: ReturnType<typeof setTimeout> | null = null;
 let sessionTimer: ReturnType<typeof setTimeout> | null = null;
-const sessionQueue = new Set<string>();
 
 function offlineState() {
   return typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'error';
 }
 
 /**
- * Pull the cloud copy down and merge it with the local mirror. Newest wins on
- * every session, so an edit made offline and an edit made on another device
+ * Pulls the cloud copy down and merges it with the local mirror. Newest wins
+ * on every session, so an edit made offline and an edit made elsewhere
  * settle instead of fighting.
  */
 export async function pullRemote(): Promise<void> {
@@ -48,17 +48,39 @@ export async function pullRemote(): Promise<void> {
 
     store.setSyncState('idle');
   } catch (error) {
-    if (error instanceof UnauthorizedError) throw error;
+    if (error instanceof UnauthorizedError) {
+      announceUnauthorized();
+      return;
+    }
     store.setSyncState(offlineState());
   }
 }
 
 /**
- * Pushes a single exercise.
+ * Sends everything on this device.
  *
- * The whole collection is never sent from the client, because a client with
- * a stale view would then overwrite exercises it has never seen.
+ * The server merges by timestamp, so sending the whole local copy is safe even
+ * if some of it is older than what is already there. That is what makes the
+ * offline case work: nothing has to be remembered, the next connection just
+ * pushes everything.
  */
+export async function pushAllLocal(): Promise<void> {
+  const store = useStore.getState();
+  if (!store.sessions.length && !store.exercises.length) return;
+
+  try {
+    if (store.exercises.length) await api.putExercises(store.exercises);
+    if (store.sessions.length) await api.putSessions(store.sessions);
+    store.setSyncState('idle');
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      announceUnauthorized();
+      return;
+    }
+    store.setSyncState(offlineState());
+  }
+}
+
 export function scheduleExercisePush(exercise: Exercise): void {
   if (exerciseTimer) clearTimeout(exerciseTimer);
   exerciseTimer = setTimeout(async () => {
@@ -66,45 +88,50 @@ export function scheduleExercisePush(exercise: Exercise): void {
       await api.putExercise(exercise);
       useStore.getState().setSyncState('idle');
     } catch (error) {
-      if (error instanceof UnauthorizedError) throw error;
+      if (error instanceof UnauthorizedError) {
+        announceUnauthorized();
+        return;
+      }
       useStore.getState().setSyncState(offlineState());
     }
   }, 1500);
 }
 
 export function scheduleSessionPush(sessionId: string): void {
-  sessionQueue.add(sessionId);
   if (sessionTimer) clearTimeout(sessionTimer);
   sessionTimer = setTimeout(async () => {
-    const ids = Array.from(sessionQueue);
-    sessionQueue.clear();
-
     const store = useStore.getState();
-    store.setSyncState('syncing');
+    const session = store.sessions.find((s) => s.id === sessionId);
+    if (!session) return;
     try {
-      await Promise.all(
-        ids.map((id) => {
-          const session = store.sessions.find((s) => s.id === id);
-          return session ? api.putSession(session) : Promise.resolve();
-        }),
-      );
+      await api.putSession(session);
       store.setSyncState('idle');
     } catch (error) {
-      if (error instanceof UnauthorizedError) throw error;
-      ids.forEach((id) => sessionQueue.add(id));
+      if (error instanceof UnauthorizedError) {
+        announceUnauthorized();
+        return;
+      }
       store.setSyncState(offlineState());
     }
   }, 1500);
 }
 
-export function scheduleSettingsPush(settings: { units: 'kg'; restTimerSec: number }): void {
+export function scheduleSettingsPush(settings: {
+  units: 'kg';
+  restTimerSec: number;
+  theme?: 'light' | 'dark';
+  updatedAt?: number;
+}): void {
   if (exerciseTimer) clearTimeout(exerciseTimer);
   exerciseTimer = setTimeout(async () => {
     try {
       await api.putSettings(settings);
       useStore.getState().setSyncState('idle');
     } catch (error) {
-      if (error instanceof UnauthorizedError) throw error;
+      if (error instanceof UnauthorizedError) {
+        announceUnauthorized();
+        return;
+      }
       useStore.getState().setSyncState(offlineState());
     }
   }, 1500);
@@ -113,21 +140,19 @@ export function scheduleSettingsPush(settings: { units: 'kg'; restTimerSec: numb
 export function startSyncListeners(): () => void {
   if (typeof window === 'undefined') return () => {};
 
-  const onOnline = () => {
-    void pullRemote().catch(() => undefined);
+  const catchUp = () => {
+    void pushAllLocal().then(() => pullRemote());
   };
 
   const onVisibility = () => {
-    if (document.visibilityState === 'visible') {
-      void pullRemote().catch(() => undefined);
-    }
+    if (document.visibilityState === 'visible') catchUp();
   };
 
-  window.addEventListener('online', onOnline);
+  window.addEventListener('online', catchUp);
   document.addEventListener('visibilitychange', onVisibility);
 
   return () => {
-    window.removeEventListener('online', onOnline);
+    window.removeEventListener('online', catchUp);
     document.removeEventListener('visibilitychange', onVisibility);
   };
 }

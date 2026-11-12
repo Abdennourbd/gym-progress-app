@@ -6,7 +6,7 @@ import { WorkoutTab } from './workout/WorkoutTab';
 import { ProgressTab } from './progress/ProgressTab';
 import { ExercisesTab } from './exercises/ExercisesTab';
 import { useStore } from '@/lib/client/store';
-import { pullRemote, startSyncListeners } from '@/lib/client/sync';
+import { pullRemote, pushAllLocal, startSyncListeners } from '@/lib/client/sync';
 import { applyTheme, readStoredTheme, systemTheme } from '@/lib/client/theme';
 
 export function AppShell() {
@@ -20,6 +20,7 @@ export function AppShell() {
       applyTheme(
         useStore.getState().settings.theme ?? readStoredTheme() ?? systemTheme(),
       );
+      await pushAllLocal().catch(() => undefined);
       await pullRemote().catch(() => undefined);
       const theme = useStore.getState().settings.theme;
       if (theme) applyTheme(theme);

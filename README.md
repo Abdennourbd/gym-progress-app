@@ -127,6 +127,20 @@ would rather set up Upstash yourself.
 Without a cloud store the app falls back to a local file on the server, which
 is only useful in development.
 
+## Working offline
+
+The app is built for a gym with no signal.
+
+- The screen and the code are cached by a service worker, so the app opens
+  with no connection at all.
+- Everything you log is written to the device first, so a set is never lost
+  because the phone dropped off the network.
+- When you were signed in, you stay signed in offline. The app does not throw
+  you back to the login screen just because the network is gone.
+- When the signal comes back, everything on the device is sent to the server
+  in one request and the two copies are merged by timestamp, so the newest
+  version of each workout wins.
+
 ## Tests
 
 ```bash

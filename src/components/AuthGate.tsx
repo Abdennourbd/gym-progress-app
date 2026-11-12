@@ -2,6 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/client/api';
+import { useStore } from '@/lib/client/store';
+import {
+  markSignedIn,
+  markSignedOut,
+  UNAUTHORIZED_EVENT,
+  wasSignedIn,
+} from '@/lib/client/auth-state';
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<'checking' | 'in' | 'out'>('checking');
@@ -13,8 +20,35 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetch('/api/auth/session')
       .then((r) => r.json())
-      .then((d: { authenticated: boolean }) => setStatus(d.authenticated ? 'in' : 'out'))
-      .catch(() => setStatus('out'));
+      .then((d: { authenticated: boolean }) => {
+        if (d.authenticated) {
+          markSignedIn();
+          setStatus('in');
+        } else {
+          markSignedOut();
+          setStatus('out');
+        }
+      })
+      .catch(() => {
+        // The network is gone. If we were signed in, let the app run on the
+        // copy on this device rather than locking the user out mid-workout.
+        if (wasSignedIn()) {
+          useStore.getState().setSyncState('offline');
+          setStatus('in');
+        } else {
+          setStatus('out');
+        }
+      });
+  }, []);
+
+  // The server says the session is gone. Lock, even if we are offline.
+  useEffect(() => {
+    const onUnauthorized = () => {
+      markSignedOut();
+      setStatus('out');
+    };
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   }, []);
 
   // Two hours of inactivity ends the session locally too, so the lock screen
@@ -45,6 +79,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       setError(null);
       try {
         await api.login(email, password);
+        markSignedIn();
         setStatus('in');
       } catch {
         setError('Wrong email or password.');
