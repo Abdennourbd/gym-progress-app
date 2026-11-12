@@ -59,4 +59,4 @@ export interface AppState {
   settings: Settings;
 }
 
-export const DEFAULT_SETTINGS: Settings = { units: 'kg', restTimerSec: 90 };
+export const DEFAULT_SETTINGS: Settings = { units: 'kg', restTimerSec: 120 };

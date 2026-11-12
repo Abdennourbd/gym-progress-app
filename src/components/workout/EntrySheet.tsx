@@ -91,13 +91,30 @@ export function EntrySheet({
               : 'First time — pick your opening weight'}
           </p>
         </div>
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="-mr-1 rounded-full px-2 py-1 text-xl text-neutral-400 active:bg-neutral-100"
-        >
-          ✕
-        </button>
+
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+            Sets
+          </span>
+          <div className="flex gap-1">
+            {SET_OPTIONS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => onChange({ ...values, sets: n })}
+                aria-pressed={values.sets === n}
+                aria-label={`${n} ${n === 1 ? 'set' : 'sets'}`}
+                className={`h-10 w-10 rounded-xl border text-sm font-semibold tabular-nums transition active:scale-95 ${
+                  values.sets === n
+                    ? 'border-neutral-900 bg-neutral-900 text-white'
+                    : 'border-neutral-200 bg-white text-neutral-600'
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <button
@@ -114,29 +131,6 @@ export function EntrySheet({
           {REASON_LABEL[suggestion.reason]}
         </span>
       </button>
-
-      <div className="mb-5 flex items-center gap-3">
-        <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">
-          Sets
-        </span>
-        <div className="flex gap-1.5">
-          {SET_OPTIONS.map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => onChange({ ...values, sets: n })}
-              aria-pressed={values.sets === n}
-              className={`h-10 w-12 rounded-xl border text-sm font-semibold tabular-nums transition active:scale-95 ${
-                values.sets === n
-                  ? 'border-neutral-900 bg-neutral-900 text-white'
-                  : 'border-neutral-200 bg-white text-neutral-600'
-              }`}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <div className="mb-6 flex flex-wrap justify-center gap-x-4 gap-y-6">
         <Steppers

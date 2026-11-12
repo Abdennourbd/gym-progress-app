@@ -176,7 +176,7 @@ test('counts the sets done and shows the running totals', async ({ page }) => {
   await pickExercise(page, 'Machine Rows');
 
   // Three sets of the same weight and reps.
-  await page.getByRole('dialog').getByRole('button', { name: '3', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '3 sets' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
 
   // The row shows the set count.
@@ -191,7 +191,7 @@ test('counts the sets done and shows the running totals', async ({ page }) => {
   // own sets.
   await openMuscle(page, 'chest');
   await pickExercise(page, 'Machine Press');
-  await page.getByRole('dialog').getByRole('button', { name: '2', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '2 sets' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
 
   await expect(page.getByTestId('session-list').getByText('· 2 sets')).toBeVisible();
@@ -205,21 +205,24 @@ test('the set count is a minimal one two three choice', async ({ page }) => {
   await pickExercise(page, 'Machine Rows');
 
   const dialog = page.getByRole('dialog');
-  const sets = dialog.getByRole('button', { name: /^[123]$/ });
+  const sets = dialog.getByRole('button', { name: /^[123] sets?$/ });
   await expect(sets).toHaveCount(3);
-  await expect(dialog.getByRole('button', { name: '4' })).toHaveCount(0);
-  await expect(dialog.getByRole('button', { name: '5' })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: '4 sets' })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: '5 sets' })).toHaveCount(0);
 
   // One is the default, three is the most you can choose.
-  await expect(dialog.getByRole('button', { name: '1', exact: true })).toHaveAttribute(
+  await expect(dialog.getByRole('button', { name: '1 set' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
-  await dialog.getByRole('button', { name: '3', exact: true }).click();
-  await expect(dialog.getByRole('button', { name: '3', exact: true })).toHaveAttribute(
+  await dialog.getByRole('button', { name: '3 sets' }).click();
+  await expect(dialog.getByRole('button', { name: '3 sets' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
+
+  // The set picker sits where the close button used to be.
+  await expect(dialog.getByRole('button', { name: 'Close' })).toHaveCount(0);
 });
 
 test('the sheet is keyboard friendly', async ({ page }) => {
@@ -243,6 +246,6 @@ test('the rest timer counts down', async ({ page }) => {
   await signIn(page);
 
   await page.getByRole('button', { name: 'Start rest timer' }).click();
-  await expect(page.getByRole('button', { name: /0[01]:\d\d/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /0[0-9]:\d\d|1[0-9]:\d\d|2[0-9]:\d\d/ })).toBeVisible();
   await page.getByRole('button', { name: 'Pause rest timer' }).click();
 });
