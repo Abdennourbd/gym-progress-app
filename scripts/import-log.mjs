@@ -93,14 +93,15 @@ async function main() {
       continue;
     }
 
-    // Same exercise, so keep the id and anything the user has set themselves,
-    // but fill in a switch point the log knows about and the app has not got.
+    // Same exercise, so keep the id and everything the user has set
+    // themselves, but fill in anything the log knows and the app has not got.
+    // The newer timestamp makes the server accept the change.
     exercise.id = found.id;
     const index = merged.findIndex((e) => e.id === found.id);
     merged[index] = {
       ...found,
-      ...exercise,
       id: found.id,
+      updatedAt: Date.now(),
       targetReps: found.targetReps ?? exercise.targetReps,
       switchAt: found.switchAt ?? exercise.switchAt,
       stepKg: found.stepKg ?? exercise.stepKg,

@@ -21,6 +21,16 @@ export function ExercisesTab() {
     [exercises, query],
   );
 
+  // Archived exercises are hidden from the picker but keep counting in every
+  // chart. They are listed here so they are never simply gone.
+  const archived = useMemo(
+    () =>
+      exercises.filter(
+        (e) => e.archivedAt && e.name.toLowerCase().includes(query.trim().toLowerCase()),
+      ),
+    [exercises, query],
+  );
+
   const grouped = useMemo(() => {
     const map = new Map<string, Exercise[]>();
     for (const ex of visible) {
@@ -85,6 +95,36 @@ export function ExercisesTab() {
             ? 'Nothing matches that search.'
             : 'Add exercises from the Workout tab to see them here.'}
         </p>
+      ) : null}
+
+      {archived.length ? (
+        <section>
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            Archived · {archived.length}
+          </h2>
+          <div className="flex flex-col gap-1.5">
+            {archived.map((ex) => (
+              <div
+                key={ex.id}
+                className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-100 px-4 py-3"
+              >
+                <span className="min-w-0 flex-1 truncate text-sm text-neutral-500 line-through">
+                  {ex.name}
+                </span>
+                <button
+                  onClick={() => {
+                    const restored = { ...ex, archivedAt: undefined, updatedAt: Date.now() };
+                    upsertExercise(restored);
+                    scheduleExercisePush(restored);
+                  }}
+                  className="shrink-0 text-sm font-semibold text-neutral-700"
+                >
+                  Restore
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
       ) : null}
 
       <SettingsPanel />
