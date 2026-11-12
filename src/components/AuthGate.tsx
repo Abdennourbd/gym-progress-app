@@ -57,7 +57,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (status === 'checking') {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-neutral-400">
+      <div className="flex min-h-dvh items-center justify-center text-ink-faint">
         <span className="animate-pulse">Loading…</span>
       </div>
     );
@@ -68,7 +68,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-dvh flex-col justify-center gap-6 px-6 pb-16">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold tracking-tight">Gym Progress</h1>
-          <p className="text-sm text-neutral-500">Sign in to log your session.</p>
+          <p className="text-sm text-ink-soft">Sign in to log your session.</p>
         </div>
 
         <form onSubmit={submit} className="flex flex-col gap-3">
@@ -82,7 +82,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               aria-label="Email"
               autoComplete="username"
               required
-              className="h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-base outline-none focus:border-neutral-900"
+              className="h-14 w-full rounded-2xl border border-line-strong bg-surface px-4 text-base outline-none focus:border-accent"
             />
           </label>
           <label className="block">
@@ -95,7 +95,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               aria-label="Password"
               autoComplete="current-password"
               required
-              className="h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-base outline-none focus:border-neutral-900"
+              className="h-14 w-full rounded-2xl border border-line-strong bg-surface px-4 text-base outline-none focus:border-accent"
             />
           </label>
           <p role="status" aria-live="polite" className="min-h-5 text-sm text-red-600">
@@ -104,7 +104,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           <button
             type="submit"
             disabled={busy}
-            className="h-14 w-full rounded-2xl bg-neutral-900 text-base font-semibold text-white disabled:opacity-50"
+            className="h-14 w-full rounded-2xl bg-accent text-base font-semibold text-accent-ink disabled:opacity-50"
           >
             {busy ? 'Signing in…' : 'Sign in'}
           </button>

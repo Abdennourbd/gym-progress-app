@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { badRequest, currentUser, touchSession, unauthorized } from '@/lib/server/guard';
 import { exerciseSchema } from '@/lib/server/schemas';
-import { saveExercise } from '@/lib/server/repo';
+import { deleteExercise, saveExercise } from '@/lib/server/repo';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -23,6 +23,21 @@ export async function PUT(req: Request, { params }: Params) {
   }
 
   await saveExercise(parsed.data);
+
+  const res = NextResponse.json({ ok: true });
+  await touchSession(res);
+  return res;
+}
+
+/**
+ * Removes an exercise for good. Archiving is the usual way to hide one, but
+ * this is here for cleaning up exercises that were never real.
+ */
+export async function DELETE(_req: Request, { params }: Params) {
+  if (!(await currentUser())) return unauthorized();
+
+  const { id } = await params;
+  await deleteExercise(id);
 
   const res = NextResponse.json({ ok: true });
   await touchSession(res);

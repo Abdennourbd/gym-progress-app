@@ -7,6 +7,7 @@ import { ProgressTab } from './progress/ProgressTab';
 import { ExercisesTab } from './exercises/ExercisesTab';
 import { useStore } from '@/lib/client/store';
 import { pullRemote, startSyncListeners } from '@/lib/client/sync';
+import { applyTheme, readStoredTheme, systemTheme } from '@/lib/client/theme';
 
 export function AppShell() {
   const [tab, setTab] = useState<TabKey>('workout');
@@ -14,11 +15,15 @@ export function AppShell() {
   const syncState = useStore((s) => s.syncState);
 
   useEffect(() => {
-    void useStore
-      .getState()
-      .hydrate()
-      .then(() => pullRemote())
-      .catch(() => undefined);
+    void (async () => {
+      await useStore.getState().hydrate();
+      applyTheme(
+        useStore.getState().settings.theme ?? readStoredTheme() ?? systemTheme(),
+      );
+      await pullRemote().catch(() => undefined);
+      const theme = useStore.getState().settings.theme;
+      if (theme) applyTheme(theme);
+    })();
 
     const stop = startSyncListeners();
 
@@ -31,14 +36,14 @@ export function AppShell() {
 
   if (!hydrated) {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-neutral-400">
+      <div className="flex min-h-dvh items-center justify-center text-ink-faint">
         <span className="animate-pulse">Loading…</span>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-neutral-50">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-canvas">
       <main className="flex-1 pb-24">
         {tab === 'workout' ? <WorkoutTab /> : null}
         {tab === 'progress' ? <ProgressTab /> : null}
@@ -58,7 +63,7 @@ export function AppShell() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white shadow-lg"
+          className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-surface-3 px-3 py-1.5 text-xs font-medium text-ink shadow-lg"
         >
           Saved locally — will sync
         </div>

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { THEME_BOOTSTRAP } from '@/lib/client/theme';
 import './globals.css';
 
 const geistSans = Geist({
@@ -39,8 +40,13 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-neutral-50 text-neutral-900">{children}</body>
+      <head>
+        {/* Sets the theme before the first paint so there is no flash. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+      </head>
+      <body className="min-h-full bg-canvas text-ink">{children}</body>
     </html>
   );
 }

@@ -85,7 +85,7 @@ export function EntrySheet({
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate text-xl font-bold tracking-tight">{exercise.name}</h2>
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-ink-soft">
             {previous
               ? `Last time: ${previous.weightKg} kg × ${previous.reps}`
               : 'First time — pick your opening weight'}
@@ -93,7 +93,7 @@ export function EntrySheet({
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-ink-faint">
             Sets
           </span>
           <div className="flex gap-1">
@@ -106,8 +106,8 @@ export function EntrySheet({
                 aria-label={`${n} ${n === 1 ? 'set' : 'sets'}`}
                 className={`h-10 w-10 rounded-xl border text-sm font-semibold tabular-nums transition active:scale-95 ${
                   values.sets === n
-                    ? 'border-neutral-900 bg-neutral-900 text-white'
-                    : 'border-neutral-200 bg-white text-neutral-600'
+                    ? 'border-accent bg-accent text-accent-ink'
+                    : 'border-line bg-surface text-ink-soft'
                 }`}
               >
                 {n}
@@ -119,15 +119,15 @@ export function EntrySheet({
 
       <button
         onClick={applyTarget}
-        className="mb-5 flex w-full items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 text-left active:bg-neutral-200"
+        className="mb-5 flex w-full items-center justify-between rounded-2xl bg-surface-2 px-4 py-3 text-left active:bg-surface-3"
       >
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+          <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">
             Next time
           </p>
           <p className="text-lg font-bold tabular-nums">{targetText}</p>
         </div>
-        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-600">
+        <span className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-ink-soft">
           {REASON_LABEL[suggestion.reason]}
         </span>
       </button>
@@ -153,7 +153,7 @@ export function EntrySheet({
       </div>
 
       {delta.kind !== 'new' ? (
-        <p className="mb-4 text-center text-sm text-neutral-500">
+        <p className="mb-4 text-center text-sm text-ink-soft">
           vs last time:{' '}
           <span
             className={
@@ -174,7 +174,7 @@ export function EntrySheet({
           onCommit(values);
           onClose();
         }}
-        className="h-14 w-full rounded-2xl bg-neutral-900 text-base font-semibold text-white active:scale-[0.99]"
+        className="h-14 w-full rounded-2xl bg-accent text-base font-semibold text-accent-ink active:scale-[0.99]"
       >
         {mode === 'add' ? 'Done — add it' : 'Done'}
       </button>
@@ -192,7 +192,7 @@ export function EntrySheet({
       ) : mode === 'edit' ? (
         <button
           onClick={() => setConfirmRemove(true)}
-          className="mt-1 h-11 w-full text-sm text-neutral-400"
+          className="mt-1 h-11 w-full text-sm text-ink-faint"
         >
           Remove exercise
         </button>

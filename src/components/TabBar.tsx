@@ -16,14 +16,14 @@ export function TabBar({
   onChange: (tab: TabKey) => void;
 }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-md grid-cols-3 border-t border-neutral-200 bg-white/90 backdrop-blur-lg">
+    <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-md grid-cols-3 border-t border-line bg-surface/90 backdrop-blur-lg">
       {TABS.map((tab) => (
         <button
           key={tab.key}
           onClick={() => onChange(tab.key)}
           aria-current={active === tab.key ? 'page' : undefined}
           className={`flex flex-col items-center gap-1 py-2.5 text-[11px] transition-colors ${
-            active === tab.key ? 'text-neutral-900' : 'text-neutral-400'
+            active === tab.key ? 'text-ink' : 'text-ink-faint'
           }`}
         >
           <span className="text-xl leading-none">{tab.icon}</span>

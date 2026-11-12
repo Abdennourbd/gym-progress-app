@@ -73,11 +73,11 @@ export function NewExerciseSheet({ open, muscleId, onClose, onCreated }: Props) 
         placeholder="Exercise name"
         aria-label="Exercise name"
         autoFocus
-        className="mb-4 h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-base outline-none focus:border-neutral-900"
+        className="mb-4 h-14 w-full rounded-2xl border border-line-strong bg-surface px-4 text-base outline-none focus:border-accent"
       />
 
       <fieldset className="mb-4">
-        <legend className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+        <legend className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
           Muscle
         </legend>
         <div className="flex flex-wrap gap-2">
@@ -89,8 +89,8 @@ export function NewExerciseSheet({ open, muscleId, onClose, onCreated }: Props) 
               aria-pressed={muscle === m.id}
               className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
                 muscle === m.id
-                  ? 'border-neutral-900 bg-neutral-900 text-white'
-                  : 'border-neutral-200 bg-white text-neutral-600'
+                  ? 'border-accent bg-accent text-accent-ink'
+                  : 'border-line bg-surface text-ink-soft'
               }`}
             >
               {m.emoji} {MUSCLE_NAMES[m.id]}
@@ -107,7 +107,7 @@ export function NewExerciseSheet({ open, muscleId, onClose, onCreated }: Props) 
             { label: 'Step kg', value: step, set: setStep },
           ] as const
         ).map((field) => (
-          <label key={field.label} className="flex flex-col gap-1 text-xs text-neutral-500">
+          <label key={field.label} className="flex flex-col gap-1 text-xs text-ink-soft">
             {field.label}
             <input
               type="number"
@@ -115,13 +115,13 @@ export function NewExerciseSheet({ open, muscleId, onClose, onCreated }: Props) 
               aria-label={field.label}
               value={field.value}
               onChange={(e) => field.set(Number(e.target.value))}
-              className="h-12 rounded-xl border border-neutral-300 px-3 text-base tabular-nums text-neutral-900 outline-none focus:border-neutral-900"
+              className="h-12 rounded-xl border border-line-strong px-3 text-base tabular-nums text-ink outline-none focus:border-accent"
             />
           </label>
         ))}
       </div>
 
-      <p className="mb-4 text-xs leading-relaxed text-neutral-400">
+      <p className="mb-4 text-xs leading-relaxed text-ink-faint">
         Weight goes up once you hit {switchAt} reps. You can change the rep range any time from
         the Exercises tab.
       </p>
@@ -129,7 +129,7 @@ export function NewExerciseSheet({ open, muscleId, onClose, onCreated }: Props) 
       <button
         onClick={save}
         disabled={!name.trim()}
-        className="h-14 w-full rounded-2xl bg-neutral-900 text-base font-semibold text-white disabled:opacity-40"
+        className="h-14 w-full rounded-2xl bg-accent text-base font-semibold text-accent-ink disabled:opacity-40"
       >
         Create
       </button>

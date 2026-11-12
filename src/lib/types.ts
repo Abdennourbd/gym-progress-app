@@ -50,6 +50,7 @@ export interface Session {
 export interface Settings {
   units: 'kg';
   restTimerSec: number;
+  theme?: 'light' | 'dark';
   updatedAt?: number;
 }
 

@@ -95,10 +95,10 @@ export function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className="max-h-[92dvh] w-full max-w-md overflow-x-hidden overflow-y-auto rounded-t-3xl bg-white px-5 pb-7 pt-3 shadow-2xl"
+        className="max-h-[92dvh] w-full max-w-md overflow-x-hidden overflow-y-auto rounded-t-3xl bg-surface px-5 pb-7 pt-3 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-neutral-300" />
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-surface-3" />
         {children}
       </div>
     </div>

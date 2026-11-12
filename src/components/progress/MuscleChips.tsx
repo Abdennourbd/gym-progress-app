@@ -18,8 +18,8 @@ export function MuscleChips({
   const chipClass = (isActive: boolean) =>
     `shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
       isActive
-        ? 'border-neutral-900 bg-neutral-900 text-white'
-        : 'border-neutral-200 bg-white text-neutral-500'
+        ? 'border-accent bg-accent text-accent-ink'
+        : 'border-line bg-surface text-ink-soft'
     }`;
 
   return (

@@ -22,8 +22,8 @@ export function MetricToggle({
           onClick={() => onChange(m.key)}
           className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
             value === m.key
-              ? 'border-neutral-900 bg-neutral-900 text-white'
-              : 'border-neutral-200 bg-white text-neutral-500'
+              ? 'border-accent bg-accent text-accent-ink'
+              : 'border-line bg-surface text-ink-soft'
           }`}
         >
           {m.label}

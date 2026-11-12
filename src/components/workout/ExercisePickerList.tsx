@@ -35,17 +35,17 @@ export function ExercisePickerList({
             key={ex.id}
             data-exercise={ex.name}
             onClick={() => onPick(ex)}
-            className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left transition active:bg-neutral-100"
+            className="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-left transition active:bg-surface-2"
           >
             <span
               className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                logged ? 'bg-emerald-500 text-white' : 'bg-neutral-100 text-neutral-400'
+                logged ? 'bg-emerald-500 text-white' : 'bg-surface-2 text-ink-faint'
               }`}
             >
               {logged ? '✓' : ''}
             </span>
             <span className="min-w-0 flex-1 truncate font-medium">{ex.name}</span>
-            <span className="shrink-0 text-sm tabular-nums text-neutral-500">
+            <span className="shrink-0 text-sm tabular-nums text-ink-soft">
               {last ? `${last.weightKg} kg × ${last.reps}` : 'never done'}
             </span>
           </button>
@@ -53,14 +53,14 @@ export function ExercisePickerList({
       })}
 
       {list.length === 0 ? (
-        <p className="py-6 text-center text-sm text-neutral-400">
+        <p className="py-6 text-center text-sm text-ink-faint">
           Nothing here yet.
         </p>
       ) : null}
 
       <button
         onClick={onNew}
-        className="mt-1 h-12 rounded-2xl border-2 border-dashed border-neutral-300 text-sm font-semibold text-neutral-600 active:bg-neutral-100"
+        className="mt-1 h-12 rounded-2xl border-2 border-dashed border-line-strong text-sm font-semibold text-ink-soft active:bg-surface-2"
       >
         + New exercise
       </button>

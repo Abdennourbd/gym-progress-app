@@ -41,7 +41,7 @@ export function ExerciseHistory({
 
   if (!data.length) {
     return (
-      <p className="py-8 text-center text-sm text-neutral-400">
+      <p className="py-8 text-center text-sm text-ink-faint">
         No history for this exercise yet.
       </p>
     );
@@ -56,21 +56,21 @@ export function ExerciseHistory({
         <AreaChart data={data} margin={{ top: 8, right: 6, bottom: 0, left: -20 }}>
           <defs>
             <linearGradient id="exFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#111111" stopOpacity={0.22} />
-              <stop offset="100%" stopColor="#111111" stopOpacity={0} />
+              <stop offset="0%" stopColor="var(--chart-ink)" stopOpacity="var(--chart-fill)" />
+              <stop offset="100%" stopColor="var(--chart-ink)" stopOpacity="0" />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
           <XAxis
             dataKey="date"
             tickFormatter={(d: string) => d.slice(5)}
-            tick={{ fontSize: 10, fill: '#a3a3a3' }}
+            tick={{ fontSize: 10, fill: 'var(--chart-axis)' }}
             axisLine={false}
             tickLine={false}
             minTickGap={18}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: '#a3a3a3' }}
+            tick={{ fontSize: 10, fill: 'var(--chart-axis)' }}
             axisLine={false}
             tickLine={false}
             width={44}
@@ -78,7 +78,9 @@ export function ExerciseHistory({
           <Tooltip
             contentStyle={{
               borderRadius: 14,
-              border: '1px solid #e5e5e5',
+              border: '1px solid var(--line)',
+              backgroundColor: 'var(--surface)',
+              color: 'var(--ink)',
               fontSize: 12,
             }}
             labelFormatter={(d) => String(d)}
@@ -90,10 +92,10 @@ export function ExerciseHistory({
           <Area
             type="monotone"
             dataKey="value"
-            stroke="#111111"
+            stroke="var(--chart-ink)"
             strokeWidth={2}
             fill="url(#exFill)"
-            activeDot={{ r: 4, fill: '#111111' }}
+            activeDot={{ r: 4, fill: 'var(--chart-ink)' }}
           />
         </AreaChart>
       </ResponsiveContainer>

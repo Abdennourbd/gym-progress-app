@@ -16,15 +16,15 @@ export function RangeSelector({
   onChange: (r: RangeKey) => void;
 }) {
   return (
-    <div className="flex rounded-xl bg-neutral-200 p-1">
+    <div className="flex rounded-xl bg-surface-3 p-1">
       {RANGES.map((r) => (
         <button
           key={r.key}
           onClick={() => onChange(r.key)}
           className={`flex-1 rounded-lg py-2 text-sm transition ${
             value === r.key
-              ? 'bg-white font-semibold shadow-sm'
-              : 'font-medium text-neutral-500'
+              ? 'bg-surface font-semibold shadow-sm'
+              : 'font-medium text-ink-soft'
           }`}
         >
           {r.label}

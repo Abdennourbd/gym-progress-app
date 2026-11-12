@@ -65,7 +65,7 @@ export function Steppers({
   if (editing) {
     return (
       <div className="flex flex-col items-center gap-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+        <span className="text-xs font-medium uppercase tracking-wide text-ink-faint">
           {label}
         </span>
         <input
@@ -82,16 +82,16 @@ export function Steppers({
             if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
           }}
           aria-label={`${label} in ${unit}`}
-          className={`${large ? 'w-20 text-2xl' : 'w-16 text-xl'} rounded-xl border border-neutral-300 px-2 py-1 text-center font-bold tabular-nums outline-none focus:border-neutral-900`}
+          className={`${large ? 'w-20 text-2xl' : 'w-16 text-xl'} rounded-xl border border-line-strong px-2 py-1 text-center font-bold tabular-nums outline-none focus:border-accent`}
         />
-        <span className="text-xs text-neutral-400">{unit}</span>
+        <span className="text-xs text-ink-faint">{unit}</span>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+      <span className="text-xs font-medium uppercase tracking-wide text-ink-faint">
         {label}
       </span>
       <div className="flex items-center gap-1.5">
@@ -103,7 +103,7 @@ export function Steppers({
           onPointerUp={stopHold}
           onPointerLeave={stopHold}
           onPointerCancel={stopHold}
-          className={`${btn} flex items-center justify-center border border-neutral-300 bg-white font-semibold text-neutral-700 transition active:bg-neutral-100 active:scale-95`}
+          className={`${btn} flex items-center justify-center border border-line-strong bg-surface font-semibold text-ink transition active:bg-surface-2 active:scale-95`}
         >
           −
         </button>
@@ -122,12 +122,12 @@ export function Steppers({
           onPointerUp={stopHold}
           onPointerLeave={stopHold}
           onPointerCancel={stopHold}
-          className={`${btn} flex items-center justify-center border border-neutral-300 bg-white font-semibold text-neutral-700 transition active:bg-neutral-100 active:scale-95`}
+          className={`${btn} flex items-center justify-center border border-line-strong bg-surface font-semibold text-ink transition active:bg-surface-2 active:scale-95`}
         >
           +
         </button>
       </div>
-      <span className="text-xs text-neutral-400">{unit}</span>
+      <span className="text-xs text-ink-faint">{unit}</span>
     </div>
   );
 }

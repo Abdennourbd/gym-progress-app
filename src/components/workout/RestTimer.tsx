@@ -50,7 +50,7 @@ export function RestTimer({ defaultSec }: { defaultSec: number }) {
   const mmss = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
 
   return (
-    <div className="flex items-center gap-1 rounded-full border border-neutral-200 bg-white py-1 pl-1 pr-2 text-sm">
+    <div className="flex items-center gap-1 rounded-full border border-line bg-surface py-1 pl-1 pr-2 text-sm">
       <button
         onClick={() => {
           if (running) {
@@ -67,7 +67,7 @@ export function RestTimer({ defaultSec }: { defaultSec: number }) {
               ? `Resume rest timer, ${mmss} left`
               : 'Start rest timer'
         }
-        className="flex h-9 items-center gap-1 rounded-full px-3 font-semibold tabular-nums active:bg-neutral-100"
+        className="flex h-9 items-center gap-1 rounded-full px-3 font-semibold tabular-nums active:bg-surface-2"
       >
         <span>{running ? '⏸' : '▶'}</span>
         <span>{remaining > 0 ? mmss : 'Rest'}</span>
@@ -77,7 +77,7 @@ export function RestTimer({ defaultSec }: { defaultSec: number }) {
         <>
           <button
             onClick={() => setRemaining((r) => r + 30)}
-            className="rounded-full px-2 py-1 text-xs font-medium text-neutral-500 active:bg-neutral-100"
+            className="rounded-full px-2 py-1 text-xs font-medium text-ink-soft active:bg-surface-2"
           >
             +30s
           </button>
@@ -87,7 +87,7 @@ export function RestTimer({ defaultSec }: { defaultSec: number }) {
               setRunning(false);
             }}
             aria-label="Reset rest timer"
-            className="rounded-full px-1.5 py-1 text-xs text-neutral-400 active:bg-neutral-100"
+            className="rounded-full px-1.5 py-1 text-xs text-ink-faint active:bg-surface-2"
           >
             ✕
           </button>

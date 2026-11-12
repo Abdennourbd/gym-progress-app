@@ -56,14 +56,14 @@ export function ExercisesTab() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search exercises"
-        className="h-12 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-base outline-none focus:border-neutral-900"
+        className="h-12 w-full rounded-2xl border border-line-strong bg-surface px-4 text-base outline-none focus:border-accent"
       />
 
       {grouped.map(([muscle, list]) => {
         const meta = MUSCLES.find((m) => m.id === muscle);
         return (
           <section key={muscle}>
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
               {meta ? `${meta.emoji} ${meta.name}` : MUSCLE_NAMES[muscle] ?? muscle}
             </h2>
             <div className="flex flex-col gap-1.5">
@@ -71,15 +71,15 @@ export function ExercisesTab() {
                 <button
                   key={ex.id}
                   onClick={() => setEditingId(ex.id)}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left transition active:bg-neutral-100"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 text-left transition active:bg-surface-2"
                 >
                   <span className="min-w-0 flex-1 truncate font-medium">
                     {ex.name}
                     {ex.muscleIds.length > 1 && muscle !== ex.muscleIds[0] ? (
-                      <span className="ml-2 text-[10px] text-neutral-400">also</span>
+                      <span className="ml-2 text-[10px] text-ink-faint">also</span>
                     ) : null}
                   </span>
-                  <span className="shrink-0 text-xs tabular-nums text-neutral-400">
+                  <span className="shrink-0 text-xs tabular-nums text-ink-faint">
                     {ex.targetReps.min}–{ex.targetReps.max} reps · {ex.stepKg} kg step
                   </span>
                 </button>
@@ -90,7 +90,7 @@ export function ExercisesTab() {
       })}
 
       {!visible.length ? (
-        <p className="py-8 text-center text-sm text-neutral-400">
+        <p className="py-8 text-center text-sm text-ink-faint">
           {exercises.length
             ? 'Nothing matches that search.'
             : 'Add exercises from the Workout tab to see them here.'}
@@ -99,16 +99,16 @@ export function ExercisesTab() {
 
       {archived.length ? (
         <section>
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
             Archived · {archived.length}
           </h2>
           <div className="flex flex-col gap-1.5">
             {archived.map((ex) => (
               <div
                 key={ex.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-100 px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-line-strong bg-surface-2 px-4 py-3"
               >
-                <span className="min-w-0 flex-1 truncate text-sm text-neutral-500 line-through">
+                <span className="min-w-0 flex-1 truncate text-sm text-ink-soft line-through">
                   {ex.name}
                 </span>
                 <button
@@ -117,7 +117,7 @@ export function ExercisesTab() {
                     upsertExercise(restored);
                     scheduleExercisePush(restored);
                   }}
-                  className="shrink-0 text-sm font-semibold text-neutral-700"
+                  className="shrink-0 text-sm font-semibold text-ink"
                 >
                   Restore
                 </button>

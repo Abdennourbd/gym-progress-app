@@ -81,9 +81,9 @@ export function ProgressTab() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <MetricToggle value={metric} onChange={setMetric} />
           {latest !== null ? (
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-ink-soft">
               latest{' '}
-              <span className="font-bold tabular-nums text-neutral-900">
+              <span className="font-bold tabular-nums text-ink">
                 {latest.toFixed(0)}
                 {metric === 'volume' ? ' kg' : ''}
               </span>
@@ -95,12 +95,12 @@ export function ProgressTab() {
       <MuscleChips active={muscle} available={availableMuscles} onChange={setMuscle} />
 
       <div className="flex flex-col gap-4 px-4">
-        <section className="rounded-2xl border border-neutral-200 bg-white p-3.5">
+        <section className="rounded-2xl border border-line bg-surface p-3.5">
         <div className="mb-1 flex items-baseline justify-between gap-2">
           <h2 className="text-sm font-semibold">
             {muscle ? `${MUSCLE_NAMES[muscle] ?? muscle}` : 'Whole body'}
           </h2>
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-ink-faint">
             {metric === 'index' ? 'Overload Index' : 'Volume (kg moved)'}
           </p>
         </div>
@@ -113,7 +113,7 @@ export function ProgressTab() {
               trendMode={metric === 'index' || range === '3mo' ? 'average' : 'sum'}
               trendWindow={metric === 'index' ? 3 : range === '3mo' ? 4 : 7}
             />
-            <p className="mt-1 text-center text-[11px] text-neutral-400">
+            <p className="mt-1 text-center text-[11px] text-ink-faint">
               {metric === 'index'
                 ? 'One point per workout, the dashed line is the trend'
                 : range === '3mo'
@@ -123,8 +123,8 @@ export function ProgressTab() {
           </>
         ) : (
           <div className="flex h-60 flex-col items-center justify-center gap-1 text-center">
-            <p className="text-sm font-medium text-neutral-500">Nothing to chart yet</p>
-            <p className="max-w-56 text-xs text-neutral-400">
+            <p className="text-sm font-medium text-ink-soft">Nothing to chart yet</p>
+            <p className="max-w-56 text-xs text-ink-faint">
               Log a workout and your progress starts showing up here.
             </p>
           </div>
@@ -133,7 +133,7 @@ export function ProgressTab() {
 
       {!muscle ? (
         <section>
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
             By muscle · last {RANGE_LABEL[range]}
           </h2>
           <RankedMuscleList summaries={summaries} onSelect={setMuscle} />
@@ -141,7 +141,7 @@ export function ProgressTab() {
       ) : (
         <section>
           <div className="mb-2 flex items-center justify-between gap-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
               {MUSCLE_NAMES[muscle] ?? muscle} exercises
             </h2>
             <button
@@ -149,7 +149,7 @@ export function ProgressTab() {
                 setMuscle(null);
                 setOpenExerciseId(null);
               }}
-              className="text-xs font-medium text-neutral-500"
+              className="text-xs font-medium text-ink-soft"
             >
               Back to all
             </button>
@@ -162,25 +162,25 @@ export function ProgressTab() {
                 onClick={() =>
                   setOpenExerciseId((current) => (current === ex.id ? null : ex.id))
                 }
-                className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left transition active:bg-neutral-100"
+                className="rounded-xl border border-line bg-surface px-4 py-3 text-left transition active:bg-surface-2"
               >
                 <span className="font-semibold">{ex.name}</span>
-                <span className="ml-2 text-xs text-neutral-400">
+                <span className="ml-2 text-xs text-ink-faint">
                   {ex.targetReps.min}–{ex.targetReps.max} reps
                 </span>
               </button>
             ))}
             {!muscleExercises.length ? (
-              <p className="py-6 text-center text-sm text-neutral-400">
+              <p className="py-6 text-center text-sm text-ink-faint">
                 No exercises for this muscle yet.
               </p>
             ) : null}
           </div>
 
           {openExercise ? (
-            <div className="mt-3 rounded-2xl border border-neutral-200 bg-white p-3.5">
+            <div className="mt-3 rounded-2xl border border-line bg-surface p-3.5">
               <h3 className="mb-1 text-sm font-semibold">{openExercise.name}</h3>
-              <p className="mb-2 text-xs text-neutral-400">Estimated 1RM over time</p>
+              <p className="mb-2 text-xs text-ink-faint">Estimated 1RM over time</p>
               <ExerciseHistory exercise={openExercise} sessions={sessions} />
             </div>
           ) : null}
@@ -188,7 +188,7 @@ export function ProgressTab() {
       )}
 
       <section>
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
           Recent workouts
         </h2>
         <div className="flex flex-col gap-1.5">
@@ -200,10 +200,10 @@ export function ProgressTab() {
             return (
               <div
                 key={session.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-2.5"
+                className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-2.5"
               >
                 <span className="text-sm font-medium tabular-nums">{session.date}</span>
-                <span className="text-xs text-neutral-500">
+                <span className="text-xs text-ink-soft">
                   {session.entries.length}{' '}
                   {session.entries.length === 1 ? 'exercise' : 'exercises'}
                 </span>
@@ -214,7 +214,7 @@ export function ProgressTab() {
             );
           })}
           {!recentSessions.length ? (
-            <p className="py-6 text-center text-sm text-neutral-400">No workouts logged yet.</p>
+            <p className="py-6 text-center text-sm text-ink-faint">No workouts logged yet.</p>
           ) : null}
         </div>
       </section>

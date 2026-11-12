@@ -36,6 +36,7 @@ export const sessionSchema = z.object({
 export const settingsSchema = z.object({
   units: z.literal('kg'),
   restTimerSec: z.number().int().min(10).max(600),
+  theme: z.enum(['light', 'dark']).optional(),
   updatedAt: z.number().optional(),
 });
 

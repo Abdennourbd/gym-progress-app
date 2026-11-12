@@ -34,7 +34,7 @@ export function ExerciseEditor({
           value={name}
           onChange={(e) => setName(e.target.value)}
           aria-label="Exercise name"
-          className="h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-base outline-none focus:border-neutral-900"
+          className="h-14 w-full rounded-2xl border border-line-strong bg-surface px-4 text-base outline-none focus:border-accent"
         />
       </label>
 
@@ -47,7 +47,7 @@ export function ExerciseEditor({
             { label: 'Step kg', value: step, set: setStep },
           ] as const
         ).map((f) => (
-          <label key={f.label} className="flex flex-col gap-1 text-xs text-neutral-500">
+          <label key={f.label} className="flex flex-col gap-1 text-xs text-ink-soft">
             {f.label}
             <input
               type="number"
@@ -55,13 +55,13 @@ export function ExerciseEditor({
               aria-label={f.label}
               value={f.value}
               onChange={(e) => f.set(Number(e.target.value))}
-              className="h-12 rounded-xl border border-neutral-300 px-2 text-base tabular-nums text-neutral-900 outline-none focus:border-neutral-900"
+              className="h-12 rounded-xl border border-line-strong px-2 text-base tabular-nums text-ink outline-none focus:border-accent"
             />
           </label>
         ))}
       </div>
 
-      <p className="mb-4 text-xs leading-relaxed text-neutral-400">
+      <p className="mb-4 text-xs leading-relaxed text-ink-faint">
         Weight goes up once you reach the switch point. Your history is never deleted — an
         archived exercise still counts in every chart.
       </p>
@@ -78,7 +78,7 @@ export function ExerciseEditor({
           });
           onClose();
         }}
-        className="h-14 w-full rounded-2xl bg-neutral-900 text-base font-semibold text-white active:scale-[0.99]"
+        className="h-14 w-full rounded-2xl bg-accent text-base font-semibold text-accent-ink active:scale-[0.99]"
       >
         Save
       </button>
@@ -96,7 +96,7 @@ export function ExerciseEditor({
       ) : (
         <button
           onClick={() => setConfirmArchive(true)}
-          className="mt-1 h-11 w-full text-sm text-neutral-400"
+          className="mt-1 h-11 w-full text-sm text-ink-faint"
         >
           Archive exercise
         </button>

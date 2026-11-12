@@ -77,6 +77,44 @@ export async function saveSession(session: Session): Promise<void> {
   await store.set(KEYS.sessions, next);
 }
 
+/**
+ * Removes an exercise and any workout entries that pointed at it, so no
+ * history is left dangling.
+ */
+export async function deleteExercise(id: string): Promise<void> {
+  const store = getStore();
+
+  const exercises = (await store.get<Exercise[]>(KEYS.exercises)) ?? [];
+  await store.set(
+    KEYS.exercises,
+    exercises.filter((e) => e.id !== id),
+  );
+
+  const summaries = (await store.get<SessionSummary[]>(KEYS.sessions)) ?? [];
+  const emptied: string[] = [];
+
+  for (const summary of summaries) {
+    const session = await store.get<Session>(KEYS.session(summary.id));
+    if (!session) continue;
+
+    const entries = session.entries.filter((e) => e.exerciseId !== id);
+    if (entries.length === session.entries.length) continue;
+
+    if (!entries.length) {
+      emptied.push(session.id);
+      continue;
+    }
+
+    await store.set(KEYS.session(session.id), {
+      ...session,
+      entries,
+      updatedAt: Date.now(),
+    });
+  }
+
+  for (const sessionId of emptied) await deleteSession(sessionId);
+}
+
 export async function deleteSession(id: string): Promise<void> {
   const store = getStore();
 

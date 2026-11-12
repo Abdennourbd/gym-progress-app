@@ -225,6 +225,27 @@ test('the set count is a minimal one two three choice', async ({ page }) => {
   await expect(dialog.getByRole('button', { name: 'Close' })).toHaveCount(0);
 });
 
+test('dark mode can be switched on and off', async ({ page }) => {
+  await signIn(page);
+
+  await page.locator('nav').getByRole('button', { name: 'Exercises' }).click();
+  await expect(page.getByRole('heading', { name: 'Exercises' })).toBeVisible();
+
+  const theme = () => page.evaluate(() => document.documentElement.dataset.theme ?? '');
+
+  await page.getByRole('button', { name: 'Dark', exact: true }).click();
+  await expect.poll(theme).toBe('dark');
+
+  // The page really is dark, not just labelled as such.
+  const background = await page.evaluate(() =>
+    getComputedStyle(document.body).backgroundColor,
+  );
+  expect(background).not.toBe('rgb(250, 250, 250)');
+
+  await page.getByRole('button', { name: 'Light', exact: true }).click();
+  await expect.poll(theme).toBe('light');
+});
+
 test('the sheet is keyboard friendly', async ({ page }) => {
   await signIn(page);
 

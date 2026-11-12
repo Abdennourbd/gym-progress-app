@@ -16,7 +16,7 @@ export function RankedMuscleList({
 
   if (!rows.length) {
     return (
-      <p className="py-8 text-center text-sm text-neutral-400">
+      <p className="py-8 text-center text-sm text-ink-faint">
         No sessions in this range yet.
       </p>
     );
@@ -27,13 +27,13 @@ export function RankedMuscleList({
       {rows.map((row) => {
         const pct = row.changePct ?? 0;
         const colour =
-          pct > 0.5 ? 'text-emerald-600' : pct < -0.5 ? 'text-red-600' : 'text-neutral-400';
+          pct > 0.5 ? 'text-emerald-600' : pct < -0.5 ? 'text-red-600' : 'text-ink-faint';
 
         return (
           <button
             key={row.muscleId}
             onClick={() => onSelect(row.muscleId)}
-            className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-left transition active:bg-neutral-100"
+            className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5 text-left transition active:bg-surface-2"
           >
             <span className="w-24 shrink-0 truncate text-sm font-semibold">
               {MUSCLE_NAMES[row.muscleId] ?? row.muscleId}
