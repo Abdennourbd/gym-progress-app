@@ -198,6 +198,30 @@ test('counts the sets done and shows the running totals', async ({ page }) => {
   await expect(page.getByTestId('session-list').locator('button')).toHaveCount(2);
 });
 
+test('the set count is a minimal one two three choice', async ({ page }) => {
+  await signIn(page);
+
+  await openMuscle(page, 'back');
+  await pickExercise(page, 'Machine Rows');
+
+  const dialog = page.getByRole('dialog');
+  const sets = dialog.getByRole('button', { name: /^[123]$/ });
+  await expect(sets).toHaveCount(3);
+  await expect(dialog.getByRole('button', { name: '4' })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: '5' })).toHaveCount(0);
+
+  // One is the default, three is the most you can choose.
+  await expect(dialog.getByRole('button', { name: '1', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await dialog.getByRole('button', { name: '3', exact: true }).click();
+  await expect(dialog.getByRole('button', { name: '3', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+});
+
 test('the sheet is keyboard friendly', async ({ page }) => {
   await signIn(page);
 

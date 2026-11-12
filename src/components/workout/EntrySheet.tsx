@@ -13,7 +13,7 @@ export interface SheetValues {
   sets: number;
 }
 
-const SET_OPTIONS = [1, 2, 3, 4, 5];
+const SET_OPTIONS = [1, 2, 3];
 
 interface Props {
   open: boolean;
@@ -115,18 +115,18 @@ export function EntrySheet({
         </span>
       </button>
 
-      <div className="mb-5">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">
+      <div className="mb-5 flex items-center gap-3">
+        <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">
           Sets
-        </p>
-        <div className="flex gap-2">
+        </span>
+        <div className="flex gap-1.5">
           {SET_OPTIONS.map((n) => (
             <button
               key={n}
               type="button"
               onClick={() => onChange({ ...values, sets: n })}
               aria-pressed={values.sets === n}
-              className={`h-12 flex-1 rounded-2xl border text-base font-semibold tabular-nums transition active:scale-95 ${
+              className={`h-10 w-12 rounded-xl border text-sm font-semibold tabular-nums transition active:scale-95 ${
                 values.sets === n
                   ? 'border-neutral-900 bg-neutral-900 text-white'
                   : 'border-neutral-200 bg-white text-neutral-600'
