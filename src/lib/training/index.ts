@@ -12,12 +12,18 @@ export interface MuscleSummary {
   index: number | null;
   changePct: number | null;
   points: MusclePoint[];
-  bestExercise?: { exerciseId: string; name: string; score: number };
+  bestExercise?: {
+    exerciseId: string;
+    name: string;
+    score: number;
+    unit: 'kg' | 'reps';
+  };
 }
 
 interface DayEntry {
   exerciseId: string;
   score: number;
+  unit: 'kg' | 'reps';
 }
 
 /**
@@ -38,7 +44,11 @@ function entriesByDate(exercises: Exercise[], sessions: Session[]): Map<string, 
       const ex = byId.get(entry.exerciseId);
       if (!ex) continue;
       if (!isRealSet(entry)) continue;
-      list.push({ exerciseId: entry.exerciseId, score: strength(entry.weightKg, entry.reps) });
+      list.push({
+        exerciseId: entry.exerciseId,
+        score: strength(entry.weightKg, entry.reps),
+        unit: entry.weightKg > 0 ? 'kg' : 'reps',
+      });
     }
     if (list.length) out.set(session.date, list);
   }
@@ -137,7 +147,12 @@ export function muscleSummaries(
         const ex = exercises.find((e) => e.id === item.exerciseId);
         if (!ex) continue;
         if (!best || item.score > best.score) {
-          best = { exerciseId: item.exerciseId, name: ex.name, score: item.score };
+          best = {
+            exerciseId: item.exerciseId,
+            name: ex.name,
+            score: item.score,
+            unit: item.unit,
+          };
         }
       }
     }

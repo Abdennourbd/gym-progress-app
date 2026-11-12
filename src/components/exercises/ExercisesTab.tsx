@@ -64,7 +64,7 @@ export function ExercisesTab() {
         return (
           <section key={muscle}>
             <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
-              {meta ? `${meta.emoji} ${meta.name}` : MUSCLE_NAMES[muscle] ?? muscle}
+              {meta ? meta.name : MUSCLE_NAMES[muscle] ?? muscle}
             </h2>
             <div className="flex flex-col gap-1.5">
               {list.map((ex) => (

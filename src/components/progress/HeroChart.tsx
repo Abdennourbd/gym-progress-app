@@ -3,9 +3,8 @@
 import { useMemo } from 'react';
 import {
   Area,
-  Bar,
+  AreaChart,
   CartesianGrid,
-  ComposedChart,
   Line,
   ResponsiveContainer,
   Tooltip,
@@ -18,6 +17,7 @@ export interface ChartPoint {
   value: number | null;
 }
 
+/** A moving average across the last few sessions. */
 function movingAverage(values: number[], window: number): (number | null)[] {
   return values.map((_, i) => {
     const slice = values.slice(Math.max(0, i - window + 1), i + 1);
@@ -26,41 +26,22 @@ function movingAverage(values: number[], window: number): (number | null)[] {
   });
 }
 
-/** A rolling total, for volume where the trend is a week's work, not an average. */
-function movingSum(values: number[], window: number): (number | null)[] {
-  return values.map((_, i) => {
-    const slice = values.slice(Math.max(0, i - window + 1), i + 1);
-    if (!slice.length) return null;
-    return slice.reduce((a, b) => a + b, 0);
-  });
-}
-
 interface Props {
   points: ChartPoint[];
   label: string;
-  mode: 'index' | 'volume';
-  trendMode: 'average' | 'sum';
-  trendWindow: number;
 }
 
-export function HeroChart({ points, label, mode, trendMode, trendWindow }: Props) {
+export function HeroChart({ points, label }: Props) {
   const data = useMemo(() => {
-    if (mode === 'index') {
-      // Only the days you actually trained. Plotting the empty days in between
-      // leaves a chart made of disconnected dots.
-      const trained = points.filter((p) => p.value !== null);
-      const trend = movingAverage(
-        trained.map((p) => p.value as number),
-        trendWindow,
-      );
-      return trained.map((p, i) => ({ date: p.date, value: p.value, trend: trend[i] }));
-    }
-
-    const values = points.map((p) => p.value ?? 0);
-    const trend =
-      trendMode === 'sum' ? movingSum(values, trendWindow) : movingAverage(values, trendWindow);
-    return points.map((p, i) => ({ date: p.date, value: p.value, trend: trend[i] }));
-  }, [points, mode, trendMode, trendWindow]);
+    // Only the days you actually trained. Plotting the empty days in between
+    // leaves a chart made of disconnected dots.
+    const trained = points.filter((p) => p.value !== null);
+    const trend = movingAverage(
+      trained.map((p) => p.value as number),
+      3,
+    );
+    return trained.map((p, i) => ({ date: p.date, value: p.value, trend: trend[i] }));
+  }, [points]);
 
   const axis = {
     tick: { fontSize: 10, fill: 'var(--chart-axis)' },
@@ -71,7 +52,7 @@ export function HeroChart({ points, label, mode, trendMode, trendWindow }: Props
   return (
     <div className="h-60 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 8, right: 6, bottom: 0, left: -12 }}>
+        <AreaChart data={data} margin={{ top: 8, right: 6, bottom: 0, left: -12 }}>
           <defs>
             <linearGradient id="overloadFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--chart-ink)" stopOpacity="var(--chart-fill)" />
@@ -85,11 +66,7 @@ export function HeroChart({ points, label, mode, trendMode, trendWindow }: Props
             {...axis}
             minTickGap={18}
           />
-          <YAxis
-            domain={mode === 'index' ? [0, 100] : [0, 'auto']}
-            {...axis}
-            width={44}
-          />
+          <YAxis domain={[0, 100]} {...axis} width={44} />
           <Tooltip
             contentStyle={{
               borderRadius: 14,
@@ -102,44 +79,29 @@ export function HeroChart({ points, label, mode, trendMode, trendWindow }: Props
             labelFormatter={(d) => String(d)}
             formatter={(value, name) => [
               value === null || value === undefined ? '—' : Number(value).toFixed(0),
-              name === 'trend'
-                ? mode === 'volume'
-                  ? '7-day total'
-                  : '3-session trend'
-                : label,
+              name === 'trend' ? 'trend' : label,
             ]}
           />
-
-          {mode === 'index' ? (
-            <Area
-              type="monotone"
-              dataKey="value"
-              name={label}
-              stroke="var(--chart-ink)"
-              strokeWidth={2}
-              fill="url(#overloadFill)"
-              activeDot={{ r: 4, fill: 'var(--chart-ink)' }}
-            />
-          ) : (
-            <Bar
-              dataKey="value"
-              name={label}
-              fill="var(--chart-grid)"
-              radius={[3, 3, 0, 0]}
-            />
-          )}
-
+          <Area
+            type="monotone"
+            dataKey="value"
+            name={label}
+            stroke="var(--chart-ink)"
+            strokeWidth={2}
+            fill="url(#overloadFill)"
+            activeDot={{ r: 4, fill: 'var(--chart-ink)' }}
+          />
           <Line
             type="monotone"
             dataKey="trend"
             name="trend"
             stroke="var(--chart-ink)"
-            strokeWidth={mode === 'index' ? 1.5 : 2}
+            strokeWidth={1.5}
             strokeDasharray="4 3"
             dot={false}
             connectNulls
           />
-        </ComposedChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

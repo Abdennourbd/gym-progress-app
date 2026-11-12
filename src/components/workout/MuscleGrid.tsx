@@ -1,6 +1,7 @@
 'use client';
 
 import { MUSCLES, type Exercise } from '@/lib/types';
+import { MuscleIcon } from '../icons/MuscleIcon';
 
 interface Props {
   exercises: Exercise[];
@@ -32,7 +33,7 @@ export function MuscleGrid({ exercises, activeMuscle, onPick }: Props) {
                 : 'border-line bg-surface text-ink'
             }`}
           >
-            <span className="text-xl leading-none">{m.emoji}</span>
+            <MuscleIcon muscle={m.id} className="h-9 w-9" />
             <span className="mt-0.5 text-[13px] font-semibold">{m.name}</span>
             <span
               className={`text-[10px] ${active ? 'text-ink-faint' : 'text-ink-faint'}`}

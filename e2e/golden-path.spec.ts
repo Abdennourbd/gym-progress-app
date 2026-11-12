@@ -246,6 +246,47 @@ test('dark mode can be switched on and off', async ({ page }) => {
   await expect.poll(theme).toBe('light');
 });
 
+test('the weight and reps pickers stay stacked even with a wide number', async ({ page }) => {
+  await signIn(page);
+
+  await openMuscle(page, 'chest');
+  await pickExercise(page, 'Machine Press');
+
+  const dialog = page.getByRole('dialog');
+
+  // Pile on weight so the number gets wide.
+  for (let i = 0; i < 6; i += 1) {
+    await dialog.getByRole('button', { name: 'increase Weight' }).click();
+  }
+  await page.waitForTimeout(300);
+
+  const weight = await dialog.getByText('Weight', { exact: true }).boundingBox();
+  const reps = await dialog.getByText('Reps', { exact: true }).boundingBox();
+  expect(weight).not.toBeNull();
+  expect(reps).not.toBeNull();
+
+  // Weight sits above reps, and both are centred on the same line.
+  expect(weight!.y).toBeLessThan(reps!.y);
+  expect(Math.abs(weight!.x + weight!.width / 2 - (reps!.x + reps!.width / 2))).toBeLessThan(40);
+
+  // And the dialog still fits the screen without sideways scrolling.
+  const overflow = await dialog.evaluate(
+    (el) => el.scrollWidth - el.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
+});
+
+test('there is no volume metric, only strength', async ({ page }) => {
+  await signIn(page);
+
+  await page.locator('nav').getByRole('button', { name: 'Progress' }).click();
+  await expect(page.getByRole('heading', { name: 'Progress' })).toBeVisible();
+
+  await expect(page.getByRole('button', { name: 'Volume' })).toHaveCount(0);
+  await expect(page.getByText('Strength')).toBeVisible();
+  await expect(page.getByText(/kg moved/)).toHaveCount(0);
+});
+
 test('the sheet is keyboard friendly', async ({ page }) => {
   await signIn(page);
 

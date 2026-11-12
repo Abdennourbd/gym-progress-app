@@ -8,21 +8,21 @@
  */
 import { deflateSync } from 'node:zlib';
 import { writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const OUT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
 const BG = [17, 17, 17];
-const FG = [255, 255, 255];
+const FG = [250, 250, 250];
 
-// Normalised rectangles: [x0, y0, x1, y1]
+// A barbell, on a 32 unit grid, scaled to the icon.
 const PLATES = [
-  [0.12, 0.42, 0.2, 0.58],
-  [0.22, 0.32, 0.3, 0.68],
-  [0.3, 0.46, 0.7, 0.54],
-  [0.7, 0.32, 0.78, 0.68],
-  [0.8, 0.42, 0.88, 0.58],
+  [4, 12, 7, 20],
+  [7.5, 8.5, 11.5, 23.5],
+  [12, 14.4, 20, 17.6],
+  [20.5, 8.5, 24.5, 23.5],
+  [25, 12, 28, 20],
 ];
 
 function insideRoundedRect(x, y, r) {
@@ -33,8 +33,8 @@ function insideRoundedRect(x, y, r) {
   return dx * dx + dy * dy <= r * r;
 }
 
-function insideRect(x, y, [x0, y0, x1, y1]) {
-  return x >= x0 && x <= x1 && y >= y0 && y <= y1;
+function insideRect(x, y, r) {
+  return x >= r[0] && x <= r[2] && y >= r[1] && y <= r[3];
 }
 
 function renderPixel(x, y) {

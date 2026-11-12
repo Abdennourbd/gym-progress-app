@@ -4,10 +4,9 @@ import { useMemo, useState } from 'react';
 import { useStore } from '@/lib/client/store';
 import { eachDay, rangeStart, RANGE_LABEL, rollUpWeekly, toDateKey, type RangeKey } from '@/lib/training/dates';
 import { muscleIndexSeries, muscleSummaries, wholeBodyIndexSeries } from '@/lib/training/index';
-import { volumeSeries } from '@/lib/training/volume';
-import { MUSCLE_NAMES } from '@/lib/types';
+import { strength } from '@/lib/training/strength';
+import { MUSCLE_NAMES, type SessionEntry } from '@/lib/types';
 import { RangeSelector } from './RangeSelector';
-import { MetricToggle, type Metric } from './MetricToggle';
 import { MuscleChips } from './MuscleChips';
 import { HeroChart } from './HeroChart';
 import { RankedMuscleList } from './RankedMuscleList';
@@ -18,7 +17,6 @@ export function ProgressTab() {
   const sessions = useStore((s) => s.sessions);
 
   const [range, setRange] = useState<RangeKey>('30d');
-  const [metric, setMetric] = useState<Metric>('index');
   const [muscle, setMuscle] = useState<string | null>(null);
   const [openExerciseId, setOpenExerciseId] = useState<string | null>(null);
 
@@ -30,26 +28,15 @@ export function ProgressTab() {
   );
 
   const chartPoints = useMemo(() => {
-    let points: { date: string; value: number | null }[];
-
-    if (metric === 'volume') {
-      points = volumeSeries(muscle, exercises, sessions, dates).map((p) => ({
-        date: p.date,
-        value: p.volume,
-      }));
-    } else {
-      const series = muscle
-        ? muscleIndexSeries(muscle, exercises, sessions, dates)
-        : wholeBodyIndexSeries(exercises, sessions, dates);
-      points = series.map((p) => ({ date: p.date, value: p.index }));
-    }
+    const series = muscle
+      ? muscleIndexSeries(muscle, exercises, sessions, dates)
+      : wholeBodyIndexSeries(exercises, sessions, dates);
+    const points = series.map((p) => ({ date: p.date, value: p.index }));
 
     // Over three months daily points are too noisy to read, so they collapse
     // into weekly buckets.
-    return range === '3mo'
-      ? rollUpWeekly(points, metric === 'volume' ? 'sum' : 'average')
-      : points;
-  }, [metric, muscle, range, exercises, sessions, dates]);
+    return range === '3mo' ? rollUpWeekly(points, 'average') : points;
+  }, [muscle, range, exercises, sessions, dates]);
 
   const summaries = useMemo(
     () => muscleSummaries(exercises, sessions, dates),
@@ -79,13 +66,12 @@ export function ProgressTab() {
         <RangeSelector value={range} onChange={setRange} />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <MetricToggle value={metric} onChange={setMetric} />
+          <p className="text-sm font-semibold">Strength</p>
           {latest !== null ? (
             <p className="text-sm text-ink-soft">
               latest{' '}
               <span className="font-bold tabular-nums text-ink">
                 {latest.toFixed(0)}
-                {metric === 'volume' ? ' kg' : ''}
               </span>
             </p>
           ) : null}
@@ -100,25 +86,18 @@ export function ProgressTab() {
           <h2 className="text-sm font-semibold">
             {muscle ? `${MUSCLE_NAMES[muscle] ?? muscle}` : 'Whole body'}
           </h2>
-          <p className="text-xs text-ink-faint">
-            {metric === 'index' ? 'Overload Index' : 'Volume (kg moved)'}
-          </p>
+          <p className="text-xs text-ink-faint">Overload Index, 0 to 100</p>
         </div>
         {hasData ? (
           <>
-            <HeroChart
-              points={chartPoints}
-              label={metric === 'index' ? 'Index' : 'kg'}
-              mode={metric}
-              trendMode={metric === 'index' || range === '3mo' ? 'average' : 'sum'}
-              trendWindow={metric === 'index' ? 3 : range === '3mo' ? 4 : 7}
-            />
+            <HeroChart points={chartPoints} label="Strength" />
             <p className="mt-1 text-center text-[11px] text-ink-faint">
-              {metric === 'index'
-                ? 'One point per workout, the dashed line is the trend'
-                : range === '3mo'
-                  ? 'Each bar is a week, the dashed line is the 4 week average'
-                  : 'Each bar is a day, the dashed line is the last 7 days'}
+              One point per workout, the dashed line is the trend
+            </p>
+            <p className="mt-2 rounded-xl bg-surface-2 px-3 py-2 text-[11px] leading-relaxed text-ink-soft">
+              Each set becomes an estimated 1RM: weight × (1 + reps ÷ 30). That is
+              scored against your best in the last 90 days, so 100 means you are
+              at your strongest and anything below is how far off it you are.
             </p>
           </>
         ) : (
@@ -136,6 +115,13 @@ export function ProgressTab() {
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
             By muscle · last {RANGE_LABEL[range]}
           </h2>
+          <div className="mb-1.5 flex gap-3 px-3.5 text-[10px] uppercase tracking-wide text-ink-faint">
+            <span className="w-24">muscle</span>
+            <span className="w-14">change</span>
+            <span className="flex-1" />
+            <span>best set</span>
+            <span className="w-9 text-right">index</span>
+          </div>
           <RankedMuscleList summaries={summaries} onSelect={setMuscle} />
         </section>
       ) : (
@@ -193,10 +179,15 @@ export function ProgressTab() {
         </h2>
         <div className="flex flex-col gap-1.5">
           {recentSessions.map((session) => {
-            const volume = session.entries.reduce(
-              (sum, e) => sum + e.weightKg * e.reps,
+            const sets = session.entries.reduce(
+              (sum, e) => sum + (e.sets ?? 1),
               0,
             );
+            const best = session.entries.reduce((top, e) => {
+              const score = strength(e.weightKg, e.reps);
+              return score > top.score ? { score, entry: e } : top;
+            }, { score: 0, entry: null as SessionEntry | null });
+
             return (
               <div
                 key={session.id}
@@ -207,8 +198,11 @@ export function ProgressTab() {
                   {session.entries.length}{' '}
                   {session.entries.length === 1 ? 'exercise' : 'exercises'}
                 </span>
-                <span className="text-sm font-semibold tabular-nums">
-                  {volume.toLocaleString()} kg
+                <span className="text-xs tabular-nums text-ink-soft">{sets} sets</span>
+                <span className="w-20 text-right text-sm font-semibold tabular-nums">
+                  {best.entry
+                    ? `${strength(best.entry.weightKg, best.entry.reps).toFixed(1)} kg`
+                    : '—'}
                 </span>
               </div>
             );

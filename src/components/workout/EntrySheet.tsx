@@ -132,7 +132,9 @@ export function EntrySheet({
         </span>
       </button>
 
-      <div className="mb-6 flex flex-wrap justify-center gap-x-4 gap-y-6">
+      {/* Always one above the other, so a wide number like 140.5 can never
+          push the layout sideways. */}
+      <div className="mb-6 flex flex-col items-center gap-6">
         <Steppers
           label="Weight"
           unit="kg"

@@ -1,6 +1,7 @@
 'use client';
 
 import { MUSCLES } from '@/lib/types';
+import { MuscleIcon } from '../icons/MuscleIcon';
 
 export function MuscleChips({
   active,
@@ -37,7 +38,8 @@ export function MuscleChips({
             onClick={() => onChange(m.id)}
             className={chipClass(active === m.id)}
           >
-            {m.emoji} {m.name}
+            <MuscleIcon muscle={m.id} className="h-4 w-4" />
+            {m.name}
           </button>
         ))}
       </div>

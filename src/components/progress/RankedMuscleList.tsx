@@ -42,7 +42,13 @@ export function RankedMuscleList({
               {pct > 0.5 ? '▲' : pct < -0.5 ? '▼' : '='} {Math.abs(pct).toFixed(0)}%
             </span>
             <span className="flex-1" />
-            <span className="shrink-0 text-sm font-bold tabular-nums">
+            {row.bestExercise ? (
+              <span className="shrink-0 text-sm tabular-nums text-ink-soft">
+                {row.bestExercise.score.toFixed(row.bestExercise.unit === 'kg' ? 1 : 0)}{' '}
+                {row.bestExercise.unit}
+              </span>
+            ) : null}
+            <span className="w-9 shrink-0 text-right text-sm font-bold tabular-nums">
               {row.index?.toFixed(0)}
             </span>
           </button>

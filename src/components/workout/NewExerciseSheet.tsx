@@ -6,6 +6,7 @@ import { MUSCLES, MUSCLE_NAMES, type Exercise } from '@/lib/types';
 import { useStore } from '@/lib/client/store';
 import { scheduleExercisePush } from '@/lib/client/sync';
 import { Sheet } from '../Sheet';
+import { MuscleIcon } from '../icons/MuscleIcon';
 
 interface Props {
   open: boolean;
@@ -93,7 +94,8 @@ export function NewExerciseSheet({ open, muscleId, onClose, onCreated }: Props) 
                   : 'border-line bg-surface text-ink-soft'
               }`}
             >
-              {m.emoji} {MUSCLE_NAMES[m.id]}
+              <MuscleIcon muscle={m.id} className="h-4 w-4" />
+              {MUSCLE_NAMES[m.id]}
             </button>
           ))}
         </div>

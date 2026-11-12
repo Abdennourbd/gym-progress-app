@@ -1,11 +1,13 @@
 'use client';
 
+import { ExercisesIcon, ProgressIcon, WorkoutIcon } from './icons/AppIcons';
+
 export type TabKey = 'workout' | 'progress' | 'exercises';
 
-const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'workout', label: 'Workout', icon: '🏋️' },
-  { key: 'progress', label: 'Progress', icon: '📈' },
-  { key: 'exercises', label: 'Exercises', icon: '📋' },
+const TABS: { key: TabKey; label: string; Icon: typeof WorkoutIcon }[] = [
+  { key: 'workout', label: 'Workout', Icon: WorkoutIcon },
+  { key: 'progress', label: 'Progress', Icon: ProgressIcon },
+  { key: 'exercises', label: 'Exercises', Icon: ExercisesIcon },
 ];
 
 export function TabBar({
@@ -26,7 +28,7 @@ export function TabBar({
             active === tab.key ? 'text-ink' : 'text-ink-faint'
           }`}
         >
-          <span className="text-xl leading-none">{tab.icon}</span>
+          <tab.Icon className="h-6 w-6" />
           <span className={active === tab.key ? 'font-semibold' : 'font-medium'}>
             {tab.label}
           </span>
