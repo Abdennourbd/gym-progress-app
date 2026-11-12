@@ -15,8 +15,7 @@ interface Props {
 }
 
 export function NewExerciseSheet({ open, muscleId, onClose, onCreated }: Props) {
-  const exercises = useStore((s) => s.exercises);
-  const setExercises = useStore((s) => s.setExercises);
+  const upsertExercise = useStore((s) => s.upsertExercise);
 
   const [name, setName] = useState('');
   const [muscle, setMuscle] = useState(muscleId ?? 'chest');
@@ -51,8 +50,8 @@ export function NewExerciseSheet({ open, muscleId, onClose, onCreated }: Props) 
       updatedAt: Date.now(),
     };
 
-    setExercises([...exercises, exercise]);
-    scheduleExercisePush();
+    upsertExercise(exercise);
+    scheduleExercisePush(exercise);
 
     setName('');
 

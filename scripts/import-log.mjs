@@ -86,7 +86,7 @@ function build() {
     createdAt: STARTED_AT,
   }));
 
-  const entries = LOG.map(([name, , weightKg, reps], i) => ({
+  const entries = LOG.map(([, , weightKg, reps], i) => ({
     id: randomUUID(),
     exerciseId: exercises[i].id,
     weightKg,

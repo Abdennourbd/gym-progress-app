@@ -4,6 +4,7 @@ import { api, UnauthorizedError } from './api';
 import { useStore } from './store';
 import { LOCAL_KEYS, writeLocal } from './db';
 import { mergeAppState } from '@/lib/training/merge';
+import type { Exercise } from '@/lib/types';
 
 let exerciseTimer: ReturnType<typeof setTimeout> | null = null;
 let sessionTimer: ReturnType<typeof setTimeout> | null = null;
@@ -52,16 +53,21 @@ export async function pullRemote(): Promise<void> {
   }
 }
 
-export function scheduleExercisePush(): void {
+/**
+ * Pushes a single exercise.
+ *
+ * The whole collection is never sent from the client, because a client with
+ * a stale view would then overwrite exercises it has never seen.
+ */
+export function scheduleExercisePush(exercise: Exercise): void {
   if (exerciseTimer) clearTimeout(exerciseTimer);
   exerciseTimer = setTimeout(async () => {
-    const store = useStore.getState();
     try {
-      await api.putExercises(store.exercises);
-      store.setSyncState('idle');
+      await api.putExercise(exercise);
+      useStore.getState().setSyncState('idle');
     } catch (error) {
       if (error instanceof UnauthorizedError) throw error;
-      store.setSyncState(offlineState());
+      useStore.getState().setSyncState(offlineState());
     }
   }, 1500);
 }

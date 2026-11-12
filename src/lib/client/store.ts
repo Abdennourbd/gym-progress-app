@@ -16,6 +16,7 @@ export interface Store {
   syncState: SyncState;
 
   hydrate: () => Promise<void>;
+  upsertExercise: (exercise: Exercise) => void;
   setExercises: (next: Exercise[]) => void;
   upsertSession: (session: Session) => void;
   removeSession: (id: string) => void;
@@ -41,6 +42,14 @@ export const useStore = create<Store>((set, get) => ({
       readLocal<string | null>(LOCAL_KEYS.activeSession, null),
     ]);
     set({ exercises, sessions, settings, activeSessionId, hydrated: true });
+  },
+
+  upsertExercise: (exercise) => {
+    const exercises = get().exercises.filter((e) => e.id !== exercise.id);
+    exercises.push(exercise);
+    exercises.sort((a, b) => a.createdAt - b.createdAt);
+    set({ exercises });
+    void writeLocal(LOCAL_KEYS.exercises, exercises);
   },
 
   setExercises: (next) => {

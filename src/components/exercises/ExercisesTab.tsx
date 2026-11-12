@@ -9,7 +9,7 @@ import { SettingsPanel } from './SettingsPanel';
 
 export function ExercisesTab() {
   const exercises = useStore((s) => s.exercises);
-  const setExercises = useStore((s) => s.setExercises);
+  const upsertExercise = useStore((s) => s.upsertExercise);
   const [query, setQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -85,18 +85,13 @@ export function ExercisesTab() {
           exercise={editing}
           onClose={() => setEditingId(null)}
           onSave={(next) => {
-            setExercises(exercises.map((e) => (e.id === next.id ? next : e)));
-            scheduleExercisePush();
+            upsertExercise(next);
+            scheduleExercisePush(next);
           }}
           onArchive={() => {
-            setExercises(
-              exercises.map((e) =>
-                e.id === editing.id
-                  ? { ...e, archivedAt: Date.now(), updatedAt: Date.now() }
-                  : e,
-              ),
-            );
-            scheduleExercisePush();
+            const archived = { ...editing, archivedAt: Date.now(), updatedAt: Date.now() };
+            upsertExercise(archived);
+            scheduleExercisePush(archived);
           }}
         />
       ) : null}

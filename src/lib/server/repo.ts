@@ -2,6 +2,7 @@ import type { AppState, Exercise, Session, Settings } from '@/lib/types';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import { KEYS } from './redis';
 import { getStore } from './store';
+import { mergeExercises } from '@/lib/training/merge';
 
 interface SessionSummary {
   id: string;
@@ -29,8 +30,26 @@ export async function loadState(): Promise<AppState> {
   };
 }
 
+/**
+ * Writes a set of exercises, merging them into the collection rather than
+ * replacing it. An exercise is never removed by a write, only archived, so no
+ * client can delete another client's exercises by sending a list it has not
+ * seen.
+ */
 export async function saveExercises(exercises: Exercise[]): Promise<void> {
-  await getStore().set(KEYS.exercises, exercises);
+  const store = getStore();
+  const existing = (await store.get<Exercise[]>(KEYS.exercises)) ?? [];
+  await store.set(KEYS.exercises, mergeExercises(existing, exercises));
+}
+
+/**
+ * Writes one exercise into the collection, leaving every other exercise
+ * alone.
+ */
+export async function saveExercise(exercise: Exercise): Promise<void> {
+  const store = getStore();
+  const existing = (await store.get<Exercise[]>(KEYS.exercises)) ?? [];
+  await store.set(KEYS.exercises, mergeExercises(existing, [exercise]));
 }
 
 export async function saveSession(session: Session): Promise<void> {

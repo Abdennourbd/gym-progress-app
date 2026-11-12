@@ -32,6 +32,11 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ exercises }),
     }),
+  putExercise: (exercise: Exercise) =>
+    request<{ ok: true }>(`/api/exercises/${exercise.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(exercise),
+    }),
   putSession: (session: Session) =>
     request<{ ok: true }>(`/api/sessions/${session.id}`, {
       method: 'PUT',
