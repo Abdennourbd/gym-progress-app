@@ -59,6 +59,8 @@ export function ExercisesTab() {
         className="h-12 w-full rounded-2xl border border-line-strong bg-surface px-4 text-base outline-none focus:border-accent"
       />
 
+      <SettingsPanel />
+
       {grouped.map(([muscle, list]) => {
         const meta = MUSCLES.find((m) => m.id === muscle);
         return (
@@ -126,8 +128,6 @@ export function ExercisesTab() {
           </div>
         </section>
       ) : null}
-
-      <SettingsPanel />
 
       {editing ? (
         <ExerciseEditor

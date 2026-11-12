@@ -91,17 +91,25 @@ export async function saveSession(session: Session): Promise<void> {
 }
 
 /**
- * Removes an exercise and any workout entries that pointed at it, so no
- * history is left dangling.
+ * Archives an exercise and any workout entries that pointed at it.
+ *
+ * It archives rather than removes. A record that is really gone would be put
+ * back the moment a device with an older copy of the list reconnects, and a
+ * silent reappearance is much worse than a hidden one. An archived exercise
+ * keeps its history in every chart and can be restored.
  */
-export async function deleteExercise(id: string): Promise<void> {
+export async function archiveExercise(id: string): Promise<void> {
   const store = getStore();
 
   const exercises = (await store.get<Exercise[]>(KEYS.exercises)) ?? [];
-  await store.set(
-    KEYS.exercises,
-    exercises.filter((e) => e.id !== id),
+  const target = exercises.find((e) => e.id === id);
+  if (!target) return;
+
+  const now = Date.now();
+  const next = exercises.map((e) =>
+    e.id === id ? { ...e, archivedAt: now, updatedAt: now } : e,
   );
+  await store.set(KEYS.exercises, next);
 
   const summaries = (await store.get<SessionSummary[]>(KEYS.sessions)) ?? [];
   const emptied: string[] = [];
@@ -121,7 +129,7 @@ export async function deleteExercise(id: string): Promise<void> {
     await store.set(KEYS.session(session.id), {
       ...session,
       entries,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
   }
 
