@@ -93,6 +93,9 @@ export function WorkoutTab() {
     } else if (sheet.entryId && session) {
       updateEntryInSession(session.id, sheet.entryId, values);
     }
+    // Back to the workout, where the set you just logged is on top and the
+    // muscle grid is ready for the next one.
+    setView({ kind: 'home' });
   };
 
   const sheetExercise = sheet ? (byId.get(sheet.exerciseId) ?? null) : null;

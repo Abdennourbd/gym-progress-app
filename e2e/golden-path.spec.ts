@@ -55,6 +55,10 @@ test('picks an exercise from the muscle grid and adds it on done', async ({ page
 
   // It is now in the workout.
   await expect(page.getByText('72.5 kg × 8')).toBeVisible();
+
+  // And it drops back to the workout with the grid ready for the next one.
+  await expect(page.getByTestId('muscle-grid')).toBeVisible();
+  await expect(page.getByTestId('exercise-list')).toHaveCount(0);
 });
 
 test('the muscle grid has no recent section', async ({ page }) => {
