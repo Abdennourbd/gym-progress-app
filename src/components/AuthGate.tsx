@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api } from '@/lib/client/api';
+import { api, UnauthorizedError } from '@/lib/client/api';
 import { useStore } from '@/lib/client/store';
+import { hasLocalData } from '@/lib/client/db';
 import {
   markSignedIn,
   markSignedOut,
@@ -18,27 +19,40 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    fetch('/api/auth/session')
-      .then((r) => r.json())
-      .then((d: { authenticated: boolean }) => {
-        if (d.authenticated) {
+    let cancelled = false;
+
+    const check = async () => {
+      try {
+        const res = await fetch('/api/auth/session');
+        const data = (await res.json()) as { authenticated: boolean };
+        if (cancelled) return;
+
+        if (data.authenticated) {
           markSignedIn();
           setStatus('in');
         } else {
           markSignedOut();
           setStatus('out');
         }
-      })
-      .catch(() => {
-        // The network is gone. If we were signed in, let the app run on the
-        // copy on this device rather than locking the user out mid-workout.
-        if (wasSignedIn()) {
+      } catch {
+        if (cancelled) return;
+        // No network. If this device already holds training data it was signed
+        // in before, so let the app run on what is here rather than locking
+        // the user out mid-workout.
+        if (wasSignedIn() || (await hasLocalData())) {
+          markSignedIn();
           useStore.getState().setSyncState('offline');
           setStatus('in');
         } else {
           setStatus('out');
         }
-      });
+      }
+    };
+
+    void check();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // The server says the session is gone. Lock, even if we are offline.
@@ -81,8 +95,18 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         await api.login(email, password);
         markSignedIn();
         setStatus('in');
-      } catch {
-        setError('Wrong email or password.');
+      } catch (err) {
+        if (err instanceof UnauthorizedError) {
+          setError('Wrong email or password.');
+        } else if (await hasLocalData()) {
+          // No signal, but this device already has your workouts on it. Let him
+          // in on the local copy rather than pretending the password is wrong.
+          markSignedIn();
+          useStore.getState().setSyncState('offline');
+          setStatus('in');
+        } else {
+          setError("Can't reach the server. Check your connection and try again.");
+        }
       } finally {
         setBusy(false);
       }

@@ -29,3 +29,18 @@ export const LOCAL_KEYS = {
   settings: 'gym:settings',
   activeSession: 'gym:activeSession',
 } as const;
+
+/**
+ * Whether this device already holds training data.
+ *
+ * Used to tell "you were never signed in" apart from "you were signed in but
+ * there is no signal right now". Without it, opening the app with no signal
+ * would show a login screen you cannot get past.
+ */
+export async function hasLocalData(): Promise<boolean> {
+  const [exercises, sessions] = await Promise.all([
+    readLocal<unknown[]>(LOCAL_KEYS.exercises, []),
+    readLocal<unknown[]>(LOCAL_KEYS.sessions, []),
+  ]);
+  return exercises.length > 0 || sessions.length > 0;
+}

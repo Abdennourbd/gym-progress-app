@@ -1,4 +1,12 @@
-const CACHE = 'gym-shell-v1';
+/*
+ * Makes the app work with no signal.
+ *
+ * The shell is cached so the app opens offline, and every request falls back
+ * to the cache when the network is gone. Bump the version to throw away a
+ * stale shell.
+ */
+const VERSION = 'gym-shell-v2';
+const CACHE = VERSION;
 const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -27,30 +35,42 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // API responses: network first, cache as a fallback so the last known
-  // state is still readable with no signal.
+  // The api answers from the network when it can, and from the last known
+  // copy when it cannot.
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(req)
         .then((res) => {
           const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
+          void caches.open(CACHE).then((c) => c.put(req, copy));
           return res;
         })
-        .catch(() => caches.match(req)),
+        .catch(async () => {
+          const cached = await caches.match(req);
+          if (cached) return cached;
+          return Response.error();
+        }),
     );
     return;
   }
 
-  // App shell: network first so a new deploy is picked up, cache fallback so
-  // the app still opens in a basement with no signal.
+  // The shell is served from the network when it can, so a new version is
+  // picked up straight away, and from the cache when it cannot.
   event.respondWith(
     fetch(req)
       .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy));
+        if (res.ok) {
+          const copy = res.clone();
+          void caches.open(CACHE).then((c) => c.put(req, copy));
+        }
         return res;
       })
-      .catch(() => caches.match(req).then((r) => r || caches.match('/'))),
+      .catch(async () => {
+        const cached = await caches.match(req);
+        if (cached) return cached;
+        const shell = await caches.match('/');
+        if (shell) return shell;
+        return Response.error();
+      }),
   );
 });

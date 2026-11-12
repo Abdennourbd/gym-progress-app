@@ -354,3 +354,50 @@ test('keeps working offline and syncs when the signal comes back', async ({ page
 
   await expect.poll(countSessions, { timeout: 15000 }).toBeGreaterThan(before);
 });
+
+test('opens offline even when the sign in marker is missing', async ({ page, context }) => {
+  await signIn(page);
+  await page.waitForFunction(() => navigator.serviceWorker?.controller !== null, {
+    timeout: 15000,
+  });
+
+  // Forget that we were signed in. The data on this device should still be
+  // enough to open the app with no signal.
+  await page.evaluate(() => window.localStorage.removeItem('gym:signed-in'));
+
+  await context.setOffline(true);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1500);
+
+  await expect(page.getByRole('heading', { name: 'Workout' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sign in' })).toHaveCount(0);
+});
+
+test('a network failure is not reported as a wrong password', async ({ page, context }) => {
+  await signIn(page);
+  await page.waitForFunction(() => navigator.serviceWorker?.controller !== null, {
+    timeout: 15000,
+  });
+
+  // Wipe the device so there is nothing local to fall back on.
+  await page.evaluate(async () => {
+    window.localStorage.clear();
+    await new Promise<void>((resolve) => {
+      const req = indexedDB.deleteDatabase('keyval-store');
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
+      req.onblocked = () => resolve();
+    });
+  });
+
+  await context.setOffline(true);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
+
+  await page.getByPlaceholder('Email').fill('someone@example.com');
+  await page.getByPlaceholder('Password').fill('whatever');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+
+  await expect(page.getByText(/Can't reach the server/)).toBeVisible();
+  await expect(page.getByText('Wrong email or password.')).toHaveCount(0);
+});
