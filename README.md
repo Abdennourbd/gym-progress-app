@@ -136,6 +136,17 @@ npm run test:e2e  # real browser: log a set, reload, still there
 
 `npm run test:e2e` needs a browser: `npx playwright install chromium`.
 
+## Importing a training log
+
+`scripts/import-log.mjs` turns a written log into exercises and one session.
+It matches exercises by name, so running it twice does not duplicate anything.
+
+```bash
+GYM_EMAIL=you@example.com E2E_PASSWORD=your-password node scripts/import-log.mjs
+```
+
+Edit the `LOG` array at the top of that file to change what gets imported.
+
 ## Layout
 
 ```
