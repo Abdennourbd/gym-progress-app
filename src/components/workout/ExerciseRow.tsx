@@ -34,6 +34,9 @@ export function ExerciseRow({ exercise, entry, previous, onOpen }: Props) {
         </div>
         <div className="mt-0.5 text-sm tabular-nums text-neutral-500">
           {entry.weightKg} kg × {entry.reps}
+          {entry.sets > 1 ? (
+            <span className="text-neutral-400"> · {entry.sets} sets</span>
+          ) : null}
         </div>
       </div>
 

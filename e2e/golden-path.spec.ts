@@ -148,6 +148,35 @@ test('still has the set after a reload', async ({ page }) => {
   await expect(page.getByText('61.5 kg × 11')).toBeVisible();
 });
 
+test('counts the sets done and shows the running totals', async ({ page }) => {
+  await signIn(page);
+
+  await openMuscle(page, 'back');
+  await pickExercise(page, 'Machine Rows');
+
+  // Three sets of the same weight and reps.
+  await page.getByRole('dialog').getByRole('button', { name: '3', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
+
+  // The row shows the set count.
+  await expect(page.getByText('· 3 sets')).toBeVisible();
+
+  // And the workout totals count the exercise and all three sets.
+  await expect(page.getByText('exercise', { exact: true })).toBeVisible();
+  const totals = page.locator('header');
+  await expect(totals).toContainText('1');
+  await expect(totals).toContainText('3');
+
+  // A second exercise adds one more exercise and its own sets.
+  await openMuscle(page, 'back');
+  await pickExercise(page, 'T-Bar Row');
+  await page.getByRole('dialog').getByRole('button', { name: '2', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
+
+  await expect(page.getByText('· 2 sets')).toBeVisible();
+  await expect(totals).toContainText('exercises');
+});
+
 test('the sheet is keyboard friendly', async ({ page }) => {
   await signIn(page);
 

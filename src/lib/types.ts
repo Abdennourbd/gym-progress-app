@@ -33,6 +33,8 @@ export interface SessionEntry {
   exerciseId: string;
   weightKg: number;
   reps: number;
+  /** How many sets were done at this weight and reps. */
+  sets: number;
   completedAt: number;
 }
 

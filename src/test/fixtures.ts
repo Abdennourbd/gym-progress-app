@@ -26,6 +26,7 @@ export function makeEntry(over: Partial<SessionEntry> = {}): SessionEntry {
     exerciseId: 'ex-1',
     weightKg: 80,
     reps: 8,
+    sets: 1,
     completedAt: 1_700_000_000_000,
     ...over,
   };

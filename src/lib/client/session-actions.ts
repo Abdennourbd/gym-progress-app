@@ -31,7 +31,7 @@ export function startSession(): string {
 export function addEntryToSession(
   sessionId: string,
   exerciseId: string,
-  values?: { weightKg: number; reps: number },
+  values?: { weightKg: number; reps: number; sets: number },
 ): void {
   const store = useStore.getState();
   const session = store.sessions.find((s) => s.id === sessionId);
@@ -49,6 +49,7 @@ export function addEntryToSession(
     exerciseId,
     weightKg: values?.weightKg ?? previous?.weightKg ?? 0,
     reps: values?.reps ?? previous?.reps ?? exercise?.targetReps.min ?? 0,
+    sets: values?.sets ?? 1,
     completedAt: Date.now(),
   };
 

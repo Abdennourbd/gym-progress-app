@@ -20,6 +20,7 @@ export const entrySchema = z.object({
   exerciseId: z.string().min(1),
   weightKg: z.number().min(0).max(1000),
   reps: z.number().int().min(0).max(1000),
+  sets: z.number().int().min(1).max(20).default(1),
   completedAt: z.number(),
 });
 

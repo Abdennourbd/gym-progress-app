@@ -39,4 +39,19 @@ describe('volumeSeries', () => {
     ];
     expect(volumeSeries('chest', [bench], sessions, ['2026-01-01'])[0].volume).toBe(1200);
   });
+
+  it('counts every set of a set', () => {
+    const sessions = [
+      makeSession('2026-01-01', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 100, reps: 10, sets: 3 }),
+      ]),
+    ];
+    expect(volumeSeries('chest', [bench], sessions, ['2026-01-01'])[0].volume).toBe(3000);
+  });
+
+  it('treats a missing set count as one', () => {
+    const entry = makeEntry({ exerciseId: 'ex-bench', weightKg: 100, reps: 10 });
+    const sessions = [makeSession('2026-01-01', [{ ...entry, sets: undefined } as never])];
+    expect(volumeSeries('chest', [bench], sessions, ['2026-01-01'])[0].volume).toBe(1000);
+  });
 });

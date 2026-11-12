@@ -49,6 +49,11 @@ export function WorkoutTab() {
     [session],
   );
 
+  const totalSets = useMemo(
+    () => (session ? session.entries.reduce((sum, e) => sum + (e.sets ?? 1), 0) : 0),
+    [session],
+  );
+
   /** The previous set for an exercise, ignoring the workout being edited. */
   const previousFor = (exerciseId: string) =>
     lastSetBefore(exerciseId, sessions, session?.id ?? '');
@@ -61,6 +66,7 @@ export function WorkoutTab() {
       exerciseId,
       weightKg: previous?.weightKg ?? 0,
       reps: previous?.reps ?? exercise?.targetReps.min ?? 0,
+      sets: 1,
     });
   };
 
@@ -73,6 +79,7 @@ export function WorkoutTab() {
       entryId: entry.id,
       weightKg: entry.weightKg,
       reps: entry.reps,
+      sets: entry.sets ?? 1,
     });
   };
 
@@ -102,30 +109,49 @@ export function WorkoutTab() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight">Workout</h1>
-          <p className="truncate text-sm text-neutral-500">
-            {session
-              ? `${session.date} · ${session.entries.length} ${session.entries.length === 1 ? 'exercise' : 'exercises'}`
-              : 'Pick a muscle to start'}
-          </p>
+      <header className="flex flex-col gap-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight">Workout</h1>
+            <p className="truncate text-sm text-neutral-500">
+              {session ? session.date : 'Pick a muscle to start'}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <RestTimer defaultSec={settings.restTimerSec} />
+            {session ? (
+              <button
+                onClick={() => {
+                  finishSessionNow(session.id);
+                  setActiveSessionId(null);
+                  setView({ kind: 'home' });
+                }}
+                className="h-10 rounded-xl border border-neutral-300 bg-white px-3.5 text-sm font-semibold active:bg-neutral-100"
+              >
+                Finish
+              </button>
+            ) : null}
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <RestTimer defaultSec={settings.restTimerSec} />
-          {session ? (
-            <button
-              onClick={() => {
-                finishSessionNow(session.id);
-                setActiveSessionId(null);
-                setView({ kind: 'home' });
-              }}
-              className="h-10 rounded-xl border border-neutral-300 bg-white px-3.5 text-sm font-semibold active:bg-neutral-100"
-            >
-              Finish
-            </button>
-          ) : null}
-        </div>
+
+        {session ? (
+          <div className="flex gap-2">
+            <div className="flex-1 rounded-2xl border border-neutral-200 bg-white px-3.5 py-2">
+              <p className="text-xl font-bold leading-none tabular-nums">
+                {session.entries.length}
+              </p>
+              <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+                {session.entries.length === 1 ? 'exercise' : 'exercises'}
+              </p>
+            </div>
+            <div className="flex-1 rounded-2xl border border-neutral-200 bg-white px-3.5 py-2">
+              <p className="text-xl font-bold leading-none tabular-nums">{totalSets}</p>
+              <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+                sets
+              </p>
+            </div>
+          </div>
+        ) : null}
       </header>
 
       {view.kind === 'home' ? (
@@ -194,7 +220,11 @@ export function WorkoutTab() {
         open={Boolean(sheet && sheetExercise)}
         mode={sheet?.mode ?? 'add'}
         exercise={sheetExercise}
-        values={{ weightKg: sheet?.weightKg ?? 0, reps: sheet?.reps ?? 0 }}
+        values={{
+          weightKg: sheet?.weightKg ?? 0,
+          reps: sheet?.reps ?? 0,
+          sets: sheet?.sets ?? 1,
+        }}
         previous={sheet ? previousFor(sheet.exerciseId) : null}
         onChange={changeSheet}
         onCommit={commitSheet}
@@ -216,6 +246,7 @@ export function WorkoutTab() {
             exerciseId: exercise.id,
             weightKg: 0,
             reps: exercise.targetReps.min,
+            sets: 1,
           });
         }}
       />

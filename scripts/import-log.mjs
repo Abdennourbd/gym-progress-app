@@ -51,6 +51,7 @@ function buildSession(exercises) {
     exerciseId: exercises[i].id,
     weightKg: entry.weightKg,
     reps: entry.reps,
+    sets: entry.sets ?? 1,
     completedAt: STARTED_AT,
   }));
 

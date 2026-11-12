@@ -19,7 +19,7 @@ export function volumeSeries(
       const ex = byId.get(entry.exerciseId);
       if (!ex) continue;
       if (muscleId && !ex.muscleIds.includes(muscleId)) continue;
-      total += entry.weightKg * entry.reps;
+      total += entry.weightKg * entry.reps * (entry.sets ?? 1);
     }
     totals.set(session.date, (totals.get(session.date) ?? 0) + total);
   }

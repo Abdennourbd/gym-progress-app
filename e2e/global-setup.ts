@@ -31,6 +31,7 @@ export default function globalSetup() {
     muscles: string[];
     weightKg: number;
     reps: number;
+    sets?: number;
     targetReps?: { min: number; max: number };
     switchAt?: number;
   }[];
@@ -56,6 +57,7 @@ export default function globalSetup() {
       exerciseId: exercises[i].id,
       weightKg: entry.weightKg,
       reps: entry.reps,
+      sets: entry.sets ?? 1,
       completedAt: startedAt,
     })),
     updatedAt: startedAt,

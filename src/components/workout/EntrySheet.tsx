@@ -10,7 +10,10 @@ import { deltaBadge } from '@/lib/training/delta';
 export interface SheetValues {
   weightKg: number;
   reps: number;
+  sets: number;
 }
+
+const SET_OPTIONS = [1, 2, 3, 4, 5];
 
 interface Props {
   open: boolean;
@@ -48,7 +51,10 @@ export function EntrySheet({
   // starting point, the target is worked out from what you have just logged.
   // It then always answers "what should I do next time".
   const untouched =
-    !previous && values.weightKg === 0 && values.reps === exercise.targetReps.min;
+    !previous &&
+    values.weightKg === 0 &&
+    values.reps === exercise.targetReps.min &&
+    values.sets === 1;
 
   const suggestion = untouched
     ? suggestNext(exercise, null)
@@ -63,6 +69,7 @@ export function EntrySheet({
 
   const applyTarget = () => {
     onChange({
+      ...values,
       weightKg: suggestion.weightKg ?? values.weightKg,
       reps: suggestion.reps,
     });
@@ -107,6 +114,29 @@ export function EntrySheet({
           {REASON_LABEL[suggestion.reason]}
         </span>
       </button>
+
+      <div className="mb-5">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-400">
+          Sets
+        </p>
+        <div className="flex gap-2">
+          {SET_OPTIONS.map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onChange({ ...values, sets: n })}
+              aria-pressed={values.sets === n}
+              className={`h-12 flex-1 rounded-2xl border text-base font-semibold tabular-nums transition active:scale-95 ${
+                values.sets === n
+                  ? 'border-neutral-900 bg-neutral-900 text-white'
+                  : 'border-neutral-200 bg-white text-neutral-600'
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="mb-6 flex flex-wrap justify-center gap-x-4 gap-y-6">
         <Steppers
