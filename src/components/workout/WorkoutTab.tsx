@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useStore } from '@/lib/client/store';
 import {
   addEntryToSession,
@@ -18,8 +18,6 @@ import { RestTimer } from './RestTimer';
 import { lastSetBefore } from '@/lib/training/history';
 import { MUSCLE_NAMES } from '@/lib/types';
 
-type View = { kind: 'home' } | { kind: 'muscle'; muscleId: string };
-
 interface SheetState extends SheetValues {
   mode: 'add' | 'edit';
   exerciseId: string;
@@ -33,9 +31,10 @@ export function WorkoutTab() {
   const activeSessionId = useStore((s) => s.activeSessionId);
   const setActiveSessionId = useStore((s) => s.setActiveSessionId);
 
-  const [view, setView] = useState<View>({ kind: 'home' });
+  const [muscle, setMuscle] = useState<string | null>(null);
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [creatingIn, setCreatingIn] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const session = useMemo(
     () => sessions.find((s) => s.id === activeSessionId) ?? null,
@@ -100,9 +99,19 @@ export function WorkoutTab() {
     } else if (sheet.entryId && session) {
       updateEntryInSession(session.id, sheet.entryId, values);
     }
-    // Back to the workout, where the set you just logged is on top and the
-    // muscle grid is ready for the next one.
-    setView({ kind: 'home' });
+    // The muscle stays open, so the next exercise of the same muscle is one
+    // tap away.
+  };
+
+  const toggleMuscle = (muscleId: string) => {
+    const next = muscle === muscleId ? null : muscleId;
+    setMuscle(next);
+    if (next) {
+      // Bring the list under the finger into view.
+      requestAnimationFrame(() =>
+        listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }),
+      );
+    }
   };
 
   const sheetExercise = sheet ? (byId.get(sheet.exerciseId) ?? null) : null;
@@ -124,7 +133,6 @@ export function WorkoutTab() {
                 onClick={() => {
                   finishSessionNow(session.id);
                   setActiveSessionId(null);
-                  setView({ kind: 'home' });
                 }}
                 className="h-10 rounded-xl border border-neutral-300 bg-white px-3.5 text-sm font-semibold active:bg-neutral-100"
               >
@@ -154,67 +162,57 @@ export function WorkoutTab() {
         ) : null}
       </header>
 
-      {view.kind === 'home' ? (
-        <>
-          {session && session.entries.length ? (
-            <div className="flex flex-col gap-2">
-              {session.entries.map((entry) => {
-                const exercise = byId.get(entry.exerciseId);
-                if (!exercise) return null;
-                return (
-                  <ExerciseRow
-                    key={entry.id}
-                    exercise={exercise}
-                    entry={entry}
-                    previous={previousFor(exercise.id)}
-                    onOpen={() => openEdit(entry.id)}
-                  />
-                );
-              })}
-            </div>
-          ) : null}
+      {session && session.entries.length ? (
+        <div className="flex flex-col gap-2" data-testid="session-list">
+          {session.entries.map((entry) => {
+            const exercise = byId.get(entry.exerciseId);
+            if (!exercise) return null;
+            return (
+              <ExerciseRow
+                key={entry.id}
+                exercise={exercise}
+                entry={entry}
+                previous={previousFor(exercise.id)}
+                onOpen={() => openEdit(entry.id)}
+              />
+            );
+          })}
+        </div>
+      ) : null}
 
-          <div>
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
-              Pick a muscle
-            </h2>
-            <MuscleGrid
-              exercises={exercises.filter((e) => !e.archivedAt)}
-              onOpenMuscle={(muscleId) => setView({ kind: 'muscle', muscleId })}
-            />
-          </div>
-        </>
-      ) : (
-        <>
-          <button
-            onClick={() => setView({ kind: 'home' })}
-            className="-ml-1 self-start py-1 text-sm font-medium text-neutral-500"
-          >
-            ‹ All muscles
-          </button>
+      <div>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          Pick a muscle
+        </h2>
+        <MuscleGrid
+          exercises={exercises.filter((e) => !e.archivedAt)}
+          activeMuscle={muscle}
+          onPick={toggleMuscle}
+        />
+      </div>
 
-          <div>
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
-              {MUSCLE_NAMES[view.muscleId] ?? view.muscleId}
-            </h2>
-            <ExercisePickerList
-              muscleId={view.muscleId}
-              exercises={exercises}
-              sessions={sessions}
-              loggedIds={loggedIds}
-              onPick={(exercise) => {
-                if (loggedIds.includes(exercise.id)) {
-                  const entry = session?.entries.find((e) => e.exerciseId === exercise.id);
-                  if (entry) openEdit(entry.id);
-                } else {
-                  openAdd(exercise.id);
-                }
-              }}
-              onNew={() => setCreatingIn(view.muscleId)}
-            />
-          </div>
-        </>
-      )}
+      {muscle ? (
+        <div ref={listRef}>
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            {MUSCLE_NAMES[muscle] ?? muscle}
+          </h2>
+          <ExercisePickerList
+            muscleId={muscle}
+            exercises={exercises}
+            sessions={sessions}
+            loggedIds={loggedIds}
+            onPick={(exercise) => {
+              if (loggedIds.includes(exercise.id)) {
+                const entry = session?.entries.find((e) => e.exerciseId === exercise.id);
+                if (entry) openEdit(entry.id);
+              } else {
+                openAdd(exercise.id);
+              }
+            }}
+            onNew={() => setCreatingIn(muscle)}
+          />
+        </div>
+      ) : null}
 
       <EntrySheet
         open={Boolean(sheet && sheetExercise)}

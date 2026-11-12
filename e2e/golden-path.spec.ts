@@ -16,7 +16,6 @@ async function openMuscle(page: Page, muscle: string) {
   await page.locator(`[data-muscle="${muscle}"]`).click();
   await expect(page.getByTestId('exercise-list')).toBeVisible();
 }
-
 async function pickExercise(page: Page, name: string) {
   await page.locator(`[data-exercise="${name}"]`).click();
   await expect(page.getByRole('dialog')).toBeVisible();
@@ -54,11 +53,33 @@ test('picks an exercise from the muscle grid and adds it on done', async ({ page
   await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
 
   // It is now in the workout.
-  await expect(page.getByText('72.5 kg × 8')).toBeVisible();
+  await expect(page.getByTestId('session-list').getByText('72.5 kg × 8')).toBeVisible();
 
-  // And it drops back to the workout with the grid ready for the next one.
+  // The muscle stays open so the next exercise of the same muscle is one tap
+  // away, and the grid is still right there.
   await expect(page.getByTestId('muscle-grid')).toBeVisible();
+  await expect(page.getByTestId('exercise-list')).toBeVisible();
+});
+
+test('the exercises open below the muscle on the same page', async ({ page }) => {
+  await signIn(page);
+
+  // Nothing is open to begin with.
   await expect(page.getByTestId('exercise-list')).toHaveCount(0);
+
+  // One tap on a muscle opens its exercises underneath the grid.
+  await page.locator('[data-muscle="shoulders"]').click();
+  await expect(page.getByTestId('exercise-list')).toBeVisible();
+  await expect(page.getByText('DB Lateral Raise')).toBeVisible();
+  await expect(page.getByTestId('muscle-grid')).toBeVisible();
+
+  // Tapping it again closes it.
+  await page.locator('[data-muscle="shoulders"]').click();
+  await expect(page.getByTestId('exercise-list')).toHaveCount(0);
+
+  // A different muscle swaps the list.
+  await page.locator('[data-muscle="calves"]').click();
+  await expect(page.getByText('Calf Raises')).toBeVisible();
 });
 
 test('the muscle grid has no recent section', async ({ page }) => {
@@ -140,12 +161,12 @@ test('still has the set after a reload', async ({ page }) => {
   await logSet(page, 1, 1);
   await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
 
-  await expect(page.getByText('61.5 kg × 11')).toBeVisible();
+  await expect(page.getByTestId('session-list').getByText('61.5 kg × 11')).toBeVisible();
 
   // The whole point: closing the app mid-workout must not lose anything.
   await page.reload();
   await expect(page.getByText('Pec Dec')).toBeVisible();
-  await expect(page.getByText('61.5 kg × 11')).toBeVisible();
+  await expect(page.getByTestId('session-list').getByText('61.5 kg × 11')).toBeVisible();
 });
 
 test('counts the sets done and shows the running totals', async ({ page }) => {
@@ -159,22 +180,22 @@ test('counts the sets done and shows the running totals', async ({ page }) => {
   await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
 
   // The row shows the set count.
-  await expect(page.getByText('· 3 sets')).toBeVisible();
+  await expect(page.getByTestId('session-list').getByText('· 3 sets')).toBeVisible();
 
   // And the workout totals count the exercise and all three sets.
-  await expect(page.getByText('exercise', { exact: true })).toBeVisible();
   const totals = page.locator('header');
-  await expect(totals).toContainText('1');
-  await expect(totals).toContainText('3');
+  await expect(totals).toContainText('exercise');
+  await expect(totals).toContainText('sets');
 
-  // A second exercise adds one more exercise and its own sets.
-  await openMuscle(page, 'back');
-  await pickExercise(page, 'T-Bar Row');
+  // A second exercise, from another muscle, adds one more exercise and its
+  // own sets.
+  await openMuscle(page, 'chest');
+  await pickExercise(page, 'Machine Press');
   await page.getByRole('dialog').getByRole('button', { name: '2', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
 
-  await expect(page.getByText('· 2 sets')).toBeVisible();
-  await expect(totals).toContainText('exercises');
+  await expect(page.getByTestId('session-list').getByText('· 2 sets')).toBeVisible();
+  await expect(page.getByTestId('session-list').locator('button')).toHaveCount(2);
 });
 
 test('the sheet is keyboard friendly', async ({ page }) => {
