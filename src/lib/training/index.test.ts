@@ -92,12 +92,13 @@ describe('muscleSummaries', () => {
     expect(chest.changePct).toBeCloseTo(20, 0);
   });
 
-  it('finds the best exercise for the muscle', () => {
+  it('counts a heavier set with fewer reps as stronger', () => {
     const sessions = [
-      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 100, reps: 5 })]),
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 10, reps: 10 })]),
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 12, reps: 6 })]),
     ];
-    const [chest] = muscleSummaries([bench], sessions, ['2026-01-01']);
-    expect(chest.bestExercise?.name).toBe('Bench Press');
+    const [chest] = muscleSummaries([bench], sessions, ['2026-01-01', '2026-01-20']);
+    expect(chest.changePct).toBeGreaterThan(0);
   });
 
   it('ignores a set with no reps instead of counting it as zero', () => {

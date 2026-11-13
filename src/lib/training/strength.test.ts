@@ -2,13 +2,23 @@ import { describe, it, expect } from 'vitest';
 import { strength } from './strength';
 
 describe('strength', () => {
-  it('uses the Epley estimate for weighted sets', () => {
-    expect(strength(80, 8)).toBeCloseTo(101.333, 2);
-    expect(strength(100, 10)).toBeCloseTo(133.333, 2);
+  it('scores the weight, with reps only breaking ties', () => {
+    expect(strength(10, 10)).toBeCloseTo(10.1, 5);
+    expect(strength(10, 8)).toBeLessThan(strength(10, 9));
   });
 
-  it('treats zero weight as bodyweight and scores by reps', () => {
-    expect(strength(0, 12)).toBe(12);
+  it('counts adding weight with fewer reps as progress', () => {
+    expect(strength(12, 6)).toBeGreaterThan(strength(10, 10));
+    expect(strength(80, 6)).toBeGreaterThan(strength(77.5, 8));
+  });
+
+  it('treats zero weight as bodyweight and progresses with reps', () => {
+    expect(strength(0, 12)).toBeCloseTo(0.12, 5);
+    expect(strength(0, 15)).toBeGreaterThan(strength(0, 12));
+  });
+
+  it('counts adding the first plates onto a bodyweight exercise as progress', () => {
+    expect(strength(5, 8)).toBeGreaterThan(strength(0, 12));
   });
 
   it('returns zero when there are no reps', () => {
@@ -17,12 +27,6 @@ describe('strength', () => {
 
   it('never returns a negative score', () => {
     expect(strength(80, -5)).toBe(0);
-    expect(strength(-10, 5)).toBe(5);
-  });
-
-  it('rewards both added reps and added weight', () => {
-    const base = strength(80, 8);
-    expect(strength(80, 10)).toBeGreaterThan(base);
-    expect(strength(85, 8)).toBeGreaterThan(base);
+    expect(strength(-10, 5)).toBe(0.05);
   });
 });

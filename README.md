@@ -32,9 +32,7 @@ an account. Leave it unset and anyone who has the link can sign up.
   drop back to 6".
 - **Muscle-grouped browsing.** Exercises live under the muscle they train, so
   finding and adding one is two taps.
-- **Whole-body and per-muscle progress.** A scale-free Overload Index (0–100)
-  over 7 days, 30 days or 3 months, plus a ranked breakdown of every muscle so
-  you can see what is progressing and what has stalled.
+- **Whole-body and per-muscle progress.** A strength score (0–100) over 7 days, 30 days or 3 months, plus a ranked breakdown of every muscle so you can see what is progressing and what has stalled.
 - **Nothing to save.** Every edit is written to the device immediately and to
   the cloud a moment later. Close the phone between exercises, come back, and
   your session is exactly where you left it.
@@ -43,33 +41,32 @@ an account. Leave it unset and anyone who has the link can sign up.
 
 ## How the numbers work
 
-**Strength score** — for a weighted set, the Epley estimate of your one-rep
-max, so both load and reps move the number:
+**Strength score** — a set scores its weight, plus a tiny bonus for each rep.
+Adding weight always moves the score up, even when the reps drop to make room
+for it:
 
 ```
-80 kg × 8  → 101.3
-80 kg × 10 → 106.7
-85 kg × 8  → 107.7
+10 kg × 10  →  10.10
+12 kg × 6   →  12.06   (progress: heavier)
+80 kg × 8   →  80.08
+0 kg × 12   →  0.12    (bodyweight work, scored by reps)
 ```
 
-A bodyweight set (0 kg) scores by reps instead, because a rep count and a
-kilogram figure are not comparable.
+A bodyweight set scores by reps divided by 100, so it can never outscore real
+kilograms.
 
-**Overload Index** — each exercise is scored against its own best over the
-trailing 90 days:
+**Strength (0–100)** — each exercise is scored against its own strongest set
+in the last 90 days:
 
 ```
-index = 100 × score(today) ÷ best score in the last 90 days
+strength = 100 × score(today) ÷ best score in the last 90 days
 ```
 
-Because every exercise is normalised against *its own* baseline, kilograms and
-reps can live side by side inside one muscle without distortion. A personal
-record scores 100.
+Because every exercise is normalised against *its own* baseline, every muscle
+rolls up fairly and your heaviest lifts don't drown out your lightest ones.
 
-**Whole body** — the mean of the indexes of every muscle you trained that day.
-A 200 kg leg press and a 10 kg lateral raise count the same, which is the
-whole point: it answers "am I getting stronger overall" rather than "did I
-move more weight".
+**Whole body** — the mean of the strength scores of every muscle you trained
+that day. It answers "am I getting stronger overall" with one number.
 
 **Next target** — worked out from what you just lifted:
 

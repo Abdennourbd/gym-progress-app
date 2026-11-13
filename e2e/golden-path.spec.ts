@@ -291,8 +291,9 @@ test('there is no volume metric, only strength', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Progress' })).toBeVisible();
 
   await expect(page.getByRole('button', { name: 'Volume' })).toHaveCount(0);
-  await expect(page.getByText('Strength')).toBeVisible();
+  await expect(page.getByText('Strength', { exact: true }).first()).toBeVisible();
   await expect(page.getByText(/kg moved/)).toHaveCount(0);
+  await expect(page.getByText('best set', { exact: false })).toHaveCount(0);
 });
 
 test('the sheet is keyboard friendly', async ({ page }) => {

@@ -25,15 +25,17 @@ export function ExerciseHistory({
   sessions: Session[];
 }) {
   const data = useMemo(() => {
-    const rows: { date: string; value: number; set: string }[] = [];
+    const rows: { date: string; value: number; set: string; bodyweight: boolean }[] = [];
     const sorted = [...sessions].sort((a, b) => (a.date < b.date ? -1 : 1));
     for (const session of sorted) {
       const entry = session.entries.find((e) => e.exerciseId === exercise.id);
       if (!entry) continue;
+      const bodyweight = entry.weightKg <= 0;
       rows.push({
         date: session.date,
-        value: strength(entry.weightKg, entry.reps),
+        value: bodyweight ? entry.reps : strength(entry.weightKg, entry.reps),
         set: `${entry.weightKg} kg × ${entry.reps}`,
+        bodyweight,
       });
     }
     return rows;
@@ -47,7 +49,7 @@ export function ExerciseHistory({
     );
   }
 
-  const allReps = data.every((d) => d.value <= 40);
+  const allReps = data.every((d) => d.bodyweight);
   const unit = allReps ? 'reps' : 'kg';
 
   return (
@@ -86,7 +88,7 @@ export function ExerciseHistory({
             labelFormatter={(d) => String(d)}
             formatter={(_value, _name, item) => [
               `${(item?.payload as { set?: string })?.set ?? ''}`,
-              unit === 'kg' ? 'Est. 1RM' : 'Reps',
+              unit === 'kg' ? 'Strength' : 'Reps',
             ]}
           />
           <Area

@@ -4,8 +4,7 @@ import { useMemo, useState } from 'react';
 import { useStore } from '@/lib/client/store';
 import { eachDay, rangeStart, RANGE_LABEL, rollUpWeekly, toDateKey, type RangeKey } from '@/lib/training/dates';
 import { muscleIndexSeries, muscleSummaries, wholeBodyIndexSeries } from '@/lib/training/index';
-import { strength } from '@/lib/training/strength';
-import { MUSCLE_NAMES, type SessionEntry } from '@/lib/types';
+import { MUSCLE_NAMES } from '@/lib/types';
 import { RangeSelector } from './RangeSelector';
 import { MuscleChips } from './MuscleChips';
 import { HeroChart } from './HeroChart';
@@ -86,7 +85,6 @@ export function ProgressTab() {
           <h2 className="text-sm font-semibold">
             {muscle ? `${MUSCLE_NAMES[muscle] ?? muscle}` : 'Whole body'}
           </h2>
-          <p className="text-xs text-ink-faint">Overload Index, 0 to 100</p>
         </div>
         {hasData ? (
           <>
@@ -95,9 +93,10 @@ export function ProgressTab() {
               One point per workout, the dashed line is the trend
             </p>
             <p className="mt-2 rounded-xl bg-surface-2 px-3 py-2 text-[11px] leading-relaxed text-ink-soft">
-              Each set becomes an estimated 1RM: weight × (1 + reps ÷ 30). That is
-              scored against your best in the last 90 days, so 100 means you are
-              at your strongest and anything below is how far off it you are.
+              A set scores its weight, plus a tiny bonus for reps, so more reps at the
+              same weight still counts and going heavier always moves you forward. Each
+              exercise is scored against your strongest moment in the last 90 days, so
+              100 means you are at your best.
             </p>
           </>
         ) : (
@@ -119,8 +118,7 @@ export function ProgressTab() {
             <span className="w-24">muscle</span>
             <span className="w-14">change</span>
             <span className="flex-1" />
-            <span>best set</span>
-            <span className="w-9 text-right">index</span>
+            <span className="w-11 text-right">strength</span>
           </div>
           <RankedMuscleList summaries={summaries} onSelect={setMuscle} />
         </section>
@@ -166,7 +164,7 @@ export function ProgressTab() {
           {openExercise ? (
             <div className="mt-3 rounded-2xl border border-line bg-surface p-3.5">
               <h3 className="mb-1 text-sm font-semibold">{openExercise.name}</h3>
-              <p className="mb-2 text-xs text-ink-faint">Estimated 1RM over time</p>
+              <p className="mb-2 text-xs text-ink-faint">Strength over time</p>
               <ExerciseHistory exercise={openExercise} sessions={sessions} />
             </div>
           ) : null}
@@ -183,10 +181,6 @@ export function ProgressTab() {
               (sum, e) => sum + (e.sets ?? 1),
               0,
             );
-            const best = session.entries.reduce((top, e) => {
-              const score = strength(e.weightKg, e.reps);
-              return score > top.score ? { score, entry: e } : top;
-            }, { score: 0, entry: null as SessionEntry | null });
 
             return (
               <div
@@ -199,11 +193,6 @@ export function ProgressTab() {
                   {session.entries.length === 1 ? 'exercise' : 'exercises'}
                 </span>
                 <span className="text-xs tabular-nums text-ink-soft">{sets} sets</span>
-                <span className="w-20 text-right text-sm font-semibold tabular-nums">
-                  {best.entry
-                    ? `${strength(best.entry.weightKg, best.entry.reps).toFixed(1)} kg`
-                    : '—'}
-                </span>
               </div>
             );
           })}

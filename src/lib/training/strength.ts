@@ -1,15 +1,15 @@
 /**
  * Strength score for a single set.
  *
- * Weighted sets use the Epley estimated one-rep max so that both load and
- * reps move the number: 80kg x 8 = 101.3, 80kg x 10 = 106.7, 85kg x 8 = 107.7.
+ * The weight is the number. Reps count only as a tie-break, so a set at the
+ * same weight with more reps still scores higher, and bodyweight work
+ * (0 kg) progresses as the reps climb. Adding weight always moves the score
+ * up, even when the reps have to drop to make room for it.
  *
- * Bodyweight sets (0kg) score by reps instead, because a rep count and a
- * kilogram figure are not comparable. Aggregations normalise per exercise, so
- * the two units never need to be added together.
+ * 10kg × 10 = 10.10, 12kg × 6 = 12.06, 0kg × 12 = 0.12.
  */
 export function strength(weightKg: number, reps: number): number {
   if (reps <= 0) return 0;
-  if (weightKg <= 0) return reps;
-  return weightKg * (1 + reps / 30);
+  if (weightKg <= 0) return Math.max(0, reps) / 100;
+  return Math.max(0, weightKg) + Math.max(0, reps) / 100;
 }

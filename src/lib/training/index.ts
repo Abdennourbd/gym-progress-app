@@ -12,18 +12,11 @@ export interface MuscleSummary {
   index: number | null;
   changePct: number | null;
   points: MusclePoint[];
-  bestExercise?: {
-    exerciseId: string;
-    name: string;
-    score: number;
-    unit: 'kg' | 'reps';
-  };
 }
 
 interface DayEntry {
   exerciseId: string;
   score: number;
-  unit: 'kg' | 'reps';
 }
 
 /**
@@ -47,7 +40,6 @@ function entriesByDate(exercises: Exercise[], sessions: Session[]): Map<string, 
       list.push({
         exerciseId: entry.exerciseId,
         score: strength(entry.weightKg, entry.reps),
-        unit: entry.weightKg > 0 ? 'kg' : 'reps',
       });
     }
     if (list.length) out.set(session.date, list);
@@ -126,7 +118,6 @@ export function muscleSummaries(
   dates: string[],
 ): MuscleSummary[] {
   const muscleIds = Array.from(new Set(exercises.flatMap((e) => e.muscleIds)));
-  const byDate = entriesByDate(exercises, sessions);
 
   return muscleIds.map((muscleId) => {
     const points = muscleIndexSeries(muscleId, exercises, sessions, dates);
@@ -136,27 +127,6 @@ export function muscleSummaries(
     const changePct =
       first !== null && last !== null && first > 0 ? ((last - first) / first) * 100 : null;
 
-    const ids = new Set(
-      exercises.filter((e) => e.muscleIds.includes(muscleId)).map((e) => e.id),
-    );
-
-    let best: MuscleSummary['bestExercise'];
-    for (const list of byDate.values()) {
-      for (const item of list) {
-        if (!ids.has(item.exerciseId)) continue;
-        const ex = exercises.find((e) => e.id === item.exerciseId);
-        if (!ex) continue;
-        if (!best || item.score > best.score) {
-          best = {
-            exerciseId: item.exerciseId,
-            name: ex.name,
-            score: item.score,
-            unit: item.unit,
-          };
-        }
-      }
-    }
-
-    return { muscleId, index: last, changePct, points, bestExercise: best };
+    return { muscleId, index: last, changePct, points };
   });
 }
