@@ -1,6 +1,6 @@
 import type { AppState, Exercise, Session, Settings } from '@/lib/types';
 import { DEFAULT_SETTINGS } from '@/lib/types';
-import { KEYS } from './redis';
+import { userKeys } from './keys';
 import { getStore } from './store';
 import { mergeExercises } from '@/lib/training/merge';
 import { migrateExercises } from '@/lib/training/migrate';
@@ -12,17 +12,18 @@ interface SessionSummary {
   updatedAt: number;
 }
 
-export async function loadState(): Promise<AppState> {
+export async function loadState(userId: string): Promise<AppState> {
   const store = getStore();
+  const keys = userKeys(userId);
 
   const [exercises, summaries, settings] = await Promise.all([
-    store.get<Exercise[]>(KEYS.exercises),
-    store.get<SessionSummary[]>(KEYS.sessions),
-    store.get<Settings>(KEYS.settings),
+    store.get<Exercise[]>(keys.exercises),
+    store.get<SessionSummary[]>(keys.sessions),
+    store.get<Settings>(keys.settings),
   ]);
 
   const list = summaries ?? [];
-  const sessions = await Promise.all(list.map((s) => store.get<Session>(KEYS.session(s.id))));
+  const sessions = await Promise.all(list.map((s) => store.get<Session>(keys.session(s.id))));
 
   return {
     exercises: migrateExercises(exercises ?? []),
@@ -37,39 +38,42 @@ export async function loadState(): Promise<AppState> {
  * client can delete another client's exercises by sending a list it has not
  * seen.
  */
-export async function saveExercises(exercises: Exercise[]): Promise<void> {
+export async function saveExercises(userId: string, exercises: Exercise[]): Promise<void> {
   const store = getStore();
-  const existing = (await store.get<Exercise[]>(KEYS.exercises)) ?? [];
-  await store.set(KEYS.exercises, mergeExercises(existing, exercises));
+  const keys = userKeys(userId);
+  const existing = (await store.get<Exercise[]>(keys.exercises)) ?? [];
+  await store.set(keys.exercises, mergeExercises(existing, exercises));
 }
 
 /**
  * Writes one exercise into the collection, leaving every other exercise
  * alone.
  */
-export async function saveExercise(exercise: Exercise): Promise<void> {
+export async function saveExercise(userId: string, exercise: Exercise): Promise<void> {
   const store = getStore();
-  const existing = (await store.get<Exercise[]>(KEYS.exercises)) ?? [];
-  await store.set(KEYS.exercises, mergeExercises(existing, [exercise]));
+  const keys = userKeys(userId);
+  const existing = (await store.get<Exercise[]>(keys.exercises)) ?? [];
+  await store.set(keys.exercises, mergeExercises(existing, [exercise]));
 }
 
-export async function saveSessions(sessions: Session[]): Promise<void> {
+export async function saveSessions(userId: string, sessions: Session[]): Promise<void> {
   const store = getStore();
-  const summaries = (await store.get<SessionSummary[]>(KEYS.sessions)) ?? [];
+  const keys = userKeys(userId);
+  const summaries = (await store.get<SessionSummary[]>(keys.sessions)) ?? [];
 
   for (const session of sessions) {
     if (!session.entries.length) {
-      await deleteSession(session.id);
+      await deleteSession(userId, session.id);
       continue;
     }
 
     // Newest wins, so a device that has been offline for a while cannot
     // overwrite a newer copy with an old one.
-    const stored = await store.get<Session>(KEYS.session(session.id));
+    const stored = await store.get<Session>(keys.session(session.id));
     const winner =
       stored && stored.updatedAt > session.updatedAt ? stored : session;
 
-    await store.set(KEYS.session(winner.id), winner);
+    await store.set(keys.session(winner.id), winner);
 
     const index = summaries.findIndex((s) => s.id === winner.id);
     const summary = {
@@ -83,11 +87,11 @@ export async function saveSessions(sessions: Session[]): Promise<void> {
   }
 
   summaries.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-  await store.set(KEYS.sessions, summaries);
+  await store.set(keys.sessions, summaries);
 }
 
-export async function saveSession(session: Session): Promise<void> {
-  await saveSessions([session]);
+export async function saveSession(userId: string, session: Session): Promise<void> {
+  await saveSessions(userId, [session]);
 }
 
 /**
@@ -98,10 +102,11 @@ export async function saveSession(session: Session): Promise<void> {
  * silent reappearance is much worse than a hidden one. An archived exercise
  * keeps its history in every chart and can be restored.
  */
-export async function archiveExercise(id: string): Promise<void> {
+export async function archiveExercise(userId: string, id: string): Promise<void> {
   const store = getStore();
+  const keys = userKeys(userId);
 
-  const exercises = (await store.get<Exercise[]>(KEYS.exercises)) ?? [];
+  const exercises = (await store.get<Exercise[]>(keys.exercises)) ?? [];
   const target = exercises.find((e) => e.id === id);
   if (!target) return;
 
@@ -109,13 +114,13 @@ export async function archiveExercise(id: string): Promise<void> {
   const next = exercises.map((e) =>
     e.id === id ? { ...e, archivedAt: now, updatedAt: now } : e,
   );
-  await store.set(KEYS.exercises, next);
+  await store.set(keys.exercises, next);
 
-  const summaries = (await store.get<SessionSummary[]>(KEYS.sessions)) ?? [];
+  const summaries = (await store.get<SessionSummary[]>(keys.sessions)) ?? [];
   const emptied: string[] = [];
 
   for (const summary of summaries) {
-    const session = await store.get<Session>(KEYS.session(summary.id));
+    const session = await store.get<Session>(keys.session(summary.id));
     if (!session) continue;
 
     const entries = session.entries.filter((e) => e.exerciseId !== id);
@@ -126,25 +131,26 @@ export async function archiveExercise(id: string): Promise<void> {
       continue;
     }
 
-    await store.set(KEYS.session(session.id), {
+    await store.set(keys.session(session.id), {
       ...session,
       entries,
       updatedAt: now,
     });
   }
 
-  for (const sessionId of emptied) await deleteSession(sessionId);
+  for (const sessionId of emptied) await deleteSession(userId, sessionId);
 }
 
-export async function deleteSession(id: string): Promise<void> {
+export async function deleteSession(userId: string, id: string): Promise<void> {
   const store = getStore();
+  const keys = userKeys(userId);
 
-  await store.del(KEYS.session(id));
+  await store.del(keys.session(id));
 
-  const summaries = (await store.get<SessionSummary[]>(KEYS.sessions)) ?? [];
-  await store.set(KEYS.sessions, summaries.filter((s) => s.id !== id));
+  const summaries = (await store.get<SessionSummary[]>(keys.sessions)) ?? [];
+  await store.set(keys.sessions, summaries.filter((s) => s.id !== id));
 }
 
-export async function saveSettings(settings: Settings): Promise<void> {
-  await getStore().set(KEYS.settings, settings);
+export async function saveSettings(userId: string, settings: Settings): Promise<void> {
+  await getStore().set(userKeys(userId).settings, settings);
 }

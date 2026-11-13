@@ -6,7 +6,8 @@ import { deleteSession, saveSession } from '@/lib/server/repo';
 type Params = { params: Promise<{ id: string }> };
 
 export async function PUT(req: Request, { params }: Params) {
-  if (!(await currentUser())) return unauthorized();
+  const user = await currentUser();
+  if (!user) return unauthorized();
 
   const { id } = await params;
   const parsed = sessionSchema.safeParse(await req.json().catch(() => null));
@@ -15,7 +16,7 @@ export async function PUT(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'id_mismatch' }, { status: 400 });
   }
 
-  await saveSession(parsed.data);
+  await saveSession(user.id, parsed.data);
 
   const res = NextResponse.json({ ok: true });
   await touchSession(res);
@@ -23,10 +24,11 @@ export async function PUT(req: Request, { params }: Params) {
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
-  if (!(await currentUser())) return unauthorized();
+  const user = await currentUser();
+  if (!user) return unauthorized();
 
   const { id } = await params;
-  await deleteSession(id);
+  await deleteSession(user.id, id);
 
   const res = NextResponse.json({ ok: true });
   await touchSession(res);

@@ -13,12 +13,13 @@ const bodySchema = z.object({ sessions: z.array(sessionSchema).max(500) });
  * workouts cost one round trip rather than one each.
  */
 export async function PUT(req: Request) {
-  if (!(await currentUser())) return unauthorized();
+  const user = await currentUser();
+  if (!user) return unauthorized();
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return badRequest(parsed.error.issues);
 
-  await saveSessions(parsed.data.sessions);
+  await saveSessions(user.id, parsed.data.sessions);
 
   const res = NextResponse.json({ ok: true, saved: parsed.data.sessions.length });
   await touchSession(res);

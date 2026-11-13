@@ -3,10 +3,11 @@ import { currentUser, touchSession, unauthorized } from '@/lib/server/guard';
 import { loadState } from '@/lib/server/repo';
 
 export async function GET() {
-  if (!(await currentUser())) return unauthorized();
+  const user = await currentUser();
+  if (!user) return unauthorized();
 
   try {
-    const res = NextResponse.json(await loadState());
+    const res = NextResponse.json(await loadState(user.id));
     await touchSession(res);
     return res;
   } catch {

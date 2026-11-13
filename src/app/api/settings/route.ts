@@ -4,12 +4,13 @@ import { settingsSchema } from '@/lib/server/schemas';
 import { saveSettings } from '@/lib/server/repo';
 
 export async function PUT(req: Request) {
-  if (!(await currentUser())) return unauthorized();
+  const user = await currentUser();
+  if (!user) return unauthorized();
 
   const parsed = settingsSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return badRequest(parsed.error.issues);
 
-  await saveSettings(parsed.data);
+  await saveSettings(user.id, parsed.data);
 
   const res = NextResponse.json({ ok: true });
   await touchSession(res);

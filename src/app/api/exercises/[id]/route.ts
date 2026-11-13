@@ -13,7 +13,8 @@ type Params = { params: Promise<{ id: string }> };
  * never seen.
  */
 export async function PUT(req: Request, { params }: Params) {
-  if (!(await currentUser())) return unauthorized();
+  const user = await currentUser();
+  if (!user) return unauthorized();
 
   const { id } = await params;
   const parsed = exerciseSchema.safeParse(await req.json().catch(() => null));
@@ -22,7 +23,7 @@ export async function PUT(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'id_mismatch' }, { status: 400 });
   }
 
-  await saveExercise(parsed.data);
+  await saveExercise(user.id, parsed.data);
 
   const res = NextResponse.json({ ok: true });
   await touchSession(res);
@@ -34,10 +35,11 @@ export async function PUT(req: Request, { params }: Params) {
  * copy cannot bring it back, and its history stays in every chart.
  */
 export async function DELETE(_req: Request, { params }: Params) {
-  if (!(await currentUser())) return unauthorized();
+  const user = await currentUser();
+  if (!user) return unauthorized();
 
   const { id } = await params;
-  await archiveExercise(id);
+  await archiveExercise(user.id, id);
 
   const res = NextResponse.json({ ok: true });
   await touchSession(res);
