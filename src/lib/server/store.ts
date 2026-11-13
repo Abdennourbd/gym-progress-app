@@ -73,8 +73,19 @@ const redisStore: Store = {
     const redis = getRedis();
     if (!redis) throw new Error('redis is not configured');
     const total = await redis.incr(key);
-    // The first hit opens the window. Every later hit only refreshes it.
-    if (total === 1) await redis.expire(key, Math.max(1, Math.ceil(windowMs / 1000)));
+
+    // The first hit opens the window.
+    if (total === 1) {
+      try {
+        await redis.expire(key, Math.max(1, Math.ceil(windowMs / 1000)));
+      } catch {
+        // A counter with no end would block whoever it belongs to for good,
+        // so it is thrown away instead.
+        await redis.del(key);
+        return 0;
+      }
+    }
+
     return total;
   },
 };
