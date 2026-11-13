@@ -74,6 +74,55 @@ async function logSet(page: Page, weightSteps: number, repSteps: number) {
   });
 }
 
+test('a workout can be deleted from the recent workouts list', async ({ page }) => {
+  await signIn(page);
+
+  await openMuscle(page, 'back');
+  await pickExercise(page, 'Machine Rows');
+  await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
+
+  await page.locator('nav').getByRole('button', { name: 'Progress' }).click();
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10);
+  const row = page.getByTestId(`recent-workout-${today}`);
+  await row.getByRole('button', { name: /Delete workout/ }).click();
+  await expect(page.getByText('Delete this workout?')).toBeVisible();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(page.getByText(today, { exact: true })).toHaveCount(0);
+});
+
+test('an exercise can be added from the exercises tab', async ({ page }) => {
+  await signIn(page);
+
+  await page.locator('nav').getByRole('button', { name: 'Exercises' }).click();
+  await page.getByRole('button', { name: 'Add exercise' }).click();
+
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByLabel('Exercise name').fill('Zercher Squat');
+  await page.getByRole('button', { name: 'Quads' }).click();
+  await page.getByRole('button', { name: 'Create' }).click();
+
+  // Creating one opens it in the editor straight away.
+  await expect(page.getByLabel('Exercise name')).toHaveValue('Zercher Squat');
+});
+
+test('the last set can be edited from the exercise editor', async ({ page }) => {
+  await signIn(page);
+
+  await page.locator('nav').getByRole('button', { name: 'Exercises' }).click();
+  await page.getByRole('button', { name: /Machine Rows/ }).click();
+
+  // The import seeded Machine Rows at 70 kg x 7.
+  await expect(page.getByLabel('Weight', { exact: true })).toHaveValue('70');
+  await page.getByLabel('Weight', { exact: true }).fill('72.5');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+
+  // It sticks.
+  await page.getByRole('button', { name: /Machine Rows/ }).click();
+  await expect(page.getByLabel('Weight', { exact: true })).toHaveValue('72.5');
+});
+
 test('a visitor can look around without an account', async ({ page }) => {
   await page.goto('/');
 

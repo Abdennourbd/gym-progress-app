@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useStore } from '@/lib/client/store';
+import { api } from '@/lib/client/api';
 import { eachDay, rangeStart, RANGE_LABEL, rollUpWeekly, toDateKey, type RangeKey } from '@/lib/training/dates';
 import { muscleIndexSeries, muscleSummaries, wholeBodyIndexSeries } from '@/lib/training/index';
 import { MUSCLE_NAMES } from '@/lib/types';
@@ -18,6 +19,21 @@ export function ProgressTab() {
   const [range, setRange] = useState<RangeKey>('30d');
   const [muscle, setMuscle] = useState<string | null>(null);
   const [openExerciseId, setOpenExerciseId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const removeSession = useStore((s) => s.removeSession);
+  const isDemo = useStore((s) => s.username) === 'demo';
+
+  const deleteWorkout = async (id: string) => {
+    try {
+      await api.deleteSession(id);
+      removeSession(id);
+      setConfirmDeleteId(null);
+      setDeleteError(null);
+    } catch {
+      setDeleteError('Could not delete it now. If you are offline, try again later.');
+    }
+  };
 
   const dates = useMemo(() => eachDay(rangeStart(range), toDateKey(new Date())), [range]);
 
@@ -176,15 +192,58 @@ export function ProgressTab() {
           Recent workouts
         </h2>
         <div className="flex flex-col gap-1.5">
+          {deleteError ? (
+            <p role="alert" className="px-1 text-xs text-red-600">
+              {deleteError}
+            </p>
+          ) : null}
           {recentSessions.map((session) => {
             const sets = session.entries.reduce(
               (sum, e) => (e.reps > 0 ? sum + (e.sets ?? 1) : sum),
               0,
             );
 
+            if (confirmDeleteId === session.id) {
+              return (
+                <div
+                  key={session.id}
+                  className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2.5"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                      Delete this workout?
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => void deleteWorkout(session.id)}
+                        className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => {
+                          setConfirmDeleteId(null);
+                          setDeleteError(null);
+                        }}
+                        className="rounded-lg border border-line-strong px-3 py-1.5 text-xs font-medium text-ink-soft"
+                      >
+                        Keep it
+                      </button>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-red-700/80 dark:text-red-300/80">
+                    {session.date} · {session.entries.length}{' '}
+                    {session.entries.length === 1 ? 'exercise' : 'exercises'}, {sets}{' '}
+                    {sets === 1 ? 'set' : 'sets'}. This cannot be undone.
+                  </p>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={session.id}
+                data-testid={`recent-workout-${session.date}`}
                 className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-2.5"
               >
                 <span className="text-sm font-medium tabular-nums">{session.date}</span>
@@ -192,8 +251,25 @@ export function ProgressTab() {
                   {session.entries.length}{' '}
                   {session.entries.length === 1 ? 'exercise' : 'exercises'}
                 </span>
-                <span className="text-xs tabular-nums text-ink-soft">
+                <span className="flex items-center gap-2 text-xs tabular-nums text-ink-soft">
                   {sets} {sets === 1 ? 'set' : 'sets'}
+                  {isDemo ? null : (
+                    <button
+                      onClick={() => setConfirmDeleteId(session.id)}
+                      aria-label={`Delete workout for ${session.date}`}
+                      className="rounded-lg p-1.5 text-ink-faint transition hover:bg-surface-2 hover:text-red-600 active:scale-95"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path
+                          d="M2.5 4h11M6.5 2h3M4.5 4l.8 9.1c.05 1 .9 1.9 2 1.9h1.4c1.1 0 1.95-.9 2-1.9L11.5 4M6.7 6.8v4M9.3 6.8v4"
+                          stroke="currentColor"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  )}
                 </span>
               </div>
             );

@@ -7,12 +7,14 @@ import { MUSCLES, MUSCLE_NAMES, type Exercise } from '@/lib/types';
 import { ExerciseEditor } from './ExerciseEditor';
 import { SettingsPanel } from './SettingsPanel';
 import { StarterExercises } from './StarterExercises';
+import { NewExerciseSheet } from '../workout/NewExerciseSheet';
 
 export function ExercisesTab() {
   const exercises = useStore((s) => s.exercises);
   const upsertExercise = useStore((s) => s.upsertExercise);
   const [query, setQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const visible = useMemo(
     () =>
@@ -51,7 +53,19 @@ export function ExercisesTab() {
 
   return (
     <div className="flex flex-col gap-5 p-4">
-      <h1 className="text-2xl font-bold tracking-tight">Exercises</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold tracking-tight">Exercises</h1>
+        <button
+          onClick={() => setCreating(true)}
+          className="flex h-10 items-center gap-1.5 rounded-xl border border-line-strong bg-surface px-3 text-sm font-semibold transition active:scale-95"
+          aria-label="Add exercise"
+        >
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
+            <path d="M8 2a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2H9v4a1 1 0 1 1-2 0V9H3a1 1 0 1 1 0-2h4V3a1 1 0 0 1 1-1Z" />
+          </svg>
+          Add exercise
+        </button>
+      </div>
 
       <input
         type="search"
@@ -130,6 +144,19 @@ export function ExercisesTab() {
             ))}
           </div>
         </section>
+      ) : null}
+
+      {creating ? (
+        <NewExerciseSheet
+          open
+          muscleId={null}
+          onClose={() => setCreating(false)}
+          onCreated={(exercise) => {
+            setQuery('');
+            setCreating(false);
+            setEditingId(exercise.id);
+          }}
+        />
       ) : null}
 
       {editing ? (

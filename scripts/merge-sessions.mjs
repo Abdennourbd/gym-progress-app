@@ -44,7 +44,6 @@ for (const s of sessions) {
 
 const backup = JSON.parse(JSON.stringify(sessions));
 
-let mergedCount = 0;
 let droppedDupes = 0;
 const mergedSessions = [];
 
@@ -85,7 +84,6 @@ for (const [date, group] of byDate) {
   };
   if (merged.endedAt === undefined) delete merged.endedAt;
   mergedSessions.push(merged);
-  mergedCount += 1;
   console.log(
     `merge ${date}: ${group.length} sessions -> ${deduped.length} entries` +
       (keepId === unfinished?.id ? ' (keeps the open session)' : ''),
