@@ -4,9 +4,24 @@ A personal gym tracker for progressive overload. Log one set per exercise, and
 the app tells you what to aim for next time — and whether each muscle is
 actually getting stronger.
 
-Built for one person, on their phone, mid-workout.
+Built for your phone, mid-workout. Anyone can make an account, and every
+account keeps its own workouts to itself.
 
 ---
+
+## Accounts
+
+There is no account baked into the app. Open it and make one: a username and a
+password, and you are in.
+
+- Every account has its own exercises, workouts and settings.
+- One account can never see another account's data, on the server or on the
+  device. A shared phone is safe.
+- A new account starts empty, with a short starter set of fourteen common
+  movements to add in one tap.
+
+Set `GYM_INVITE_CODE` if you want people to need a code before they can make
+an account. Leave it unset and anyone who has the link can sign up.
 
 ## What it does
 
@@ -79,17 +94,20 @@ npm run dev
 It works with zero configuration: without cloud credentials the app stores
 everything in `.data/` on the server and in IndexedDB in the browser.
 
-To sign in, set a password hash in `.env.local`:
+To sign in, make an account from the login screen. The only thing the app
+needs from you is a secret to sign its session cookie with:
 
 ```bash
-npm run hash-password -- "your password"
+npm run dev
 ```
 
 ```env
-GYM_EMAIL=you@example.com
-GYM_PASSWORD_HASH=scrypt.16384.8.1.<salt>.<hash>
 AUTH_SECRET=<at least 32 random characters>
 ```
+
+Without `AUTH_SECRET` the app throws when it tries to sign a session. Any
+long random string will do — `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`
+makes one.
 
 ## Deploying
 
@@ -98,8 +116,6 @@ The app is a standard Next.js project, so Vercel works out of the box.
 ```bash
 npx vercel login
 npx vercel install upstash/upstash-kv   # creates the database
-npx vercel env add GYM_EMAIL production
-npx vercel env add GYM_PASSWORD_HASH production
 npx vercel env add AUTH_SECRET production
 ./deploy.sh
 ```
@@ -108,18 +124,14 @@ Or connect the GitHub repository in the Vercel dashboard and every push
 deploys on its own. The Upstash integration fills in `KV_REST_API_URL` and
 `KV_REST_API_TOKEN` for you.
 
-`npm run hash-password -- "your password"` prints the hash to paste into
-`GYM_PASSWORD_HASH`.
-
 ## Environment variables
 
 | Variable | Purpose |
 | --- | --- |
-| `GYM_EMAIL` | The one account that can sign in |
-| `GYM_PASSWORD_HASH` | scrypt hash from `npm run hash-password` |
 | `AUTH_SECRET` | Signs the session cookie, 32+ characters |
 | `KV_REST_API_URL` | Cloud store, set by the Upstash integration |
 | `KV_REST_API_TOKEN` | Cloud store, set by the Upstash integration |
+| `GYM_INVITE_CODE` | Optional. When set, an account needs this code to be created |
 
 `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` work as well, if you
 would rather set up Upstash yourself.
@@ -156,7 +168,7 @@ npm run test:e2e  # real browser: log a set, reload, still there
 It matches exercises by name, so running it twice does not duplicate anything.
 
 ```bash
-GYM_EMAIL=you@example.com E2E_PASSWORD=your-password node scripts/import-log.mjs
+USERNAME=your-username PASSWORD=your-password node scripts/import-log.mjs
 ```
 
 Edit the `LOG` array at the top of that file to change what gets imported.
@@ -172,14 +184,17 @@ src/
     exercises/          library, editor, settings
   lib/
     training/           pure maths: strength, suggestions, index, dates
-    server/             auth, session, storage
+    server/             accounts, auth, session, storage
     client/             local mirror, store, sync
-scripts/                password hashing, icon generation, visual review
+scripts/                icon generation, log import, visual review
 e2e/                    Playwright tests
 ```
 
 The maths lives in `src/lib/training/` as pure functions with no React and no
-I/O, so it can be tested directly and reasoned about on its own.
+I/O, so it can be tested directly and reasoned about on its own. The account
+registry and the key namespacing live in `src/lib/server/`, and every read and
+write of somebody's data goes through them, so no two accounts can be mixed
+up by accident.
 
 ## Design notes
 

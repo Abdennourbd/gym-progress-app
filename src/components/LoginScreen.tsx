@@ -26,7 +26,7 @@ function tabClass(active: boolean): string {
  * The server sends the reason with the failure, so a mismatched password
  * says so instead of showing a generic refusal.
  */
-function messageFor(err: unknown, mode: Mode): string {
+function messageFor(err: unknown): string {
   if (err instanceof ApiError) {
     if (err.body?.issue) return err.body.issue;
     if (err.status === 409) return 'That username is taken.';
@@ -38,9 +38,8 @@ function messageFor(err: unknown, mode: Mode): string {
 
   if (err instanceof UnauthorizedError) return 'Wrong username or password.';
 
-  return mode === 'signup'
-    ? 'Cannot reach the server. Check your connection and try again.'
-    : 'Wrong username or password.';
+  // No signal. This is not the password's fault, so it does not say it is.
+  return "Can't reach the server. Check your connection and try again.";
 }
 
 export function LoginScreen({ onSignedIn }: Props) {
@@ -82,7 +81,7 @@ export function LoginScreen({ onSignedIn }: Props) {
             return;
           }
         }
-        setError(messageFor(err, mode));
+        setError(messageFor(err));
       } finally {
         setBusy(false);
       }

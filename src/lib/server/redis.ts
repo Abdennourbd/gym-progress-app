@@ -18,10 +18,3 @@ export function getRedis(): Redis | null {
   client = new Redis({ url, token });
   return client;
 }
-
-export const KEYS = {
-  exercises: 'gym:v1:exercises',
-  sessions: 'gym:v1:sessions',
-  settings: 'gym:v1:settings',
-  session: (id: string) => `gym:v1:sessions:${id}`,
-};

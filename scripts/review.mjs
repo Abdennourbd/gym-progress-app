@@ -14,7 +14,7 @@ rmSync(path.join(PROJECT, '.data'), { recursive: true, force: true });
 
 const OUT = path.resolve(process.argv[2] ?? '/tmp/opencode/shots');
 const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:3000';
-const EMAIL = process.env.GYM_EMAIL ?? 'test@example.com';
+const USERNAME = process.env.USERNAME ?? 'review-user';
 const PASSWORD = process.env.E2E_PASSWORD ?? 'test-password';
 
 mkdirSync(OUT, { recursive: true });
@@ -153,8 +153,8 @@ const seed = async () => {
 await page.goto(BASE);
 await shot('01-login');
 
-await page.getByPlaceholder('Email').fill(EMAIL);
-await page.getByPlaceholder('Password').fill(PASSWORD);
+await page.getByLabel('Username').fill(USERNAME);
+await page.getByLabel('Password').fill(PASSWORD);
 await page.getByRole('button', { name: 'Sign in' }).click();
 await page.waitForTimeout(600);
 await shot('02-workout-empty');

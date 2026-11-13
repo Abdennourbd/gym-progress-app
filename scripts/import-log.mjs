@@ -10,8 +10,8 @@
  *
  * Environment:
  *   BASE_URL   default https://gym-progress-app-liart.vercel.app
- *   GYM_EMAIL  the account to log in with
- *   E2E_PASSWORD the password for that account
+ *   USERNAME   the account to log in with
+ *   PASSWORD   the password for that account
  */
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -21,8 +21,8 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 const BASE = process.env.BASE_URL ?? 'https://gym-progress-app-liart.vercel.app';
-const EMAIL = process.env.GYM_EMAIL ?? 'nounoubendji@gmail.com';
-const PASSWORD = process.env.E2E_PASSWORD ?? 'gym-progressive-2026';
+const USERNAME = process.env.USERNAME ?? 'abdennour';
+const PASSWORD = process.env.PASSWORD ?? '';
 
 const DATE = process.env.LOG_DATE ?? '2026-11-11';
 const SESSION_ID = `import-${DATE}`;
@@ -71,7 +71,7 @@ async function main() {
   const login = await fetch(`${BASE}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+    body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
   });
 
   if (!login.ok) {

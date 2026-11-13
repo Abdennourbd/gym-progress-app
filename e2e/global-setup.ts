@@ -1,12 +1,13 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 /**
- * Wipes the local data store and seeds it with the exercise library, so the
- * tests run against a realistic app without touching the real database.
+ * Wipes the local data store and seeds it with an account and its exercise
+ * library, so the tests run against a realistic app without touching the real
+ * database.
  */
-export default function globalSetup() {
+export default async function globalSetup() {
   // The tests write real data. Refuse to point them at anything that is not
   // this machine unless it is spelled out.
   const remote = process.env.BASE_URL;
@@ -23,6 +24,14 @@ export default function globalSetup() {
   const data = path.join(root, '.data');
   rmSync(data, { recursive: true, force: true });
   mkdirSync(data, { recursive: true });
+
+  // The store is read when it is used, not when it is imported, so these can
+  // be set here even though the imports below happen first.
+  process.env.GYM_STORE = 'local';
+  process.env.GYM_DATA_DIR = data;
+
+  const { createUser } = await import('../src/lib/server/users');
+  const { saveExercises, saveSession } = await import('../src/lib/server/repo');
 
   const log = JSON.parse(
     readFileSync(path.join(root, 'scripts', 'log-data.json'), 'utf8'),
@@ -63,23 +72,9 @@ export default function globalSetup() {
     updatedAt: startedAt,
   };
 
-  writeFileSync(
-    path.join(data, 'gym:v1:exercises.json'),
-    JSON.stringify(exercises),
-  );
-  writeFileSync(
-    path.join(data, 'gym:v1:sessions.json'),
-    JSON.stringify([
-      {
-        id: session.id,
-        date: session.date,
-        entryCount: session.entries.length,
-        updatedAt: session.updatedAt,
-      },
-    ]),
-  );
-  writeFileSync(
-    path.join(data, `gym:v1:sessions:${session.id}.json`),
-    JSON.stringify(session),
-  );
+  const user = await createUser(process.env.E2E_USERNAME ?? 'e2e-user', 'test-password');
+  if (!user) throw new Error('Could not make the end to end test account');
+
+  await saveExercises(user.id, exercises);
+  await saveSession(user.id, session);
 }

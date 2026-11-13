@@ -18,5 +18,4 @@ npx vercel deploy --prod --yes
 echo
 echo "Done. The URL is printed above."
 echo "Do not forget the environment variables:"
-echo "  GYM_EMAIL, GYM_PASSWORD_HASH, AUTH_SECRET,"
-echo "  UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN"
+echo "  AUTH_SECRET, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN"

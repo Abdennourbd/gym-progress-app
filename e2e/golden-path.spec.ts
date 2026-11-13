@@ -1,12 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const EMAIL = process.env.GYM_EMAIL ?? 'test@example.com';
+const USERNAME = process.env.E2E_USERNAME ?? 'e2e-user';
 const PASSWORD = process.env.E2E_PASSWORD ?? 'test-password';
 
 async function signIn(page: Page) {
   await page.goto('/');
-  await page.getByPlaceholder('Email').fill(EMAIL);
-  await page.getByPlaceholder('Password').fill(PASSWORD);
+  await page.getByLabel('Username').fill(USERNAME);
+  await page.getByLabel('Password').fill(PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByRole('heading', { name: 'Workout' })).toBeVisible();
 }
@@ -363,7 +363,11 @@ test('opens offline even when the sign in marker is missing', async ({ page, con
 
   // Forget that we were signed in. The data on this device should still be
   // enough to open the app with no signal.
-  await page.evaluate(() => window.localStorage.removeItem('gym:signed-in'));
+  await page.evaluate(() => {
+    for (const key of Object.keys(window.localStorage)) {
+      if (key.startsWith('gym:signed-in')) window.localStorage.removeItem(key);
+    }
+  });
 
   await context.setOffline(true);
   await page.reload({ waitUntil: 'domcontentloaded' });
@@ -394,10 +398,10 @@ test('a network failure is not reported as a wrong password', async ({ page, con
   await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
 
-  await page.getByPlaceholder('Email').fill('someone@example.com');
-  await page.getByPlaceholder('Password').fill('whatever');
+  await page.getByLabel('Username').fill('someone');
+  await page.getByLabel('Password').fill('whatever');
   await page.getByRole('button', { name: 'Sign in' }).click();
 
-  await expect(page.getByText(/Can't reach the server/)).toBeVisible();
-  await expect(page.getByText('Wrong email or password.')).toHaveCount(0);
+  await expect(page.getByText(/reach the server/)).toBeVisible();
+  await expect(page.getByText('Wrong username or password.')).toHaveCount(0);
 });
