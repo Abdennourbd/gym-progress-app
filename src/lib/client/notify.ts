@@ -10,7 +10,7 @@ export async function notifyRestDone(): Promise<boolean> {
   if (Notification.permission !== 'granted') return false;
 
   const options = {
-    body: 'Time for your next set.',
+    body: 'Timer done, time for your next set.',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     tag: 'rest-timer',
@@ -24,7 +24,7 @@ export async function notifyRestDone(): Promise<boolean> {
     if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.getRegistration();
       if (registration) {
-        await registration.showNotification('Rest timer done', options);
+        await registration.showNotification('GET THE FUCK UP !!!!', options);
         return true;
       }
     }
@@ -33,7 +33,7 @@ export async function notifyRestDone(): Promise<boolean> {
   }
 
   try {
-    new Notification('Rest timer done', options);
+    new Notification('GET THE FUCK UP !!!!', options);
     return true;
   } catch {
     return false;
