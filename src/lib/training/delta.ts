@@ -8,9 +8,11 @@ function trim(n: number): string {
 }
 
 /**
- * Compares the set just logged against the previous one for the same
- * exercise. Weight is reported first because that is the change that matters
- * most once a rep target has been reached.
+ * How the set just logged compares with the previous one.
+ *
+ * Going heavier is the change that matters, even when the reps dip to the
+ * bottom of the range to make room for the new weight. A heavier bar with at
+ * least one rep is progress, so it is reported as such.
  */
 export function deltaBadge(
   previous: { weightKg: number; reps: number } | null,
@@ -18,10 +20,10 @@ export function deltaBadge(
 ): Delta {
   if (!previous) return { kind: 'new', label: 'new' };
 
-  if (current.weightKg > previous.weightKg && current.reps >= previous.reps) {
+  if (current.weightKg > previous.weightKg && current.reps > 0) {
     return { kind: 'up', label: `${trim(current.weightKg - previous.weightKg)} kg` };
   }
-  if (current.weightKg < previous.weightKg && current.reps <= previous.reps) {
+  if (current.weightKg < previous.weightKg) {
     return { kind: 'down', label: `${trim(previous.weightKg - current.weightKg)} kg` };
   }
   if (current.reps > previous.reps) {

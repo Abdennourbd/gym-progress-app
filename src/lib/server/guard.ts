@@ -16,9 +16,9 @@ export async function currentUser(): Promise<{ id: string; username: string } | 
 }
 
 /**
- * Slides the two-hour expiry forward on every authenticated response, so one
- * login covers a whole workout but the session still dies two hours after the
- * last interaction.
+ * Slides the expiry forward on every authenticated response, so a regular
+ * training week never signs anyone out mid-set. The session only dies after
+ * ten days with no app activity at all.
  */
 export async function touchSession(res: NextResponse): Promise<void> {
   const store = await cookies();

@@ -37,6 +37,7 @@ export function RestTimer({ defaultSec }: { defaultSec: number }) {
   const [timer, setTimer] = useState<StoredRestTimer>(loadStored);
   const [nowMs, setNowMs] = useState<number | null>(null);
   const timerRef = useRef(timer);
+  const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null);
 
   useEffect(() => {
     timerRef.current = timer;
@@ -62,6 +63,8 @@ export function RestTimer({ defaultSec }: { defaultSec: number }) {
     }
   };
 
+  const running = isRunning(timer);
+
   // Persist every meaningful change so a reload picks the rest up.
   useEffect(() => {
     storeStored(timer);
@@ -82,6 +85,62 @@ export function RestTimer({ defaultSec }: { defaultSec: number }) {
     }, 250);
     return () => clearInterval(id);
   }, []);
+
+  // Keep the screen awake while a rest is running. With the display on, the
+  // clock ticks on time and the done notification pops the moment the rest
+  // ends, instead of whenever the tab happens to catch up.
+  useEffect(() => {
+    if (!running) return;
+
+    const acquire = async () => {
+      try {
+        const nav = navigator as Navigator & {
+          wakeLock?: { request: (type: 'screen') => Promise<{ release: () => Promise<void> }> };
+        };
+        if (!nav.wakeLock) return;
+        wakeLockRef.current = await nav.wakeLock.request('screen');
+      } catch {
+        // The phone denied it (battery saver, low charge). The timer still
+        // works; the screen may do the throttling thing.
+      }
+    };
+
+    void acquire();
+    // The lock is dropped automatically when the page is hidden, so grab it
+    // again on return.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void acquire();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      const lock = wakeLockRef.current;
+      wakeLockRef.current = null;
+      if (lock) void lock.release().catch(() => undefined);
+    };
+  }, [running]);
+
+  // One wake-up aimed at the exact moment the rest ends, so the alert lands
+  // on time even if the periodic tick is throttled in the background.
+  useEffect(() => {
+    if (!running) return;
+    const endsAt = timer.endsAt;
+    if (endsAt === null) return;
+
+    const ms = Math.max(0, endsAt - Date.now()) + 60;
+    const id = setTimeout(() => {
+      const now = Date.now();
+      const current = timerRef.current;
+      setNowMs(now);
+      if (isRunning(current) && isDone(current, now)) {
+        setTimer(finishRest());
+        storeStored(finishRest());
+        ring();
+      }
+    }, ms);
+    return () => clearTimeout(id);
+  }, [running, timer.endsAt]);
 
   // Re-check the wall clock whenever the app comes back to the foreground.
   useEffect(() => {
@@ -109,7 +168,6 @@ export function RestTimer({ defaultSec }: { defaultSec: number }) {
     nowMs ?? (timer.endsAt !== null ? timer.endsAt - timer.totalMs : 0);
   const remaining = remainingMs(timer, displayNow);
   const secondsLeft = Math.ceil(remaining / 1000);
-  const running = isRunning(timer);
   const urgent = running && secondsLeft > 0 && secondsLeft <= 10;
   const mmss = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
 

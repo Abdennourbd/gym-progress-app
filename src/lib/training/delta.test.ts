@@ -44,4 +44,18 @@ describe('deltaBadge', () => {
   it('prefers weight when both weight and reps went up', () => {
     expect(deltaBadge({ weightKg: 80, reps: 8 }, { weightKg: 82.5, reps: 9 }).label).toBe('2.5 kg');
   });
+
+  it('counts a heavier set with fewer reps as progress, not a drop', () => {
+    expect(deltaBadge({ weightKg: 80, reps: 8 }, { weightKg: 82.5, reps: 6 })).toEqual({
+      kind: 'up',
+      label: '2.5 kg',
+    });
+  });
+
+  it('counts adding the first plates onto a bodyweight exercise as progress', () => {
+    expect(deltaBadge({ weightKg: 0, reps: 12 }, { weightKg: 5, reps: 8 })).toEqual({
+      kind: 'up',
+      label: '5 kg',
+    });
+  });
 });

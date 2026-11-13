@@ -74,15 +74,16 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   }, []);
 
-  // Two hours of inactivity ends the session locally too, so the lock screen
-  // appears without needing a round trip.
+  // Ten days of inactivity ends the session locally too, matching the
+  // server, so the lock screen appears around the same time as the token
+  // would stop being accepted anyway.
   useEffect(() => {
     if (status !== 'in') return;
     let timer: ReturnType<typeof setTimeout>;
 
     const reset = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => setStatus('out'), 2 * 60 * 60 * 1000);
+      timer = setTimeout(() => setStatus('out'), 10 * 24 * 60 * 60 * 1000);
     };
 
     const events: (keyof WindowEventMap)[] = ['pointerdown', 'keydown', 'scroll', 'touchstart'];

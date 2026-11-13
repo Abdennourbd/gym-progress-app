@@ -59,9 +59,9 @@ export function AppShell() {
       {username === 'demo' ? (
         <div
           role="status"
-          className="border-b border-amber-500/30 bg-amber-500/15 px-4 py-1.5 text-center text-xs font-medium text-amber-800 dark:text-amber-200"
+          className="border-b border-amber-500/40 bg-amber-400 px-4 py-1.5 text-center text-xs font-medium text-amber-950"
         >
-          You&apos;re in the shared demo account — nothing you change is saved.{' '}
+          Demo account: nothing you change is saved.{' '}
           <button
             type="button"
             className="font-semibold underline"
