@@ -13,18 +13,22 @@ function secret(): Uint8Array {
   return new TextEncoder().encode(value);
 }
 
-export async function createSessionToken(email: string): Promise<string> {
-  return new SignJWT({ sub: email })
+export async function createSessionToken(userId: string, username: string): Promise<string> {
+  return new SignJWT({ sub: userId, username })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
     .sign(secret());
 }
 
-export async function verifySessionToken(token: string): Promise<string | null> {
+export async function verifySessionToken(
+  token: string,
+): Promise<{ id: string; username: string } | null> {
   try {
     const { payload } = await jwtVerify(token, secret(), { algorithms: ['HS256'] });
-    return typeof payload.sub === 'string' ? payload.sub : null;
+    if (typeof payload.sub !== 'string') return null;
+    const username = typeof payload.username === 'string' ? payload.username : '';
+    return { id: payload.sub, username };
   } catch {
     return null;
   }

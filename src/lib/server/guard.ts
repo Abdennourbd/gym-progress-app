@@ -8,7 +8,7 @@ import {
   verifySessionToken,
 } from './session';
 
-export async function currentUser(): Promise<string | null> {
+export async function currentUser(): Promise<{ id: string; username: string } | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -25,10 +25,10 @@ export async function touchSession(res: NextResponse): Promise<void> {
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return;
 
-  const email = await verifySessionToken(token);
-  if (!email) return;
+  const user = await verifySessionToken(token);
+  if (!user) return;
 
-  const fresh = await createSessionToken(email);
+  const fresh = await createSessionToken(user.id, user.username);
   res.cookies.set(SESSION_COOKIE, fresh, sessionCookieOptions(newExpiry()));
 }
 
