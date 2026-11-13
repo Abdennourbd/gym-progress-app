@@ -178,7 +178,7 @@ export function ProgressTab() {
         <div className="flex flex-col gap-1.5">
           {recentSessions.map((session) => {
             const sets = session.entries.reduce(
-              (sum, e) => sum + (e.sets ?? 1),
+              (sum, e) => (e.reps > 0 ? sum + (e.sets ?? 1) : sum),
               0,
             );
 
@@ -192,7 +192,9 @@ export function ProgressTab() {
                   {session.entries.length}{' '}
                   {session.entries.length === 1 ? 'exercise' : 'exercises'}
                 </span>
-                <span className="text-xs tabular-nums text-ink-soft">{sets} sets</span>
+                <span className="text-xs tabular-nums text-ink-soft">
+                  {sets} {sets === 1 ? 'set' : 'sets'}
+                </span>
               </div>
             );
           })}

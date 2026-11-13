@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useStore } from '@/lib/client/store';
 import {
   addEntryToSession,
+  currentWorkout,
   finishSessionNow,
   removeEntryFromSession,
   startSession,
@@ -37,7 +38,7 @@ export function WorkoutTab() {
   const listRef = useRef<HTMLDivElement>(null);
 
   const session = useMemo(
-    () => sessions.find((s) => s.id === activeSessionId) ?? null,
+    () => currentWorkout(sessions, activeSessionId),
     [sessions, activeSessionId],
   );
 
@@ -49,7 +50,13 @@ export function WorkoutTab() {
   );
 
   const totalSets = useMemo(
-    () => (session ? session.entries.reduce((sum, e) => sum + (e.sets ?? 1), 0) : 0),
+    () =>
+      session
+        ? session.entries.reduce(
+            (sum, e) => (e.reps > 0 ? sum + (e.sets ?? 1) : sum),
+            0,
+          )
+        : 0,
     [session],
   );
 
@@ -64,7 +71,7 @@ export function WorkoutTab() {
       mode: 'add',
       exerciseId,
       weightKg: previous?.weightKg ?? 0,
-      reps: previous?.reps ?? exercise?.targetReps.min ?? 0,
+      reps: previous?.reps && previous.reps > 0 ? previous.reps : exercise?.targetReps.min ?? 0,
       sets: 1,
     });
   };
@@ -155,7 +162,7 @@ export function WorkoutTab() {
             <div className="flex-1 rounded-2xl border border-line bg-surface px-3.5 py-2">
               <p className="text-xl font-bold leading-none tabular-nums">{totalSets}</p>
               <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-                sets
+                {totalSets === 1 ? 'set' : 'sets'}
               </p>
             </div>
           </div>

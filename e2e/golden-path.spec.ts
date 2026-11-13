@@ -3,7 +3,49 @@ import { test, expect, type Page } from '@playwright/test';
 const USERNAME = process.env.E2E_USERNAME ?? 'e2e-user';
 const PASSWORD = process.env.E2E_PASSWORD ?? 'test-password';
 
+/**
+ * Deletes whatever earlier tests logged today on the shared test store,
+ * straight from node, before any browser state exists. Server-side deletes
+ * are the only reliable reset: the client's offline-first merge would just
+ * push the loaded copy straight back.
+ */
+async function wipeToday() {
+  const base = process.env.BASE_URL ?? 'http://127.0.0.1:3210';
+  const login = await fetch(`${base}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
+  });
+  if (!login.ok) return;
+  const cookie = login.headers
+    .getSetCookie()
+    .map((c) => c.split(';')[0])
+    .join('; ');
+
+  const res = await fetch(`${base}/api/state`, { headers: { cookie } });
+  if (!res.ok) return;
+  const state = (await res.json()) as {
+    sessions?: { id: string; date: string }[];
+  };
+
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10);
+
+  await Promise.all(
+    (state.sessions ?? [])
+      .filter((s) => s.date === today)
+      .map((s) =>
+        fetch(`${base}/api/sessions/${s.id}`, {
+          method: 'DELETE',
+          headers: { cookie },
+        }),
+      ),
+  );
+}
+
 async function signIn(page: Page) {
+  await wipeToday();
   await page.goto('/');
   await page.getByLabel('Username').fill(USERNAME);
   await page.getByLabel('Password').fill(PASSWORD);
@@ -38,6 +80,28 @@ test('a visitor can look around without an account', async ({ page }) => {
   await page.getByRole('button', { name: 'Look around as a visitor' }).click();
   await expect(page.getByRole('heading', { name: 'Workout' })).toBeVisible();
   await expect(page.getByText(/nothing you change is saved/)).toBeVisible();
+});
+
+test('logging again the same day picks the workout back up', async ({ page }) => {
+  await signIn(page);
+
+  await openMuscle(page, 'back');
+  await pickExercise(page, 'Machine Rows');
+  await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
+  await page.getByRole('button', { name: 'Finish' }).click();
+  await expect(page.getByText('Pick a muscle to start')).toBeVisible();
+
+  // The muscle list from before the finish is still open, so the next
+  // exercise of the same muscle is right there.
+  await pickExercise(page, 'Close Grip Pulldown');
+  await page.getByRole('dialog').getByRole('button', { name: /Done/ }).click();
+  await expect(page.getByText('Pick a muscle to start')).toHaveCount(0);
+
+  await page.locator('nav').getByRole('button', { name: 'Progress' }).click();
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10);
+  await expect(page.getByText(today, { exact: true })).toHaveCount(1);
 });
 
 test('picks an exercise from the muscle grid and adds it on done', async ({ page }) => {
