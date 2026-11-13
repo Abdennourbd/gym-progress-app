@@ -1,5 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { randomBytes, randomUUID, scryptSync } from 'node:crypto';
+import path from 'node:path';
 import { Redis } from '@upstash/redis';
 
 /**
@@ -7,7 +8,8 @@ import { Redis } from '@upstash/redis';
  * real member using the app: the big lifts move up, a few accessories stall,
  * so every muscle chart has something to say.
  *
- *   node scripts/seed-demo.mjs
+ *   node scripts/seed-demo.mjs          the cloud store
+ *   node scripts/seed-demo.mjs --local  the local file store in .data
  *
  * Safe to re-run: the demo account is wiped and written again from scratch.
  * The demo user's password is random and never printed; visitors sign in
@@ -17,28 +19,58 @@ import { Redis } from '@upstash/redis';
  *   KV_REST_API_URL, KV_REST_API_TOKEN (or UPSTASH_REDIS_REST_URL/TOKEN)
  */
 
-const env = Object.fromEntries(
-  readFileSync('.env.local', 'utf8')
-    .split('\n')
-    .filter((l) => l.includes('=') && !l.trim().startsWith('#'))
-    .map((l) => [
-      l.slice(0, l.indexOf('=')).trim(),
-      l
-        .slice(l.indexOf('=') + 1)
-        .trim()
-        .replace(/^["']|["']$/g, ''),
-    ]),
-);
+const local = process.argv.includes('--local');
+
+const env = local
+  ? {}
+  : Object.fromEntries(
+      readFileSync('.env.local', 'utf8')
+        .split('\n')
+        .filter((l) => l.includes('=') && !l.trim().startsWith('#'))
+        .map((l) => [
+          l.slice(0, l.indexOf('=')).trim(),
+          l
+            .slice(l.indexOf('=') + 1)
+            .trim()
+            .replace(/^["']|["']$/g, ''),
+        ]),
+    );
 
 const url = env.KV_REST_API_URL ?? env.UPSTASH_REDIS_REST_URL;
 const token = env.KV_REST_API_TOKEN ?? env.UPSTASH_REDIS_REST_TOKEN;
 
-if (!url || !token) {
+if (!local && (!url || !token)) {
   console.error('Set KV_REST_API_URL and KV_REST_API_TOKEN in .env.local first.');
   process.exit(1);
 }
 
-const redis = new Redis({ url, token });
+/**
+ * The local file store, written the same way the app writes it, so the demo
+ * account looks the same whichever one is running.
+ */
+function localStore() {
+  const dir = process.env.GYM_DATA_DIR ?? path.join(process.cwd(), '.data');
+  mkdirSync(dir, { recursive: true });
+  const file = (key) => path.join(dir, `${key.replace(/[^a-zA-Z0-9:_-]/g, '_')}.json`);
+
+  return {
+    async get(key) {
+      try {
+        return JSON.parse(readFileSync(file(key), 'utf8'));
+      } catch {
+        return null;
+      }
+    },
+    async set(key, value) {
+      writeFileSync(file(key), JSON.stringify(value));
+    },
+    async del(...keys) {
+      for (const key of keys) writeFileSync(file(key), JSON.stringify(null));
+    },
+  };
+}
+
+const redis = local ? localStore() : new Redis({ url, token });
 
 const N = 16384;
 const R = 8;
