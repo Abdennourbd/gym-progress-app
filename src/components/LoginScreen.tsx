@@ -51,6 +51,7 @@ export function LoginScreen({ onSignedIn }: Props) {
   const [inviteRequired, setInviteRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [visitorBusy, setVisitorBusy] = useState(false);
 
   useEffect(() => {
     void api
@@ -60,7 +61,7 @@ export function LoginScreen({ onSignedIn }: Props) {
   }, []);
 
   const visitAsVisitor = async () => {
-    setBusy(true);
+    setVisitorBusy(true);
     setError(null);
     try {
       const res = await api.demoLogin();
@@ -72,7 +73,7 @@ export function LoginScreen({ onSignedIn }: Props) {
           : "Can't reach the server. Check your connection and try again.",
       );
     } finally {
-      setBusy(false);
+      setVisitorBusy(false);
     }
   };
 
@@ -239,10 +240,10 @@ export function LoginScreen({ onSignedIn }: Props) {
         <button
           type="button"
           onClick={visitAsVisitor}
-          disabled={busy}
+          disabled={visitorBusy || busy}
           className="h-12 w-full rounded-2xl border border-line-strong text-sm font-medium text-ink-soft transition active:scale-[0.99] disabled:opacity-50"
         >
-          Look around as a visitor
+          {visitorBusy ? 'Loading the demo…' : 'Look around as a visitor'}
         </button>
         <p className="text-center text-xs text-ink-faint">
           See a month of training from a real account — no sign-up, nothing is saved.

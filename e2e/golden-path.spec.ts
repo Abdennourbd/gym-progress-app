@@ -37,7 +37,7 @@ test('a visitor can look around without an account', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Look around as a visitor' }).click();
   await expect(page.getByRole('heading', { name: 'Workout' })).toBeVisible();
-  await expect(page.getByText(/shared demo account/)).toBeVisible();
+  await expect(page.getByText(/nothing you change is saved/)).toBeVisible();
 });
 
 test('picks an exercise from the muscle grid and adds it on done', async ({ page }) => {
