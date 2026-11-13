@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 /**
@@ -43,7 +43,15 @@ function read<T>(key: string): T | null {
 
 function write<T>(key: string, value: T): void {
   mkdirSync(DIR, { recursive: true });
-  writeFileSync(file(key), JSON.stringify(value));
+  const target = file(key);
+  writeFileSync(target, JSON.stringify(value));
+  // The store holds password hashes. They are not secrets on their own, but
+  // there is no reason for them to be readable by anybody else on the machine.
+  try {
+    chmodSync(target, 0o600);
+  } catch {
+    // A filesystem that does not know about permissions. Nothing to do.
+  }
 }
 
 function remove(key: string): void {

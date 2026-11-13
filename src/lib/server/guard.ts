@@ -7,12 +7,32 @@ import {
   sessionCookieOptions,
   verifySessionToken,
 } from './session';
+import { findUser } from './users';
 
-export async function currentUser(): Promise<{ id: string; username: string } | null> {
+export interface SessionUser {
+  id: string;
+  username: string;
+}
+
+/**
+ * Who is signed in, if anybody.
+ *
+ * The cookie only says who the session belongs to. The account is looked up
+ * as well, so a session for an account that has been removed stops working
+ * straight away instead of lingering on until it expires.
+ */
+export async function currentUser(): Promise<SessionUser | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  return verifySessionToken(token);
+
+  const claims = await verifySessionToken(token);
+  if (!claims) return null;
+
+  const account = await findUser(claims.username);
+  if (!account || account.id !== claims.id) return null;
+
+  return { id: claims.id, username: claims.username };
 }
 
 /**
@@ -20,14 +40,7 @@ export async function currentUser(): Promise<{ id: string; username: string } | 
  * training week never signs anyone out mid-set. The session only dies after
  * ten days with no app activity at all.
  */
-export async function touchSession(res: NextResponse): Promise<void> {
-  const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
-  if (!token) return;
-
-  const user = await verifySessionToken(token);
-  if (!user) return;
-
+export async function touchSession(res: NextResponse, user: SessionUser): Promise<void> {
   const fresh = await createSessionToken(user.id, user.username);
   res.cookies.set(SESSION_COOKIE, fresh, sessionCookieOptions(newExpiry()));
 }

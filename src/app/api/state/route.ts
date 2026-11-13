@@ -8,7 +8,7 @@ export async function GET() {
 
   try {
     const res = NextResponse.json(await loadState(user.id));
-    await touchSession(res);
+    await touchSession(res, user);
     return res;
   } catch {
     return NextResponse.json({ error: 'storage_unavailable' }, { status: 503 });

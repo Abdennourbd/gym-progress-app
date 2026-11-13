@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { findUser } from '@/lib/server/users';
-import { rateLimit } from '@/lib/server/rate-limit';
+import { count, hit } from '@/lib/server/rate-limit';
+import { clientIp } from '@/lib/server/client-ip';
 import {
   SESSION_COOKIE,
   createSessionToken,
@@ -8,10 +9,10 @@ import {
   sessionCookieOptions,
 } from '@/lib/server/session';
 
-function ipOf(req: Request): string {
-  const forwarded = req.headers.get('x-forwarded-for');
-  return forwarded?.split(',')[0]?.trim() || 'unknown';
-}
+/** Fifteen minutes. */
+const WINDOW = 15 * 60 * 1000;
+/** Visits to the demo from one address. */
+const IP_LIMIT = 30;
 
 /**
  * Signs the visitor into the shared demo account.
@@ -21,9 +22,11 @@ function ipOf(req: Request): string {
  * every write endpoint refuses it, so it never gets trashed.
  */
 export async function POST(req: Request) {
-  if (!rateLimit(`demo:${ipOf(req)}`, 30, 15 * 60 * 1000)) {
+  const ip = clientIp(req);
+  if ((await count(`demo:ip:${ip}`)) >= IP_LIMIT) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   }
+  await hit(`demo:ip:${ip}`, WINDOW);
 
   const demo = await findUser('demo');
   if (!demo) {

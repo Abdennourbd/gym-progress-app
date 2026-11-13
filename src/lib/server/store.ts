@@ -22,6 +22,20 @@ export interface Store {
    */
   setIfAbsent<T>(key: string, value: T): Promise<boolean>;
   del(key: string): Promise<void>;
+  /**
+   * How many times a key has been counted in the current window.
+   *
+   * Zero when the key is not there. Only the cloud store can answer this
+   * across more than one instance, so it is optional.
+   */
+  count?(key: string): Promise<number>;
+  /**
+   * Counts one hit in a window and returns the running total.
+   *
+   * The window starts with the first hit and is repeated by every hit after
+   * it, so the count falls back to zero on its own.
+   */
+  increment?(key: string, windowMs: number): Promise<number>;
   readonly backend: 'redis' | 'local';
 }
 
@@ -47,6 +61,21 @@ const redisStore: Store = {
     const redis = getRedis();
     if (!redis) throw new Error('redis is not configured');
     await redis.del(key);
+  },
+  async count(key: string) {
+    const redis = getRedis();
+    if (!redis) throw new Error('redis is not configured');
+    const raw = await redis.get<string | number>(key);
+    const value = typeof raw === 'number' ? raw : Number.parseInt(String(raw ?? ''), 10);
+    return Number.isFinite(value) ? value : 0;
+  },
+  async increment(key: string, windowMs: number) {
+    const redis = getRedis();
+    if (!redis) throw new Error('redis is not configured');
+    const total = await redis.incr(key);
+    // The first hit opens the window. Every later hit only refreshes it.
+    if (total === 1) await redis.expire(key, Math.max(1, Math.ceil(windowMs / 1000)));
+    return total;
   },
 };
 

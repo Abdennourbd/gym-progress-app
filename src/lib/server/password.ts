@@ -1,4 +1,4 @@
-import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { randomBytes, scrypt, timingSafeEqual, type ScryptOptions } from 'node:crypto';
 
 const N = 16384;
 const R = 8;
@@ -9,19 +9,47 @@ const KEYLEN = 64;
 const MAXMEM = 64 * 1024 * 1024;
 
 /**
+ * The work factor. It is written into the hash so it can be raised later
+ * without invalidating the passwords that are already stored.
+ */
+const OPTIONS: ScryptOptions = { N, r: R, p: P, maxmem: MAXMEM };
+
+/**
+ * The same derivation Node does, without taking the whole process with it.
+ *
+ * The synchronous version blocks the event loop for the length of the
+ * calculation. On a small server that is a lever anyone can pull: a handful of
+ * sign in attempts in a row is enough to make every other request wait. The
+ * asynchronous version hands the work to the thread pool, where it belongs.
+ */
+function derive(
+  password: string,
+  salt: Buffer,
+  keylen: number,
+  options: ScryptOptions,
+): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, keylen, options, (error, derived) => {
+      if (error) reject(error);
+      else resolve(derived);
+    });
+  });
+}
+
+/**
  * Stored as `scrypt.N.r.p.salt.hash`.
  *
  * The separator is a dot rather than a dollar sign on purpose: this value
  * lives in an environment variable, and `$` triggers variable expansion when
  * the env file is parsed, which would silently corrupt the hash.
  */
-export function hashPassword(password: string): string {
+export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
-  const hash = scryptSync(password, salt, KEYLEN, { N, r: R, p: P, maxmem: MAXMEM });
+  const hash = await derive(password, salt, KEYLEN, OPTIONS);
   return `scrypt.${N}.${R}.${P}.${salt.toString('base64')}.${hash.toString('base64')}`;
 }
 
-export function verifyPassword(password: string, stored: string): boolean {
+export async function verifyPassword(password: string, stored: string): Promise<boolean> {
   const parts = stored.split('.');
   if (parts.length !== 6 || parts[0] !== 'scrypt') return false;
 
@@ -42,7 +70,7 @@ export function verifyPassword(password: string, stored: string): boolean {
 
   let actual: Buffer;
   try {
-    actual = scryptSync(password, salt, expected.length, { N, r: R, p: P, maxmem: MAXMEM });
+    actual = await derive(password, salt, expected.length, { N, r: R, p: P, maxmem: MAXMEM });
   } catch {
     return false;
   }

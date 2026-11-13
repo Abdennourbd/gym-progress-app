@@ -23,6 +23,6 @@ export async function PUT(req: Request) {
   await saveSessions(user.id, parsed.data.sessions);
 
   const res = NextResponse.json({ ok: true, saved: parsed.data.sessions.length });
-  await touchSession(res);
+  await touchSession(res, user);
   return res;
 }

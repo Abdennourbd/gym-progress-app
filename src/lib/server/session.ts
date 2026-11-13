@@ -1,7 +1,19 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { randomBytes } from 'node:crypto';
 
-export const SESSION_COOKIE = 'gym_session';
+/**
+ * The name of the cookie that holds the session.
+ *
+ * In production it carries the `__Host-` prefix, which a browser only accepts
+ * when the cookie is marked secure, has no domain of its own and is set for
+ * the whole site. That rules out a page on a subdomain of the app, or one on
+ * the same site but a different name, writing a cookie of its own that the
+ * app would then read. It does mean the app has to be served over https,
+ * which is where it belongs anyway.
+ */
+export const SESSION_COOKIE =
+  process.env.NODE_ENV === 'production' ? '__Host-gym_session' : 'gym_session';
+
 /** Ten days. Refreshed on every authenticated request, so you stay signed in
  *  across workouts and only need the password again after a long layoff. */
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 10;
@@ -72,5 +84,22 @@ export function sessionCookieOptions(expiresAt: Date) {
     sameSite: 'lax' as const,
     path: '/',
     expires: expiresAt,
+  };
+}
+
+/**
+ * The same cookie, with no life left in it.
+ *
+ * The attributes have to match the ones the cookie was set with, or the
+ * browser keeps the old one. The `__Host-` prefix needs the secure flag to be
+ * there as well, so it cannot be left off.
+ */
+export function clearedSessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: 0,
   };
 }

@@ -27,7 +27,7 @@ export async function PUT(req: Request, { params }: Params) {
   await saveExercise(user.id, parsed.data);
 
   const res = NextResponse.json({ ok: true });
-  await touchSession(res);
+  await touchSession(res, user);
   return res;
 }
 
@@ -44,6 +44,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   await archiveExercise(user.id, id);
 
   const res = NextResponse.json({ ok: true });
-  await touchSession(res);
+  await touchSession(res, user);
   return res;
 }

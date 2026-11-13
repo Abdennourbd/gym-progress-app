@@ -14,6 +14,6 @@ export async function PUT(req: Request) {
   await saveExercises(user.id, parsed.data.exercises);
 
   const res = NextResponse.json({ ok: true });
-  await touchSession(res);
+  await touchSession(res, user);
   return res;
 }

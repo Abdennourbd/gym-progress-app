@@ -154,3 +154,24 @@ export async function deleteSession(userId: string, id: string): Promise<void> {
 export async function saveSettings(userId: string, settings: Settings): Promise<void> {
   await getStore().set(userKeys(userId).settings, settings);
 }
+
+/**
+ * Removes everything that belongs to one account.
+ *
+ * The sessions live one key each, so the list of them is read first and every
+ * one of them is removed on its own. The list, the exercises and the settings
+ * are removed afterwards.
+ */
+export async function deleteAccountData(userId: string): Promise<void> {
+  const store = getStore();
+  const keys = userKeys(userId);
+
+  const summaries = (await store.get<SessionSummary[]>(keys.sessions)) ?? [];
+  for (const summary of summaries) {
+    await store.del(keys.session(summary.id));
+  }
+
+  await store.del(keys.exercises);
+  await store.del(keys.sessions);
+  await store.del(keys.settings);
+}

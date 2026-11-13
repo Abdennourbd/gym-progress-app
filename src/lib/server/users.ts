@@ -50,7 +50,7 @@ export async function createUser(username: string, password: string): Promise<Us
   const user: User = {
     id: nanoid(),
     username: normalizeUsername(username),
-    passwordHash: hashPassword(password),
+    passwordHash: await hashPassword(password),
     createdAt: Date.now(),
   };
 
@@ -58,6 +58,16 @@ export async function createUser(username: string, password: string): Promise<Us
   return written ? user : null;
 }
 
-export function checkPassword(user: User, password: string): boolean {
+export async function checkPassword(user: User, password: string): Promise<boolean> {
   return verifyPassword(password, user.passwordHash);
+}
+
+/**
+ * Removes the account itself.
+ *
+ * The training data that belongs to it is removed by the caller, which knows
+ * which keys are in use.
+ */
+export async function deleteUser(user: User): Promise<void> {
+  await getStore().del(userRecordKey(user.username));
 }

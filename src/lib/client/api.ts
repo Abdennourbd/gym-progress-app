@@ -87,4 +87,9 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(settings),
     }),
+  deleteAccount: (password: string) =>
+    request<{ ok: true }>('/api/account', {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    }),
 };

@@ -1,11 +1,11 @@
 /*
  * Makes the app work with no signal.
  *
- * The shell is cached so the app opens offline, and every request falls back
- * to the cache when the network is gone. Bump the version to throw away a
+ * The shell is cached so the app opens offline, and every request falls back to
+ * the cache when the network is gone. Bump the version to throw away a
  * stale shell.
  */
-const VERSION = 'gym-shell-v3';
+const VERSION = 'gym-shell-v5';
 const CACHE = VERSION;
 const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
@@ -51,24 +51,19 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // The api answers from the network when it can, and from the last known
-  // copy when it cannot.
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          void caches.open(CACHE).then((c) => c.put(req, copy));
-          return res;
-        })
-        .catch(async () => {
-          const cached = await caches.match(req);
-          if (cached) return cached;
-          return Response.error();
-        }),
-    );
-    return;
-  }
+  /*
+   * The api is never cached.
+   *
+   * A cached answer to "what is on this account?" belongs to whoever asked
+   * it. On a shared phone the next person would be handed the previous
+   * person's training the first time the network dropped, and the cache
+   * cannot tell the two apart.
+   *
+   * The app does not need it either: everything you log is kept on the
+   * device first, under your own account, and that copy is what the app
+   * reads when there is no signal.
+   */
+  if (url.pathname.startsWith('/api/')) return;
 
   // The shell is served from the network when it can, so a new version is
   // picked up straight away, and from the cache when it cannot.

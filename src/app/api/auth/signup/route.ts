@@ -2,7 +2,9 @@ import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { signupBodySchema } from '@/lib/server/schemas';
 import { createUser, validatePassword, validateUsername } from '@/lib/server/users';
-import { rateLimit } from '@/lib/server/rate-limit';
+import { count, hit } from '@/lib/server/rate-limit';
+import { clientIp } from '@/lib/server/client-ip';
+import { readJson } from '@/lib/server/request';
 import {
   SESSION_COOKIE,
   createSessionToken,
@@ -10,10 +12,10 @@ import {
   sessionCookieOptions,
 } from '@/lib/server/session';
 
-function ipOf(req: Request): string {
-  const forwarded = req.headers.get('x-forwarded-for');
-  return forwarded?.split(',')[0]?.trim() || 'unknown';
-}
+/** An hour. */
+const WINDOW = 60 * 60 * 1000;
+/** Accounts made from one address in that hour. */
+const IP_LIMIT = 10;
 
 /**
  * Compares in constant time, so a wrong code cannot be guessed a bit at a
@@ -27,14 +29,26 @@ function codeMatches(given: string, expected: string): boolean {
 }
 
 export async function POST(req: Request) {
-  const parsed = signupBodySchema.safeParse(await req.json().catch(() => null));
+  const body = await readJson(req);
+  if (!body.ok) {
+    if (body.reason === 'too_large') {
+      return NextResponse.json({ error: 'body_too_large' }, { status: 413 });
+    }
+    return NextResponse.json({ error: 'invalid_body' }, { status: 400 });
+  }
+
+  const parsed = signupBodySchema.safeParse(body.value);
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid_body' }, { status: 400 });
   }
 
-  if (!rateLimit(`signup:${ipOf(req)}`, 10, 60 * 60 * 1000)) {
+  const ip = clientIp(req);
+  if ((await count(`signup:ip:${ip}`)) >= IP_LIMIT) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
   }
+  // Every attempt counts here, not only the ones that fail: the thing to keep
+  // down is how many accounts are made.
+  await hit(`signup:ip:${ip}`, WINDOW);
 
   // An invite code is optional. When the deployment sets one, an account
   // cannot be made without it. When it does not, anyone may sign up.

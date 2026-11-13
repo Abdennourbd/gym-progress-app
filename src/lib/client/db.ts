@@ -1,6 +1,6 @@
 'use client';
 
-import { get, set } from 'idb-keyval';
+import { del, get, set } from 'idb-keyval';
 
 /**
  * The local mirror. The UI always reads from here so that logging a set never
@@ -58,4 +58,21 @@ export async function hasLocalData(userId: string): Promise<boolean> {
     readLocal<unknown[]>(keys.sessions, []),
   ]);
   return exercises.length > 0 || sessions.length > 0;
+}
+
+/**
+ * Throws away what is on the device for one account.
+ *
+ * Used when the account is removed. The copy on the phone is a copy of
+ * somebody's training history, so it goes with the account rather than
+ * waiting for the next person to use the phone.
+ */
+export async function clearLocal(userId: string): Promise<void> {
+  const keys = localKeys(userId);
+  await Promise.all([
+    del(keys.exercises),
+    del(keys.sessions),
+    del(keys.settings),
+    del(keys.activeSession),
+  ]);
 }

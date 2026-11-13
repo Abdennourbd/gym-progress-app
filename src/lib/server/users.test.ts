@@ -75,8 +75,8 @@ describe('the account registry', () => {
     const user = await createUser(username, 'a-good-password');
 
     expect(user).not.toBeNull();
-    expect(checkPassword(user!, 'a-good-password')).toBe(true);
-    expect(checkPassword(user!, 'the-wrong-password')).toBe(false);
+    expect(await checkPassword(user!, 'a-good-password')).toBe(true);
+    expect(await checkPassword(user!, 'the-wrong-password')).toBe(false);
   });
 
   it('never stores the password itself', async () => {
