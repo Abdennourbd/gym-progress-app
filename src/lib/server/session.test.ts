@@ -1,9 +1,16 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createSessionToken, verifySessionToken } from './session';
+
+const original = process.env.AUTH_SECRET;
 
 beforeEach(() => {
   process.env.AUTH_SECRET = 'test-secret-test-secret-test-secret-1234';
+});
+
+afterEach(() => {
+  if (original === undefined) delete process.env.AUTH_SECRET;
+  else process.env.AUTH_SECRET = original;
 });
 
 describe('session token', () => {
@@ -24,5 +31,26 @@ describe('session token', () => {
     process.env.AUTH_SECRET = 'a-completely-different-secret-a-completely-1234';
 
     expect(await verifySessionToken(token)).toBeNull();
+  });
+
+  it('refuses to work in production without a secret', async () => {
+    delete process.env.AUTH_SECRET;
+    const production = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+
+    try {
+      await expect(createSessionToken('u-123', 'amina')).rejects.toThrow(/AUTH_SECRET/);
+    } finally {
+      process.env.NODE_ENV = production;
+    }
+  });
+
+  it('still signs in development without a secret', async () => {
+    delete process.env.AUTH_SECRET;
+
+    const token = await createSessionToken('u-123', 'amina');
+    const claims = await verifySessionToken(token);
+
+    expect(claims?.id).toBe('u-123');
   });
 });

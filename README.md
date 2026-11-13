@@ -92,22 +92,23 @@ npm run dev
 ```
 
 It works with zero configuration: without cloud credentials the app stores
-everything in `.data/` on the server and in IndexedDB in the browser.
-
-To sign in, make an account from the login screen. The only thing the app
-needs from you is a secret to sign its session cookie with:
+everything in `.data/` on the server and in IndexedDB in the browser. Make an
+account from the login screen and you are in.
 
 ```bash
 npm run dev
 ```
 
+In development the session cookie is signed with a temporary secret, so a
+restart signs everybody out. To keep people signed in, set one:
+
 ```env
 AUTH_SECRET=<at least 32 random characters>
 ```
 
-Without `AUTH_SECRET` the app throws when it tries to sign a session. Any
-long random string will do — `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`
-makes one.
+`node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`
+makes one. In production it is required: without it the app refuses to sign a
+session rather than run with a secret anyone can guess.
 
 ## Deploying
 
@@ -128,7 +129,7 @@ deploys on its own. The Upstash integration fills in `KV_REST_API_URL` and
 
 | Variable | Purpose |
 | --- | --- |
-| `AUTH_SECRET` | Signs the session cookie, 32+ characters |
+| `AUTH_SECRET` | Signs the session cookie, 32+ characters. Required in production |
 | `KV_REST_API_URL` | Cloud store, set by the Upstash integration |
 | `KV_REST_API_TOKEN` | Cloud store, set by the Upstash integration |
 | `GYM_INVITE_CODE` | Optional. When set, an account needs this code to be created |

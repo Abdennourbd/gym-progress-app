@@ -2118,3 +2118,44 @@ The rate limiter is covered in Task 4.
 adds it to `src/lib/client/api.ts` in the same step that uses it. `request`
 must throw `ApiError` for any non-401 failure so the screen can tell a taken
 username from a wrong password.
+
+---
+
+## Outcome
+
+All eleven tasks are done. 134 unit tests and 20 end to end tests pass, the
+type check is clean and the lint is clean.
+
+**What changed from the plan.**
+
+- `ApiError` carries the parsed error body, not just the status. The login
+  screen shows the reason the server gave, such as "Passwords don't match.",
+- The password field's `autoComplete` follows the mode: `current-password`
+  when signing in, `new-password` when making an account.
+- Every input has a `name`. Chrome was flagging the ones without.
+- The login screen is width constrained like the app shell (`max-w-md`).
+- `store.ts` holds `setUser({ id, username })` rather than `setUserId`. The
+  username is shown in the settings panel as "Signed in as", which matters on
+  a shared phone.
+- `upsertExercises` moved into Task 5, because Task 7 needed it and the file
+  was already being rewritten.
+- `sync.ts` gained `scheduleLibraryPush`, with its own timer. The existing
+  `scheduleExercisePush` timer is shared, so pushing fourteen exercises one
+  after another would have sent only the last one.
+- The old `KEYS` export in `redis.ts` is gone. `LEGACY_KEYS` in `keys.ts`
+  replaced it.
+- `e2e/global-setup.ts` creates the test account itself and seeds it through
+  the repository, because the data now lives under the account's namespace
+  and the setup has to know the id.
+
+**The data.** The live database held more than the local copy: 35 exercises
+and 8 workouts, not the 33 and 3 in `.data/`. The dataset was read straight
+out of the cloud store with `scripts/read-legacy-state.mjs`, copied into the
+new `abdennour` account with `scripts/seed-account.mjs`, and verified: 35
+exercises, 8 sessions, 46 sets, no orphaned entries, the same settings. The
+old global keys were left in place, so the old dataset is still there if it
+is ever needed.
+
+**The account.** `abdennour`, with the password chosen at the prompt. The
+password is not in any file in the repository.
+
