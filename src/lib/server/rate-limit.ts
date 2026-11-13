@@ -14,6 +14,12 @@ interface Bucket {
 const buckets = new Map<string, Bucket>();
 
 export function rateLimit(key: string, limit: number, windowMs: number): boolean {
+  // End-to-end tests sign in many times from the same place; the limiter is
+  // for a public deployment, not for a test run.
+  if (process.env.DISABLE_RATE_LIMIT === '1') {
+    return true;
+  }
+
   const now = Date.now();
   const bucket = buckets.get(key);
 

@@ -10,5 +10,6 @@ cd "$(dirname "$0")/.."
 
 export GYM_STORE="local"
 export AUTH_SECRET="test-secret-test-secret-test-secret-1234"
+export DISABLE_RATE_LIMIT="1"
 
 exec npm run start -- --port "${PORT:-3210}"
