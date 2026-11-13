@@ -45,8 +45,15 @@ export const exercisesBodySchema = z.object({
 });
 
 export const loginBodySchema = z.object({
-  email: z.email(),
+  username: z.string().min(1).max(64),
   password: z.string().min(1).max(200),
+});
+
+export const signupBodySchema = z.object({
+  username: z.string().min(1).max(64),
+  password: z.string().min(1).max(200),
+  confirmPassword: z.string().min(1).max(200),
+  inviteCode: z.string().max(200).optional(),
 });
 
 export type ExerciseInput = z.infer<typeof exerciseSchema>;
