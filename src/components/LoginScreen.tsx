@@ -59,6 +59,23 @@ export function LoginScreen({ onSignedIn }: Props) {
       .catch(() => undefined);
   }, []);
 
+  const visitAsVisitor = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await api.demoLogin();
+      onSignedIn(res.user);
+    } catch (err) {
+      setError(
+        err instanceof ApiError && err.status === 503
+          ? 'The demo account is not set up yet.'
+          : "Can't reach the server. Check your connection and try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const submit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -217,6 +234,20 @@ export function LoginScreen({ onSignedIn }: Props) {
               : 'Sign in'}
         </button>
       </form>
+
+      <div className="flex flex-col items-center gap-2 border-t border-line pt-4">
+        <button
+          type="button"
+          onClick={visitAsVisitor}
+          disabled={busy}
+          className="h-12 w-full rounded-2xl border border-line-strong text-sm font-medium text-ink-soft transition active:scale-[0.99] disabled:opacity-50"
+        >
+          Look around as a visitor
+        </button>
+        <p className="text-center text-xs text-ink-faint">
+          See a month of training from a real account — no sign-up, nothing is saved.
+        </p>
+      </div>
     </div>
   );
 }

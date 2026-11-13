@@ -32,6 +32,14 @@ async function logSet(page: Page, weightSteps: number, repSteps: number) {
   });
 }
 
+test('a visitor can look around without an account', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByRole('button', { name: 'Look around as a visitor' }).click();
+  await expect(page.getByRole('heading', { name: 'Workout' })).toBeVisible();
+  await expect(page.getByText(/shared demo account/)).toBeVisible();
+});
+
 test('picks an exercise from the muscle grid and adds it on done', async ({ page }) => {
   await signIn(page);
 
@@ -236,11 +244,11 @@ test('dark mode can be switched on and off', async ({ page }) => {
   await page.getByRole('button', { name: 'Dark', exact: true }).click();
   await expect.poll(theme).toBe('dark');
 
-  // The page really is dark, not just labelled as such.
-  const background = await page.evaluate(() =>
-    getComputedStyle(document.body).backgroundColor,
-  );
-  expect(background).not.toBe('rgb(250, 250, 250)');
+  // The page really is dark, not just labelled as such. The background
+  // transitions over 150ms, so wait for it to land.
+  const background = () =>
+    page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  await expect.poll(background).not.toBe('rgb(250, 250, 250)');
 
   await page.getByRole('button', { name: 'Light', exact: true }).click();
   await expect.poll(theme).toBe('light');

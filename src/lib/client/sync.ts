@@ -7,6 +7,11 @@ import { mergeAppState } from '@/lib/training/merge';
 import { announceUnauthorized } from './auth-state';
 import type { Exercise } from '@/lib/types';
 
+/** The shared demo account is read-only on the server; never push for it. */
+function demoMode(): boolean {
+  return useStore.getState().username === 'demo';
+}
+
 let exerciseTimer: ReturnType<typeof setTimeout> | null = null;
 let sessionTimer: ReturnType<typeof setTimeout> | null = null;
 let libraryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -82,6 +87,7 @@ export async function pullRemote(): Promise<void> {
  */
 export async function pushAllLocal(): Promise<void> {
   const store = useStore.getState();
+  if (demoMode()) return;
   if (!store.sessions.length && !store.exercises.length) return;
 
   try {
@@ -100,6 +106,7 @@ export async function pushAllLocal(): Promise<void> {
 export function scheduleExercisePush(exercise: Exercise): void {
   if (exerciseTimer) clearTimeout(exerciseTimer);
   exerciseTimer = setTimeout(async () => {
+    if (demoMode()) return;
     try {
       await api.putExercise(exercise);
       useStore.getState().setSyncState('idle');
@@ -123,6 +130,7 @@ export function scheduleExercisePush(exercise: Exercise): void {
 export function scheduleLibraryPush(): void {
   if (libraryTimer) clearTimeout(libraryTimer);
   libraryTimer = setTimeout(async () => {
+    if (demoMode()) return;
     try {
       const exercises = useStore.getState().exercises;
       if (!exercises.length) return;
@@ -141,6 +149,7 @@ export function scheduleLibraryPush(): void {
 export function scheduleSessionPush(sessionId: string): void {
   if (sessionTimer) clearTimeout(sessionTimer);
   sessionTimer = setTimeout(async () => {
+    if (demoMode()) return;
     const store = useStore.getState();
     const session = store.sessions.find((s) => s.id === sessionId);
     if (!session) return;
@@ -165,6 +174,7 @@ export function scheduleSettingsPush(settings: {
 }): void {
   if (exerciseTimer) clearTimeout(exerciseTimer);
   exerciseTimer = setTimeout(async () => {
+    if (demoMode()) return;
     try {
       await api.putSettings(settings);
       useStore.getState().setSyncState('idle');
@@ -182,6 +192,7 @@ export function startSyncListeners(): () => void {
   if (typeof window === 'undefined') return () => {};
 
   const catchUp = () => {
+    if (demoMode()) return;
     void pushAllLocal().then(() => pullRemote());
   };
 

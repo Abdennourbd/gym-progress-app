@@ -54,6 +54,8 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     }),
+  demoLogin: () =>
+    request<{ ok: true; user: AuthUser }>('/api/auth/demo', { method: 'POST' }),
   logout: () => request<{ ok: true }>('/api/auth/logout', { method: 'POST' }),
   fetchSession: () => request<{ authenticated: boolean; user: AuthUser | null }>('/api/auth/session'),
   fetchConfig: () => request<{ inviteRequired: boolean }>('/api/auth/config'),

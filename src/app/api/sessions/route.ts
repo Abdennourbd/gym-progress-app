@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { badRequest, currentUser, touchSession, unauthorized } from '@/lib/server/guard';
+import { badRequest, currentUser, touchSession, unauthorized, isDemoUser, demoForbidden } from '@/lib/server/guard';
 import { sessionSchema } from '@/lib/server/schemas';
 import { saveSessions } from '@/lib/server/repo';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ const bodySchema = z.object({ sessions: z.array(sessionSchema).max(500) });
 export async function PUT(req: Request) {
   const user = await currentUser();
   if (!user) return unauthorized();
+  if (isDemoUser(user)) return demoForbidden();
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return badRequest(parsed.error.issues);

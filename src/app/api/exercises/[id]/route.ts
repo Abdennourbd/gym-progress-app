@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { badRequest, currentUser, touchSession, unauthorized } from '@/lib/server/guard';
+import { badRequest, currentUser, touchSession, unauthorized, isDemoUser, demoForbidden } from '@/lib/server/guard';
 import { exerciseSchema } from '@/lib/server/schemas';
 import { archiveExercise, saveExercise } from '@/lib/server/repo';
 
@@ -15,6 +15,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function PUT(req: Request, { params }: Params) {
   const user = await currentUser();
   if (!user) return unauthorized();
+  if (isDemoUser(user)) return demoForbidden();
 
   const { id } = await params;
   const parsed = exerciseSchema.safeParse(await req.json().catch(() => null));
@@ -37,6 +38,7 @@ export async function PUT(req: Request, { params }: Params) {
 export async function DELETE(_req: Request, { params }: Params) {
   const user = await currentUser();
   if (!user) return unauthorized();
+  if (isDemoUser(user)) return demoForbidden();
 
   const { id } = await params;
   await archiveExercise(user.id, id);

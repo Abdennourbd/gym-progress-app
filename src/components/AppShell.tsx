@@ -7,13 +7,15 @@ import { ProgressTab } from './progress/ProgressTab';
 import { ExercisesTab } from './exercises/ExercisesTab';
 import { useStore } from '@/lib/client/store';
 import { pullRemote, pushAllLocal, startSyncListeners } from '@/lib/client/sync';
+import { api } from '@/lib/client/api';
 import { applyTheme, readStoredTheme, systemTheme } from '@/lib/client/theme';
 
 export function AppShell() {
   const [tab, setTab] = useState<TabKey>('workout');
+  const userId = useStore((s) => s.userId);
+  const username = useStore((s) => s.username);
   const hydrated = useStore((s) => s.hydrated);
   const syncState = useStore((s) => s.syncState);
-  const userId = useStore((s) => s.userId);
 
   useEffect(() => {
     if (!userId) return;
@@ -54,6 +56,28 @@ export function AppShell() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-canvas">
+      {username === 'demo' ? (
+        <div
+          role="status"
+          className="border-b border-amber-500/30 bg-amber-500/15 px-4 py-1.5 text-center text-xs font-medium text-amber-800 dark:text-amber-200"
+        >
+          You&apos;re in the shared demo account — nothing you change is saved.{' '}
+          <button
+            type="button"
+            className="font-semibold underline"
+            onClick={() => {
+              void api
+                .logout()
+                .catch(() => undefined)
+                .then(() => window.location.reload());
+            }}
+          >
+            Sign up
+          </button>{' '}
+          to keep your own workouts.
+        </div>
+      ) : null}
+
       <main className="flex-1 pb-24">
         {tab === 'workout' ? <WorkoutTab /> : null}
         {tab === 'progress' ? <ProgressTab /> : null}

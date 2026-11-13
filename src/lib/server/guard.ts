@@ -32,6 +32,18 @@ export async function touchSession(res: NextResponse): Promise<void> {
   res.cookies.set(SESSION_COOKIE, fresh, sessionCookieOptions(newExpiry()));
 }
 
+/**
+ * The shared demo account. Anyone can look around in it, so nobody is
+ * allowed to change it.
+ */
+export function isDemoUser(user: { username: string }): boolean {
+  return user.username === 'demo';
+}
+
+export function demoForbidden(): NextResponse {
+  return NextResponse.json({ error: 'demo_readonly' }, { status: 403 });
+}
+
 export function unauthorized(): NextResponse {
   return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 }

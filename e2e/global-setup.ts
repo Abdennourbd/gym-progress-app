@@ -75,6 +75,9 @@ export default async function globalSetup() {
   const user = await createUser(process.env.E2E_USERNAME ?? 'e2e-user', 'test-password');
   if (!user) throw new Error('Could not make the end to end test account');
 
+  // The visitor flow needs a demo account to land in, even if it stays empty.
+  await createUser('demo', 'demo-password');
+
   await saveExercises(user.id, exercises);
   await saveSession(user.id, session);
 }
