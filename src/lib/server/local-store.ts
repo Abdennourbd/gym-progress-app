@@ -1,4 +1,4 @@
-import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 /**
@@ -56,7 +56,7 @@ function write<T>(key: string, value: T): void {
 
 function remove(key: string): void {
   try {
-    writeFileSync(file(key), JSON.stringify(null));
+    unlinkSync(file(key));
   } catch {
     // Already gone, or the filesystem refused. Nothing to do.
   }

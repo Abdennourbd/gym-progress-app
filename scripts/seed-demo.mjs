@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { randomBytes, randomUUID, scryptSync } from 'node:crypto';
 import path from 'node:path';
 import { Redis } from '@upstash/redis';
@@ -65,7 +65,13 @@ function localStore() {
       writeFileSync(file(key), JSON.stringify(value));
     },
     async del(...keys) {
-      for (const key of keys) writeFileSync(file(key), JSON.stringify(null));
+      for (const key of keys) {
+        try {
+          unlinkSync(file(key));
+        } catch {
+          // Already gone.
+        }
+      }
     },
   };
 }
