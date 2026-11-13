@@ -9,6 +9,7 @@ import type { Exercise } from '@/lib/types';
 
 let exerciseTimer: ReturnType<typeof setTimeout> | null = null;
 let sessionTimer: ReturnType<typeof setTimeout> | null = null;
+let libraryTimer: ReturnType<typeof setTimeout> | null = null;
 
 function offlineState() {
   return typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'error';
@@ -101,6 +102,31 @@ export function scheduleExercisePush(exercise: Exercise): void {
   exerciseTimer = setTimeout(async () => {
     try {
       await api.putExercise(exercise);
+      useStore.getState().setSyncState('idle');
+    } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        announceUnauthorized();
+        return;
+      }
+      useStore.getState().setSyncState(offlineState());
+    }
+  }, 1500);
+}
+
+/**
+ * Sends the whole library.
+ *
+ * It reads the library when it fires, not when it is scheduled, so an edit
+ * made in the meantime is never left behind. It has its own timer so it
+ * cannot swallow a single exercise push, or the other way round.
+ */
+export function scheduleLibraryPush(): void {
+  if (libraryTimer) clearTimeout(libraryTimer);
+  libraryTimer = setTimeout(async () => {
+    try {
+      const exercises = useStore.getState().exercises;
+      if (!exercises.length) return;
+      await api.putExercises(exercises);
       useStore.getState().setSyncState('idle');
     } catch (error) {
       if (error instanceof UnauthorizedError) {

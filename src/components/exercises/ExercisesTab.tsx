@@ -6,6 +6,7 @@ import { scheduleExercisePush } from '@/lib/client/sync';
 import { MUSCLES, MUSCLE_NAMES, type Exercise } from '@/lib/types';
 import { ExerciseEditor } from './ExerciseEditor';
 import { SettingsPanel } from './SettingsPanel';
+import { StarterExercises } from './StarterExercises';
 
 export function ExercisesTab() {
   const exercises = useStore((s) => s.exercises);
@@ -92,11 +93,11 @@ export function ExercisesTab() {
       })}
 
       {!visible.length ? (
-        <p className="py-8 text-center text-sm text-ink-faint">
-          {exercises.length
-            ? 'Nothing matches that search.'
-            : 'Add exercises from the Workout tab to see them here.'}
-        </p>
+        exercises.length ? (
+          <p className="py-8 text-center text-sm text-ink-faint">Nothing matches that search.</p>
+        ) : (
+          <StarterExercises />
+        )
       ) : null}
 
       {archived.length ? (
