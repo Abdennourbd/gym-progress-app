@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createSessionToken, verifySessionToken } from './session';
 
 const original = process.env.AUTH_SECRET;
@@ -35,13 +35,12 @@ describe('session token', () => {
 
   it('refuses to work in production without a secret', async () => {
     delete process.env.AUTH_SECRET;
-    const production = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    vi.stubEnv('NODE_ENV', 'production');
 
     try {
       await expect(createSessionToken('u-123', 'amina')).rejects.toThrow(/AUTH_SECRET/);
     } finally {
-      process.env.NODE_ENV = production;
+      vi.unstubAllEnvs();
     }
   });
 
