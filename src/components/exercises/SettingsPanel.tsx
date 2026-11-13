@@ -82,6 +82,7 @@ export function SettingsPanel() {
         </div>
         <input
           type="number"
+          name="restTimerSec"
           inputMode="numeric"
           value={settings.restTimerSec}
           onChange={(e) => {

@@ -54,6 +54,8 @@ export function ExercisesTab() {
       <h1 className="text-2xl font-bold tracking-tight">Exercises</h1>
 
       <input
+        type="search"
+        name="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search exercises"

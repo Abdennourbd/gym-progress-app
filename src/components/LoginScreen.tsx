@@ -90,7 +90,7 @@ export function LoginScreen({ onSignedIn }: Props) {
   );
 
   return (
-    <div className="flex min-h-dvh flex-col justify-center gap-6 px-6 pb-16">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-6 pb-16">
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-bold tracking-tight">Gym Progress</h1>
         <p className="text-sm text-ink-soft">
@@ -132,6 +132,7 @@ export function LoginScreen({ onSignedIn }: Props) {
           <span className="sr-only">Username</span>
           <input
             type="text"
+            name="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Username"
@@ -149,11 +150,12 @@ export function LoginScreen({ onSignedIn }: Props) {
           <span className="sr-only">Password</span>
           <input
             type="password"
+            name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             aria-label="Password"
-            autoComplete="current-password"
+            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
             required
             className={inputClass}
           />
@@ -165,6 +167,7 @@ export function LoginScreen({ onSignedIn }: Props) {
               <span className="sr-only">Confirm password</span>
               <input
                 type="password"
+                name="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm password"
@@ -181,6 +184,7 @@ export function LoginScreen({ onSignedIn }: Props) {
                 <span className="sr-only">Invite code</span>
                 <input
                   type="text"
+                  name="inviteCode"
                   value={inviteCode}
                   onChange={(e) => setInviteCode(e.target.value)}
                   placeholder="Invite code"

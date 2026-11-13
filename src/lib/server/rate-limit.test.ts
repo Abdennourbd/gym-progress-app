@@ -24,14 +24,14 @@ describe('rate limiting', () => {
 
   it('starts over once the window has passed', () => {
     const key = `e-${Math.random()}`;
-    expect(rateLimit(key, 1, 1)).toBe(true);
-    expect(rateLimit(key, 1, 1)).toBe(false);
+    expect(rateLimit(key, 1, 50)).toBe(true);
+    expect(rateLimit(key, 1, 50)).toBe(false);
 
-    const until = Date.now() + 5;
+    const until = Date.now() + 60;
     while (Date.now() < until) {
       // Let the window close.
     }
 
-    expect(rateLimit(key, 1, 1)).toBe(true);
+    expect(rateLimit(key, 1, 50)).toBe(true);
   });
 });
