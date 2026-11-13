@@ -17,6 +17,15 @@ interface Bucket {
 
 const buckets = new Map<string, Bucket>();
 
+/**
+ * How many buckets are kept in memory before the old ones are swept away.
+ *
+ * Without a cap, an attacker who sends a request with a made up address in
+ * every request leaves a bucket behind each time, and the map grows for as
+ * long as the process lives.
+ */
+const MAX_BUCKETS = 5000;
+
 const PREFIX = 'gym:v1:rl:';
 
 /**
@@ -46,8 +55,18 @@ function inMemoryCount(key: string): number {
 
 function inMemoryHit(key: string, windowMs: number): number {
   const now = Date.now();
-  const bucket = buckets.get(key);
 
+  if (buckets.size >= MAX_BUCKETS) {
+    // The buckets that have run out go first. If there are still too many,
+    // the whole lot is dropped: a limiter that starts again is better than
+    // one that eats the memory of the machine.
+    for (const [name, bucket] of buckets) {
+      if (bucket.resetAt <= now) buckets.delete(name);
+    }
+    if (buckets.size >= MAX_BUCKETS) buckets.clear();
+  }
+
+  const bucket = buckets.get(key);
   if (!bucket || bucket.resetAt <= now) {
     buckets.set(key, { count: 1, resetAt: now + windowMs });
     return 1;

@@ -52,8 +52,22 @@ function secret(): Uint8Array {
   return developmentSecret;
 }
 
-export async function createSessionToken(userId: string, username: string): Promise<string> {
-  return new SignJWT({ sub: userId, username })
+/**
+ * The id of one sign in.
+ *
+ * Every session has one of its own, so signing out can name the session it
+ * is signing out instead of throwing the token away and hoping.
+ */
+export function newSessionId(): string {
+  return randomBytes(16).toString('base64url');
+}
+
+export async function createSessionToken(
+  userId: string,
+  username: string,
+  sessionId: string,
+): Promise<string> {
+  return new SignJWT({ sub: userId, username, sid: sessionId })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
@@ -62,12 +76,13 @@ export async function createSessionToken(userId: string, username: string): Prom
 
 export async function verifySessionToken(
   token: string,
-): Promise<{ id: string; username: string } | null> {
+): Promise<{ id: string; username: string; sessionId: string } | null> {
   try {
     const { payload } = await jwtVerify(token, secret(), { algorithms: ['HS256'] });
     if (typeof payload.sub !== 'string') return null;
     const username = typeof payload.username === 'string' ? payload.username : '';
-    return { id: payload.sub, username };
+    const sessionId = typeof payload.sid === 'string' ? payload.sid : '';
+    return { id: payload.sub, username, sessionId };
   } catch {
     return null;
   }

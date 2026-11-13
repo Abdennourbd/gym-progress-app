@@ -11,9 +11,36 @@
  * platform that overwrites the header (Vercel does, to stop spoofing) leaves a
  * single entry, which is the client. `x-real-ip` is the same value under
  * another name and is used when the chain is missing.
+ *
+ * This is only as good as what stands in front of the app. A deployment with
+ * no proxy, or a proxy that forwards the header unchanged, lets the client
+ * choose the address it is rate limited by. The per account limit is the
+ * backstop for that case, and the number of distinct buckets kept in memory
+ * is capped.
  */
 
-const ADDRESS = /^[0-9a-f:.]{2,45}$/i;
+const IPV4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+const IPV6_GROUP = /^[0-9a-f]{1,4}$/i;
+
+function isAddress(value: string): boolean {
+  const ipv4 = IPV4.exec(value);
+  if (ipv4) return ipv4.slice(1).every((part) => Number(part) <= 255);
+
+  // IPv6, with at most one "::" run.
+  const halves = value.split('::');
+  if (halves.length > 2) return false;
+
+  let groups = 0;
+  for (const half of halves) {
+    if (half === '') continue;
+    for (const part of half.split(':')) {
+      if (!IPV6_GROUP.test(part)) return false;
+      groups += 1;
+    }
+  }
+
+  return halves.length === 2 || groups >= 2;
+}
 
 function lastAddress(header: string | null): string | null {
   if (!header) return null;
@@ -24,7 +51,7 @@ function lastAddress(header: string | null): string | null {
     .filter(Boolean);
 
   const last = parts[parts.length - 1];
-  if (!last || !ADDRESS.test(last)) return null;
+  if (!last || !isAddress(last)) return null;
 
   return last;
 }

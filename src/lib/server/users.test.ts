@@ -34,9 +34,9 @@ describe('username', () => {
 });
 
 describe('password', () => {
-  it('wants at least eight characters', () => {
-    expect(validatePassword('1234567')).not.toBeNull();
-    expect(validatePassword('12345678')).toBeNull();
+  it('wants at least ten characters', () => {
+    expect(validatePassword('123456789')).not.toBeNull();
+    expect(validatePassword('1234567890')).toBeNull();
   });
 });
 

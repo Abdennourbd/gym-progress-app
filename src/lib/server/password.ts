@@ -56,7 +56,13 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const N = Number(parts[1]);
   const R = Number(parts[2]);
   const P = Number(parts[3]);
-  if (!Number.isInteger(N) || !Number.isInteger(R) || !Number.isInteger(P)) return false;
+
+  // The work factor is checked against what this build uses before it is
+  // used. A hash that asked for a heavier calculation than the one the app
+  // was built with would make every sign in slower, and a hash that asked
+  // for a lighter one would be weaker than it looks.
+  if (!Number.isInteger(N) || N < 16384 || N > 65536 || (N & (N - 1)) !== 0) return false;
+  if (R !== 8 || P !== 1) return false;
 
   let salt: Buffer;
   let expected: Buffer;
@@ -66,7 +72,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
   } catch {
     return false;
   }
-  if (!salt.length || !expected.length) return false;
+  if (!salt.length || expected.length !== KEYLEN) return false;
 
   let actual: Buffer;
   try {

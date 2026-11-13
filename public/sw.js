@@ -70,7 +70,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(req)
       .then((res) => {
-        if (res.ok) {
+        if (res.ok && cacheable(res)) {
           const copy = res.clone();
           void caches.open(CACHE).then((c) => c.put(req, copy));
         }
@@ -85,3 +85,17 @@ self.addEventListener('fetch', (event) => {
       }),
   );
 });
+
+/**
+ * Whether an answer is worth keeping.
+ *
+ * Anything that says it must not be stored, or that comes with a cookie of
+ * its own, is left alone. A page that was made for one person should never
+ * be handed to the next person who uses the phone.
+ */
+function cacheable(res) {
+  const control = res.headers.get('cache-control') || '';
+  if (control.includes('no-store') || control.includes('private')) return false;
+  if (res.headers.get('set-cookie')) return false;
+  return true;
+}

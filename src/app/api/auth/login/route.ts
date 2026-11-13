@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { nanoid } from 'nanoid';
 import { NextResponse } from 'next/server';
 import { loginBodySchema } from '@/lib/server/schemas';
-import { checkPassword, findUser, type User } from '@/lib/server/users';
+import { checkPassword, findUser, validateUsername, type User } from '@/lib/server/users';
 import { hashPassword } from '@/lib/server/password';
 import { count, hit } from '@/lib/server/rate-limit';
 import { clientIp } from '@/lib/server/client-ip';
@@ -11,6 +11,7 @@ import {
   SESSION_COOKIE,
   createSessionToken,
   newExpiry,
+  newSessionId,
   sessionCookieOptions,
 } from '@/lib/server/session';
 
@@ -62,6 +63,13 @@ export async function POST(req: Request) {
   const ip = clientIp(req);
   const account = accountKey(parsed.data.username.trim().toLowerCase());
 
+  // The same rules as signing up. A name that could never have been made
+  // must not be able to match an account that was made some other way.
+  if (validateUsername(parsed.data.username)) {
+    await hit(`login:ip:${ip}`, WINDOW);
+    return NextResponse.json({ error: 'invalid_credentials' }, { status: 401 });
+  }
+
   // The check comes before the password is looked at, so a blocked attempt
   // costs nothing.
   if ((await count(`login:ip:${ip}`)) >= IP_LIMIT) {
@@ -89,7 +97,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'invalid_credentials' }, { status: 401 });
   }
 
-  const token = await createSessionToken(user.id, user.username);
+  const sessionId = newSessionId();
+  const token = await createSessionToken(user.id, user.username, sessionId);
   const res = NextResponse.json({ ok: true, user: { id: user.id, username: user.username } });
   res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions(newExpiry()));
   return res;

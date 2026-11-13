@@ -6,6 +6,7 @@ import {
   SESSION_COOKIE,
   createSessionToken,
   newExpiry,
+  newSessionId,
   sessionCookieOptions,
 } from '@/lib/server/session';
 
@@ -33,7 +34,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'demo_unavailable' }, { status: 503 });
   }
 
-  const token = await createSessionToken(demo.id, demo.username);
+  const sessionId = newSessionId();
+  const token = await createSessionToken(demo.id, demo.username, sessionId);
   const res = NextResponse.json({ ok: true, user: { id: demo.id, username: demo.username } });
   res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions(newExpiry()));
   return res;

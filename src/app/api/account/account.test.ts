@@ -11,11 +11,22 @@ vi.mock('next/headers', () => ({
 }));
 
 import { POST as signup } from '../auth/signup/route';
+import { POST as demo } from '../auth/demo/route';
 import { DELETE as deleteAccount } from './route';
 import { GET as readState } from '../state/route';
 import { PUT as putExercises } from '../exercises/route';
+import { createUser } from '@/lib/server/users';
 
 const unique = () => Math.random().toString(36).slice(2, 10);
+
+let ipCounter = 0;
+
+/** Every request comes from its own place, so one test never trips the rate
+ *  limiter for another. */
+function nextIp(): string {
+  ipCounter += 1;
+  return `198.51.100.${ipCounter}`;
+}
 
 function req(body: unknown, path = 'http://localhost/api/account'): Request {
   return new Request(path, {
@@ -29,7 +40,7 @@ async function signUp(username: string, password: string): Promise<void> {
   const res = await signup(
     new Request('http://localhost/api/auth/signup', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `203.0.113.${unique().length}` },
+      headers: { 'Content-Type': 'application/json', 'x-forwarded-for': nextIp() },
       body: JSON.stringify({ username, password, confirmPassword: password }),
     }),
   );
@@ -99,7 +110,14 @@ describe('removing an account', () => {
   });
 
   it('refuses to remove the shared demo account', async () => {
-    await signUp('demo', 'demo-password');
+    // The name is reserved, so the shared account is made directly and signed
+    // in through the visitor route.
+    await createUser('demo', 'demo-password');
+
+    const visitor = await demo(new Request('http://localhost/api/auth/demo', { method: 'POST' }));
+    expect(visitor.status).toBe(200);
+    const cookie = visitor.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+    state.cookie = cookie.split(';')[0].split('=')[1];
 
     const res = await deleteAccount(req({ password: 'demo-password' }));
     expect(res.status).toBe(403);

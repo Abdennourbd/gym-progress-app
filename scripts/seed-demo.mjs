@@ -242,11 +242,13 @@ const base = 'gym:v1:u';
 const existing = await redis.get(userRecordKey);
 if (existing && existing.id) {
   console.log('wiping existing demo account', existing.id);
-  await redis.del(`${base}:${existing.id}:exercises`, `${base}:${existing.id}:sessions`, `${base}:${existing.id}:settings`);
+  // The list of sessions is read before it is removed, otherwise the
+  // sessions themselves are never found and are left behind.
   const summaries = (await redis.get(`${base}:${existing.id}:sessions`)) ?? [];
   for (const summary of summaries) {
     await redis.del(`${base}:${existing.id}:sessions:${summary.id}`);
   }
+  await redis.del(`${base}:${existing.id}:exercises`, `${base}:${existing.id}:sessions`, `${base}:${existing.id}:settings`);
 }
 
 const demoId = randomUUID();

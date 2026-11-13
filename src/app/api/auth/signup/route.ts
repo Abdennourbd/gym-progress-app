@@ -9,6 +9,7 @@ import {
   SESSION_COOKIE,
   createSessionToken,
   newExpiry,
+  newSessionId,
   sessionCookieOptions,
 } from '@/lib/server/session';
 
@@ -86,7 +87,8 @@ export async function POST(req: Request) {
 
   // The new account is signed in straight away, so nobody has to type the
   // same password twice.
-  const token = await createSessionToken(user.id, user.username);
+  const sessionId = newSessionId();
+  const token = await createSessionToken(user.id, user.username, sessionId);
   const res = NextResponse.json({ ok: true, user: { id: user.id, username: user.username } });
   res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions(newExpiry()));
   return res;

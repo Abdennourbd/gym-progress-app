@@ -12,6 +12,8 @@ import { findUser } from './users';
 export interface SessionUser {
   id: string;
   username: string;
+  /** The id of this sign in, so it can be signed out again. */
+  sessionId: string;
 }
 
 /**
@@ -19,7 +21,8 @@ export interface SessionUser {
  *
  * The cookie only says who the session belongs to. The account is looked up
  * as well, so a session for an account that has been removed stops working
- * straight away instead of lingering on until it expires.
+ * straight away instead of lingering on until it expires. A session that has
+ * been signed out is refused as well.
  */
 export async function currentUser(): Promise<SessionUser | null> {
   const store = await cookies();
@@ -31,17 +34,21 @@ export async function currentUser(): Promise<SessionUser | null> {
 
   const account = await findUser(claims.username);
   if (!account || account.id !== claims.id) return null;
+  if (account.revoked?.includes(claims.sessionId)) return null;
 
-  return { id: claims.id, username: claims.username };
+  return { id: claims.id, username: claims.username, sessionId: claims.sessionId };
 }
 
 /**
  * Slides the expiry forward on every authenticated response, so a regular
  * training week never signs anyone out mid-set. The session only dies after
  * ten days with no app activity at all.
+ *
+ * The session keeps its id, so a token that was slid forward is still the
+ * same sign in and is still refused if it was signed out.
  */
 export async function touchSession(res: NextResponse, user: SessionUser): Promise<void> {
-  const fresh = await createSessionToken(user.id, user.username);
+  const fresh = await createSessionToken(user.id, user.username, user.sessionId);
   res.cookies.set(SESSION_COOKIE, fresh, sessionCookieOptions(newExpiry()));
 }
 
