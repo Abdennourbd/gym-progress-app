@@ -49,7 +49,7 @@ export function EntrySheet({
 
   // Once the exercise has history, or the values have moved off their
   // starting point, the target is worked out from what you have just logged.
-  // It then always answers "what should I do next time".
+  // It then always answers "what should I try now".
   const untouched =
     !previous &&
     values.weightKg === 0 &&
@@ -123,7 +123,7 @@ export function EntrySheet({
       >
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">
-            Next time
+            Try this now
           </p>
           <p className="text-lg font-bold tabular-nums">{targetText}</p>
         </div>
@@ -131,6 +131,10 @@ export function EntrySheet({
           {REASON_LABEL[suggestion.reason]}
         </span>
       </button>
+
+      <p className="-mt-3 mb-4 text-center text-xs font-medium uppercase tracking-wide text-ink-faint">
+        How much did you do now?
+      </p>
 
       {/* Always one above the other, so a wide number like 140.5 can never
           push the layout sideways. */}

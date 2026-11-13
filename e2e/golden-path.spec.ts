@@ -126,7 +126,7 @@ test('suggests the next overload target from what you just lifted', async ({ pag
   await expect(page.getByRole('dialog').getByText('add weight')).toBeVisible();
 });
 
-test('the next time target can be applied in one tap', async ({ page }) => {
+test('the try this now target can be applied in one tap', async ({ page }) => {
   await signIn(page);
 
   await openMuscle(page, 'back');
@@ -135,7 +135,7 @@ test('the next time target can be applied in one tap', async ({ page }) => {
   // Last time 14 reps, so the target is 15.
   await expect(page.getByRole('dialog').getByText('15 reps')).toBeVisible();
 
-  await page.getByRole('dialog').getByText('Next time').click();
+  await page.getByRole('dialog').getByText('Try this now').click();
   await expect(page.getByRole('dialog').getByText('16 reps')).toBeVisible();
 });
 
