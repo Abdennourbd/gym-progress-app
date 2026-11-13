@@ -13,10 +13,16 @@ export function AppShell() {
   const [tab, setTab] = useState<TabKey>('workout');
   const hydrated = useStore((s) => s.hydrated);
   const syncState = useStore((s) => s.syncState);
+  const userId = useStore((s) => s.userId);
 
   useEffect(() => {
+    if (!userId) return;
+
+    let cancelled = false;
+
     void (async () => {
-      await useStore.getState().hydrate();
+      await useStore.getState().hydrate(userId);
+      if (cancelled) return;
       applyTheme(
         useStore.getState().settings.theme ?? readStoredTheme() ?? systemTheme(),
       );
@@ -32,8 +38,11 @@ export function AppShell() {
       void navigator.serviceWorker.register('/sw.js');
     }
 
-    return stop;
-  }, []);
+    return () => {
+      cancelled = true;
+      stop();
+    };
+  }, [userId]);
 
   if (!hydrated) {
     return (

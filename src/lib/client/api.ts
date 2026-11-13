@@ -7,6 +7,19 @@ export class UnauthorizedError extends Error {
   }
 }
 
+/** A failure that carries the status, so the screen can say what went wrong. */
+export class ApiError extends Error {
+  status: number;
+  body: { error?: string; issue?: string } | null;
+
+  constructor(status: number, body: { error?: string; issue?: string } | null) {
+    super(`request failed: ${status}`);
+    this.name = 'ApiError';
+    this.status = status;
+    this.body = body;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
@@ -14,18 +27,36 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (res.status === 401) throw new UnauthorizedError();
-  if (!res.ok) throw new Error(`request failed: ${res.status}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiError(
+      res.status,
+      body && typeof body === 'object' ? (body as { error?: string; issue?: string }) : null,
+    );
+  }
 
   return res.json() as Promise<T>;
 }
 
+export interface AuthUser {
+  id: string;
+  username: string;
+}
+
 export const api = {
-  login: (email: string, password: string) =>
-    request<{ ok: true }>('/api/auth/login', {
+  signup: (username: string, password: string, confirmPassword: string, inviteCode?: string) =>
+    request<{ ok: true; user: AuthUser }>('/api/auth/signup', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password, confirmPassword, inviteCode }),
+    }),
+  login: (username: string, password: string) =>
+    request<{ ok: true; user: AuthUser }>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
     }),
   logout: () => request<{ ok: true }>('/api/auth/logout', { method: 'POST' }),
+  fetchSession: () => request<{ authenticated: boolean; user: AuthUser | null }>('/api/auth/session'),
+  fetchConfig: () => request<{ inviteRequired: boolean }>('/api/auth/config'),
   fetchState: () => request<AppState>('/api/state'),
   putExercises: (exercises: Exercise[]) =>
     request<{ ok: true }>('/api/exercises', {

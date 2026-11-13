@@ -5,12 +5,14 @@ import { useStore } from '@/lib/client/store';
 import { api } from '@/lib/client/api';
 import { scheduleSettingsPush } from '@/lib/client/sync';
 import { applyTheme } from '@/lib/client/theme';
+import { forgetUser, markSignedOut } from '@/lib/client/auth-state';
 
 export function SettingsPanel() {
   const settings = useStore((s) => s.settings);
   const setSettings = useStore((s) => s.setSettings);
   const exercises = useStore((s) => s.exercises);
   const sessions = useStore((s) => s.sessions);
+  const username = useStore((s) => s.username);
   const [busy, setBusy] = useState(false);
 
   const exportJson = () => {
@@ -92,6 +94,15 @@ export function SettingsPanel() {
         />
       </div>
 
+      <div className="flex items-center justify-between rounded-2xl border border-line bg-surface px-4 py-3.5">
+        <div>
+          <p className="text-sm font-semibold">Signed in as</p>
+          <p className="text-xs text-ink-faint">
+            {username ? username : 'This account on this device'}
+          </p>
+        </div>
+      </div>
+
       <button
         onClick={exportJson}
         className="rounded-2xl border border-line bg-surface px-4 py-3.5 text-left"
@@ -104,7 +115,10 @@ export function SettingsPanel() {
         onClick={async () => {
           setBusy(true);
           try {
+            const userId = useStore.getState().userId;
             await api.logout();
+            if (userId) markSignedOut(userId);
+            forgetUser();
           } finally {
             location.reload();
           }

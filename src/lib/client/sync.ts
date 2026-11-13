@@ -2,7 +2,7 @@
 
 import { api, UnauthorizedError } from './api';
 import { useStore } from './store';
-import { LOCAL_KEYS, writeLocal } from './db';
+import { localKeys, writeLocal } from './db';
 import { mergeAppState } from '@/lib/training/merge';
 import { announceUnauthorized } from './auth-state';
 import type { Exercise } from '@/lib/types';
@@ -12,6 +12,18 @@ let sessionTimer: ReturnType<typeof setTimeout> | null = null;
 
 function offlineState() {
   return typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'error';
+}
+
+/**
+ * The keys of the signed-in account.
+ *
+ * Everything the sync layer reads or writes belongs to one account. Without
+ * this, one person's workouts on a shared phone would be pushed into the next
+ * person's account.
+ */
+function keys() {
+  const userId = useStore.getState().userId;
+  return userId ? localKeys(userId) : null;
 }
 
 /**
@@ -40,11 +52,14 @@ export async function pullRemote(): Promise<void> {
       settings: merged.settings,
     });
 
-    await Promise.all([
-      writeLocal(LOCAL_KEYS.exercises, merged.exercises),
-      writeLocal(LOCAL_KEYS.sessions, merged.sessions),
-      writeLocal(LOCAL_KEYS.settings, merged.settings),
-    ]);
+    const local = keys();
+    if (local) {
+      await Promise.all([
+        writeLocal(local.exercises, merged.exercises),
+        writeLocal(local.sessions, merged.sessions),
+        writeLocal(local.settings, merged.settings),
+      ]);
+    }
 
     store.setSyncState('idle');
   } catch (error) {

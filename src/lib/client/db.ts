@@ -23,24 +23,39 @@ export async function writeLocal<T>(key: string, value: T): Promise<void> {
   }
 }
 
-export const LOCAL_KEYS = {
-  exercises: 'gym:exercises',
-  sessions: 'gym:sessions',
-  settings: 'gym:settings',
-  activeSession: 'gym:activeSession',
-} as const;
+/**
+ * Every account has its own keys on the device.
+ *
+ * A phone is often shared. Without this, one person's workouts would be
+ * merged into the next person's account the moment they signed in.
+ */
+export function localKeys(userId: string): {
+  exercises: string;
+  sessions: string;
+  settings: string;
+  activeSession: string;
+} {
+  const base = `gym:u:${userId}`;
+  return {
+    exercises: `${base}:exercises`,
+    sessions: `${base}:sessions`,
+    settings: `${base}:settings`,
+    activeSession: `${base}:activeSession`,
+  };
+}
 
 /**
- * Whether this device already holds training data.
+ * Whether this device already holds training data for one account.
  *
  * Used to tell "you were never signed in" apart from "you were signed in but
  * there is no signal right now". Without it, opening the app with no signal
  * would show a login screen you cannot get past.
  */
-export async function hasLocalData(): Promise<boolean> {
+export async function hasLocalData(userId: string): Promise<boolean> {
+  const keys = localKeys(userId);
   const [exercises, sessions] = await Promise.all([
-    readLocal<unknown[]>(LOCAL_KEYS.exercises, []),
-    readLocal<unknown[]>(LOCAL_KEYS.sessions, []),
+    readLocal<unknown[]>(keys.exercises, []),
+    readLocal<unknown[]>(keys.sessions, []),
   ]);
   return exercises.length > 0 || sessions.length > 0;
 }
