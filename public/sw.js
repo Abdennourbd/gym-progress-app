@@ -5,7 +5,7 @@
  * to the cache when the network is gone. Bump the version to throw away a
  * stale shell.
  */
-const VERSION = 'gym-shell-v2';
+const VERSION = 'gym-shell-v3';
 const CACHE = VERSION;
 const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
@@ -25,6 +25,22 @@ self.addEventListener('activate', (event) => {
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
+  );
+});
+
+// Tapping the "rest is over" notification should bring the app forward, not
+// open a second copy.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((list) => {
+        for (const client of list) {
+          if ('focus' in client) return client.focus();
+        }
+        return clients.openWindow('/');
+      }),
   );
 });
 

@@ -312,6 +312,20 @@ test('the rest timer counts down', async ({ page }) => {
   await page.getByRole('button', { name: 'Pause rest timer' }).click();
 });
 
+test('the rest timer keeps running through a reload', async ({ page }) => {
+  await signIn(page);
+
+  await page.getByRole('button', { name: 'Start rest timer' }).click();
+  await expect(page.getByRole('button', { name: /Pause rest timer/ })).toBeVisible();
+
+  await page.reload();
+
+  // Still counting down after the reload, straight from the stored end time.
+  await expect(page.getByRole('button', { name: /Pause rest timer/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Reset rest timer' }).click();
+  await expect(page.getByRole('button', { name: 'Start rest timer' })).toBeVisible();
+});
+
 // Last, because it takes the app offline for the rest of the run.
 test('keeps working offline and syncs when the signal comes back', async ({ page, context }) => {
   await signIn(page);
