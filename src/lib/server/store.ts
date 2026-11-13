@@ -13,6 +13,14 @@ import { localStore } from './local-store';
 export interface Store {
   get<T>(key: string): Promise<T | null>;
   set<T>(key: string, value: T): Promise<void>;
+  /**
+   * Writes only when the key is free.
+   *
+   * Returns true when the value was written and false when the key was
+   * already taken. It is how a username is claimed without two people
+   * reading the same empty record and both writing.
+   */
+  setIfAbsent<T>(key: string, value: T): Promise<boolean>;
   del(key: string): Promise<void>;
   readonly backend: 'redis' | 'local';
 }
@@ -29,6 +37,12 @@ const redisStore: Store = {
     if (!redis) throw new Error('redis is not configured');
     await redis.set(key, value);
   },
+  async setIfAbsent<T>(key: string, value: T) {
+    const redis = getRedis();
+    if (!redis) throw new Error('redis is not configured');
+    const result = await redis.set(key, value, { nx: true });
+    return result === 'OK';
+  },
   async del(key: string) {
     const redis = getRedis();
     if (!redis) throw new Error('redis is not configured');
@@ -43,6 +57,9 @@ const fileStore: Store = {
   },
   async set<T>(key: string, value: T) {
     localStore.set(key, value);
+  },
+  async setIfAbsent<T>(key: string, value: T) {
+    return localStore.setIfAbsent(key, value);
   },
   async del(key: string) {
     localStore.del(key);

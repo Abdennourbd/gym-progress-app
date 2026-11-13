@@ -38,7 +38,7 @@
 - Produces:
   - `keys.ts`: `userRecordKey(username: string): string`, `userKeys(userId: string): { exercises: string; sessions: string; settings: string; session(id: string): string }`, `LEGACY_KEYS: { exercises: string; sessions: string; settings: string; session(id: string): string }`.
   - `users.ts`: `interface User { id: string; username: string; passwordHash: string; createdAt: number }`, `normalizeUsername(raw: string): string`, `validateUsername(raw: string): string | null`, `validatePassword(password: string): string | null`, `findUser(username: string): Promise<User | null>`, `createUser(username: string, password: string): Promise<User | null>`, `checkPassword(user: User, password: string): boolean`.
-  - `store.ts`: `Store` gains `setIfAbsent(key: string, value: string): Promise<boolean>` — true when the key was written, false when it already existed.
+  - `store.ts`: `Store` gains `setIfAbsent<T>(key: string, value: T): Promise<boolean>` — true when the key was written, false when it already existed. The value is generic, not a string, so both backends serialise it exactly the way their own `set` does.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -240,8 +240,8 @@ setIfAbsent(key: string, value: string): Promise<boolean>;
 `src/lib/server/redis.ts` — the `redisStore` object gains:
 
 ```ts
-async setIfAbsent(key: string, value: string): Promise<boolean> {
-  const result = await client.set(key, value, { nx: true });
+async setIfAbsent<T>(key: string, value: T): Promise<boolean> {
+  const result = await redis.set(key, value, { nx: true });
   return result === 'OK';
 }
 ```
@@ -249,12 +249,15 @@ async setIfAbsent(key: string, value: string): Promise<boolean> {
 `src/lib/server/local-store.ts` — the `localStore` object gains:
 
 ```ts
-async setIfAbsent(key: string, value: string): Promise<boolean> {
-  if (read(key) !== null) return false;
+function setIfAbsent<T>(key: string, value: T): boolean {
+  if (read<T>(key) !== null) return false;
   write(key, value);
   return true;
 }
 ```
+
+`src/lib/server/local-store.ts` also honours `GYM_DATA_DIR`, so a test run
+can be pointed at a throwaway directory instead of `.data/`.
 
 - [ ] **Step 6: Run the tests to verify they pass**
 

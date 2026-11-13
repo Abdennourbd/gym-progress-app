@@ -11,7 +11,7 @@ import path from 'node:path';
  */
 
 function pickDirectory(): string {
-  const preferred = path.join(process.cwd(), '.data');
+  const preferred = process.env.GYM_DATA_DIR ?? path.join(process.cwd(), '.data');
   try {
     mkdirSync(preferred, { recursive: true });
     return preferred;
@@ -54,8 +54,15 @@ function remove(key: string): void {
   }
 }
 
+function setIfAbsent<T>(key: string, value: T): boolean {
+  if (read<T>(key) !== null) return false;
+  write(key, value);
+  return true;
+}
+
 export const localStore = {
   get: read,
   set: write,
+  setIfAbsent,
   del: remove,
 };
