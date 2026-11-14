@@ -47,6 +47,11 @@ export async function DELETE(req: Request) {
   const account = await findUser(user.username);
   if (!account) return unauthorized();
 
+  // The account is looked up again here, and it has to still be the same one
+  // the session belongs to. The name is free again the moment an account is
+  // removed, so somebody could take it between the two reads.
+  if (account.id !== user.id) return unauthorized();
+
   if (!(await checkPassword(account, parsed.data.password))) {
     await hit(`delete:ip:${ip}`, WINDOW);
     return NextResponse.json({ error: 'invalid_credentials' }, { status: 401 });

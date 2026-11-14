@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { randomBytes, randomUUID, scryptSync } from 'node:crypto';
 import path from 'node:path';
 import { Redis } from '@upstash/redis';
@@ -65,7 +65,13 @@ function localStore() {
       writeFileSync(file(key), JSON.stringify(value));
     },
     async del(...keys) {
-      for (const key of keys) writeFileSync(file(key), JSON.stringify(null));
+      for (const key of keys) {
+        try {
+          unlinkSync(file(key));
+        } catch {
+          // Already gone.
+        }
+      }
     },
   };
 }
@@ -236,11 +242,13 @@ const base = 'gym:v1:u';
 const existing = await redis.get(userRecordKey);
 if (existing && existing.id) {
   console.log('wiping existing demo account', existing.id);
-  await redis.del(`${base}:${existing.id}:exercises`, `${base}:${existing.id}:sessions`, `${base}:${existing.id}:settings`);
+  // The list of sessions is read before it is removed, otherwise the
+  // sessions themselves are never found and are left behind.
   const summaries = (await redis.get(`${base}:${existing.id}:sessions`)) ?? [];
   for (const summary of summaries) {
     await redis.del(`${base}:${existing.id}:sessions:${summary.id}`);
   }
+  await redis.del(`${base}:${existing.id}:exercises`, `${base}:${existing.id}:sessions`, `${base}:${existing.id}:settings`);
 }
 
 const demoId = randomUUID();

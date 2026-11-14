@@ -20,11 +20,16 @@ AUTH_SECRET
 $SECRET
 
 Then add Upstash Redis from the Vercel Marketplace. It fills in
-UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for you.
+KV_REST_API_URL and KV_REST_API_TOKEN for you.
 
 Signups are open. To ask people for a code first, add this too:
 
 GYM_INVITE_CODE
 any-long-random-string-you-choose
+
+One thing to know: in production the session cookie is marked secure and
+carries the __Host- prefix, so the app has to be served over https. Vercel
+does that for you. On a domain of your own, point it at the deployment and
+let Vercel put the certificate on it.
 
 EOF
