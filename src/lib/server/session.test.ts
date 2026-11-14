@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createSessionToken, verifySessionToken } from './session';
+import { createSessionToken, newSessionId, verifySessionToken } from './session';
 
 const original = process.env.AUTH_SECRET;
 
@@ -15,11 +15,22 @@ afterEach(() => {
 
 describe('session token', () => {
   it('carries the account id and username', async () => {
-    const token = await createSessionToken('u-123', 'amina');
+    const token = await createSessionToken('u-123', 'amina', 'session-1');
     const claims = await verifySessionToken(token);
 
     expect(claims?.id).toBe('u-123');
     expect(claims?.username).toBe('amina');
+  });
+
+  it('carries the id of the sign in', async () => {
+    const token = await createSessionToken('u-123', 'amina', 'session-1');
+    const claims = await verifySessionToken(token);
+
+    expect(claims?.sessionId).toBe('session-1');
+  });
+
+  it('gives every sign in its own id', () => {
+    expect(newSessionId()).not.toBe(newSessionId());
   });
 
   it('rejects a rubbish token', async () => {
@@ -27,7 +38,7 @@ describe('session token', () => {
   });
 
   it('rejects a token signed with another secret', async () => {
-    const token = await createSessionToken('u-123', 'amina');
+    const token = await createSessionToken('u-123', 'amina', 'session-1');
     process.env.AUTH_SECRET = 'a-completely-different-secret-a-completely-1234';
 
     expect(await verifySessionToken(token)).toBeNull();
@@ -38,7 +49,9 @@ describe('session token', () => {
     vi.stubEnv('NODE_ENV', 'production');
 
     try {
-      await expect(createSessionToken('u-123', 'amina')).rejects.toThrow(/AUTH_SECRET/);
+      await expect(createSessionToken('u-123', 'amina', 'session-1')).rejects.toThrow(
+        /AUTH_SECRET/,
+      );
     } finally {
       vi.unstubAllEnvs();
     }
@@ -47,7 +60,7 @@ describe('session token', () => {
   it('still signs in development without a secret', async () => {
     delete process.env.AUTH_SECRET;
 
-    const token = await createSessionToken('u-123', 'amina');
+    const token = await createSessionToken('u-123', 'amina', 'session-1');
     const claims = await verifySessionToken(token);
 
     expect(claims?.id).toBe('u-123');

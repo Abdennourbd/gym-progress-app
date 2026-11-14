@@ -12,9 +12,9 @@ vi.mock('next/headers', () => ({
   }),
 }));
 
-import { POST as signup } from './signup/route';
 import { POST as demo } from './demo/route';
 import { PUT as putExercises } from '../exercises/route';
+import { createUser } from '@/lib/server/users';
 
 let ipCounter = 0;
 
@@ -33,11 +33,9 @@ function req(body?: unknown, ip = nextIp()): Request {
 
 describe('the demo visitor account', () => {
   it('signs a visitor in as demo and refuses writes', async () => {
-    // Make sure the shared account exists. It may already be there from an
-    // earlier run, so a 409 is fine.
-    await signup(
-      req({ username: 'demo', password: 'demo-password', confirmPassword: 'demo-password' }),
-    );
+    // Make sure the shared account exists. The name is reserved, so it is
+    // made directly rather than through the sign up screen.
+    await createUser('demo', 'demo-password');
 
     const res = await demo(req());
     expect(res.status).toBe(200);
