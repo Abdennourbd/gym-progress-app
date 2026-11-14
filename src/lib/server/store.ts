@@ -106,9 +106,24 @@ const fileStore: Store = {
   },
 };
 
+let warnedAboutLocalStore = false;
+
 export function getStore(): Store {
   // An explicit choice always wins, so a test run can never reach the real
   // database by accident.
   if (process.env.GYM_STORE === 'local') return fileStore;
-  return getRedis() ? redisStore : fileStore;
+  if (getRedis()) return redisStore;
+
+  // Falling back without saying so looks like a healthy app that is quietly
+  // writing to a file, so it says something the first time it happens.
+  if (process.env.NODE_ENV === 'production' && !warnedAboutLocalStore) {
+    warnedAboutLocalStore = true;
+    console.error(
+      'No store is configured: KV_REST_API_URL and KV_REST_API_TOKEN are missing. ' +
+        'Everything is being written to a local file instead, which is lost on ' +
+        'every restart. Set the environment variables and try again.',
+    );
+  }
+
+  return fileStore;
 }
