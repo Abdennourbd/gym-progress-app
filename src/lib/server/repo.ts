@@ -12,6 +12,46 @@ interface SessionSummary {
   updatedAt: number;
 }
 
+/**
+ * How much one account is allowed to keep.
+ *
+ * The api takes a batch of workouts in one request, so without a limit on the
+ * account itself a single account could fill the shared database. The
+ * numbers are far above what anybody needs: 2000 workouts is more than five
+ * years of training every day.
+ */
+const MAX_SESSIONS = 2000;
+const MAX_EXERCISES = 500;
+
+/** How many reads go out at the same time. */
+const READ_LIMIT = 20;
+
+/**
+ * Runs a function over a list, a few at a time.
+ *
+ * A thousand workouts would otherwise mean a thousand reads at once, and the
+ * store would not thank anybody for it.
+ */
+async function mapWithLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) {
+      const index = next;
+      next += 1;
+      results[index] = await fn(items[index]);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+}
+
 export async function loadState(userId: string): Promise<AppState> {
   const store = getStore();
   const keys = userKeys(userId);
@@ -23,7 +63,9 @@ export async function loadState(userId: string): Promise<AppState> {
   ]);
 
   const list = summaries ?? [];
-  const sessions = await Promise.all(list.map((s) => store.get<Session>(keys.session(s.id))));
+  const sessions = await mapWithLimit(list, READ_LIMIT, (s) =>
+    store.get<Session>(keys.session(s.id)),
+  );
 
   return {
     exercises: migrateExercises(exercises ?? []),
@@ -42,7 +84,7 @@ export async function saveExercises(userId: string, exercises: Exercise[]): Prom
   const store = getStore();
   const keys = userKeys(userId);
   const existing = (await store.get<Exercise[]>(keys.exercises)) ?? [];
-  await store.set(keys.exercises, mergeExercises(existing, exercises));
+  await store.set(keys.exercises, capExercises(mergeExercises(existing, exercises)));
 }
 
 /**
@@ -53,7 +95,20 @@ export async function saveExercise(userId: string, exercise: Exercise): Promise<
   const store = getStore();
   const keys = userKeys(userId);
   const existing = (await store.get<Exercise[]>(keys.exercises)) ?? [];
-  await store.set(keys.exercises, mergeExercises(existing, [exercise]));
+  await store.set(keys.exercises, capExercises(mergeExercises(existing, [exercise])));
+}
+
+/**
+ * Keeps the exercise library from growing without bounds.
+ *
+ * The oldest entries go first. The chart history for them is gone with them,
+ * so the number is set well above what anybody will ever need.
+ */
+function capExercises(exercises: Exercise[]): Exercise[] {
+  if (exercises.length <= MAX_EXERCISES) return exercises;
+  return [...exercises]
+    .sort((a, b) => a.createdAt - b.createdAt)
+    .slice(exercises.length - MAX_EXERCISES);
 }
 
 export async function saveSessions(userId: string, sessions: Session[]): Promise<void> {
@@ -61,20 +116,26 @@ export async function saveSessions(userId: string, sessions: Session[]): Promise
   const keys = userKeys(userId);
   const summaries = (await store.get<SessionSummary[]>(keys.sessions)) ?? [];
 
+  // Newest wins, so a device that has been offline for a while cannot
+  // overwrite a newer copy with an old one.
+  const winners = await mapWithLimit(
+    sessions.filter((session) => session.entries.length),
+    READ_LIMIT,
+    async (session) => {
+      const stored = await store.get<Session>(keys.session(session.id));
+      const winner =
+        stored && stored.updatedAt > session.updatedAt ? stored : session;
+      await store.set(keys.session(winner.id), winner);
+      return winner;
+    },
+  );
+
   for (const session of sessions) {
-    if (!session.entries.length) {
-      await deleteSession(userId, session.id);
-      continue;
-    }
+    if (session.entries.length) continue;
+    await deleteSession(userId, session.id);
+  }
 
-    // Newest wins, so a device that has been offline for a while cannot
-    // overwrite a newer copy with an old one.
-    const stored = await store.get<Session>(keys.session(session.id));
-    const winner =
-      stored && stored.updatedAt > session.updatedAt ? stored : session;
-
-    await store.set(keys.session(winner.id), winner);
-
+  for (const winner of winners) {
     const index = summaries.findIndex((s) => s.id === winner.id);
     const summary = {
       id: winner.id,
@@ -87,7 +148,19 @@ export async function saveSessions(userId: string, sessions: Session[]): Promise
   }
 
   summaries.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-  await store.set(keys.sessions, summaries);
+
+  // The list is sorted by date, so the oldest workouts are the ones to drop
+  // when the account is at its limit. Their keys go with them.
+  const trimmed = summaries.slice(Math.max(0, summaries.length - MAX_SESSIONS));
+  if (trimmed.length !== summaries.length) {
+    await Promise.all(
+      summaries
+        .slice(0, summaries.length - MAX_SESSIONS)
+        .map((s) => store.del(keys.session(s.id))),
+    );
+  }
+
+  await store.set(keys.sessions, trimmed);
 }
 
 export async function saveSession(userId: string, session: Session): Promise<void> {
