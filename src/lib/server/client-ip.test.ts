@@ -24,6 +24,21 @@ describe('the address of a request', () => {
   it('refuses anything that is not an address', () => {
     expect(clientIp(req({ 'x-forwarded-for': 'not-an-address' }))).toBe('unknown');
     expect(clientIp(req({ 'x-forwarded-for': 'a'.repeat(200) }))).toBe('unknown');
+    expect(clientIp(req({ 'x-forwarded-for': 'deadbeef01' }))).toBe('unknown');
+    expect(clientIp(req({ 'x-forwarded-for': '999.999.999.999' }))).toBe('unknown');
+  });
+
+  it('takes ipv6 addresses', () => {
+    expect(clientIp(req({ 'x-forwarded-for': '2001:db8::1' }))).toBe('2001:db8::1');
+    expect(clientIp(req({ 'x-forwarded-for': '::1' }))).toBe('::1');
+    expect(
+      clientIp(req({ 'x-forwarded-for': '2001:0db8:85a3:0000:0000:8a2e:0370:7334' })),
+    ).toBe('2001:0db8:85a3:0000:0000:8a2e:0370:7334');
+  });
+
+  it('refuses a malformed ipv6 address', () => {
+    expect(clientIp(req({ 'x-forwarded-for': '2001:db8:::1' }))).toBe('unknown');
+    expect(clientIp(req({ 'x-forwarded-for': 'zzzz::1' }))).toBe('unknown');
   });
 
   it('has one answer when nothing says', () => {

@@ -8,10 +8,30 @@ export interface User {
   username: string;
   passwordHash: string;
   createdAt: number;
+  /**
+   * The sessions that have been signed out.
+   *
+   * The token itself stays valid until it runs out, so signing out puts its
+   * id here and the server refuses it from then on.
+   */
+  revoked?: string[];
 }
 
 const USERNAME_PATTERN = /^[a-z0-9_-]+$/;
-const MIN_PASSWORD = 8;
+const MIN_PASSWORD = 10;
+
+/**
+ * Names that cannot be taken.
+ *
+ * The demo account is one of them. It is a shared account that anybody may
+ * look around in and that nobody may write to, so a person must not be able
+ * to sign up with the name and find themselves locked into an account they
+ * did not ask for.
+ */
+const RESERVED_USERNAMES = new Set(['demo']);
+
+/** How many signed out sessions are remembered. */
+const MAX_REVOKED = 20;
 
 export function normalizeUsername(raw: string): string {
   return raw.trim().toLowerCase();
@@ -25,6 +45,7 @@ export function validateUsername(raw: string): string | null {
   if (!USERNAME_PATTERN.test(username)) {
     return 'Use letters, numbers, underscores and dashes only.';
   }
+  if (RESERVED_USERNAMES.has(username)) return 'That name is taken.';
   return null;
 }
 
@@ -60,6 +81,19 @@ export async function createUser(username: string, password: string): Promise<Us
 
 export async function checkPassword(user: User, password: string): Promise<boolean> {
   return verifyPassword(password, user.passwordHash);
+}
+
+/**
+ * Signs a session out.
+ *
+ * The id of the session is written down, and the server refuses it from then
+ * on. Only the last few are kept: a token that was signed out more than a
+ * couple of weeks ago has run out anyway.
+ */
+export async function revokeSession(user: User, sessionId: string): Promise<void> {
+  if (!sessionId) return;
+  const revoked = [...(user.revoked ?? []), sessionId].slice(-MAX_REVOKED);
+  await getStore().set(userRecordKey(user.username), { ...user, revoked });
 }
 
 /**

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { readJson } from '@/lib/server/request';
 import { badRequest, currentUser, touchSession, unauthorized, isDemoUser, demoForbidden } from '@/lib/server/guard';
 import { exerciseSchema } from '@/lib/server/schemas';
 import { archiveExercise, saveExercise } from '@/lib/server/repo';
@@ -18,7 +19,12 @@ export async function PUT(req: Request, { params }: Params) {
   if (isDemoUser(user)) return demoForbidden();
 
   const { id } = await params;
-  const parsed = exerciseSchema.safeParse(await req.json().catch(() => null));
+  const body = await readJson(req);
+  if (!body.ok) {
+    return NextResponse.json({ error: 'body_too_large' }, { status: 413 });
+  }
+
+  const parsed = exerciseSchema.safeParse(body.value);
   if (!parsed.success) return badRequest(parsed.error.issues);
   if (parsed.data.id !== id) {
     return NextResponse.json({ error: 'id_mismatch' }, { status: 400 });

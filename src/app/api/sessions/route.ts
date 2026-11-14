@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { readJson } from '@/lib/server/request';
 import { badRequest, currentUser, touchSession, unauthorized, isDemoUser, demoForbidden } from '@/lib/server/guard';
 import { sessionSchema } from '@/lib/server/schemas';
 import { saveSessions } from '@/lib/server/repo';
@@ -17,7 +18,12 @@ export async function PUT(req: Request) {
   if (!user) return unauthorized();
   if (isDemoUser(user)) return demoForbidden();
 
-  const parsed = bodySchema.safeParse(await req.json().catch(() => null));
+  const body = await readJson(req);
+  if (!body.ok) {
+    return NextResponse.json({ error: 'body_too_large' }, { status: 413 });
+  }
+
+  const parsed = bodySchema.safeParse(body.value);
   if (!parsed.success) return badRequest(parsed.error.issues);
 
   await saveSessions(user.id, parsed.data.sessions);
