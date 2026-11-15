@@ -4,7 +4,8 @@ import type { Exercise, Session } from '@/lib/types';
 import { lastSetFor } from '@/lib/training/history';
 
 interface Props {
-  muscleId: string;
+  /** The muscles the open tile covers. A tile can cover more than one. */
+  muscleIds: string[];
   exercises: Exercise[];
   sessions: Session[];
   /** Exercise ids already logged in the workout being edited. */
@@ -14,7 +15,7 @@ interface Props {
 }
 
 export function ExercisePickerList({
-  muscleId,
+  muscleIds,
   exercises,
   sessions,
   loggedIds,
@@ -22,7 +23,7 @@ export function ExercisePickerList({
   onNew,
 }: Props) {
   const list = exercises.filter(
-    (e) => e.muscleIds.includes(muscleId) && !e.archivedAt,
+    (e) => e.muscleIds.some((m) => muscleIds.includes(m)) && !e.archivedAt,
   );
 
   return (

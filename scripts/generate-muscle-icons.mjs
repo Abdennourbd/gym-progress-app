@@ -51,7 +51,7 @@ function bbox(pointsList) {
   return { x0, y0, x1, y1 };
 }
 
-/** Which view and which source muscles make up each of the nine in the app. */
+/** Which view and which source muscles make up each of the ten in the app. */
 const SET = {
   chest: { view: 'anterior', keys: ['CHEST'] },
   back: { view: 'posterior', keys: ['UPPER_BACK'] },
@@ -62,6 +62,7 @@ const SET = {
   hamstrings: { view: 'posterior', keys: ['HAMSTRING', 'GLUTEAL'] },
   calves: { view: 'posterior', keys: ['CALVES'] },
   forearms: { view: 'anterior', keys: ['FOREARM'] },
+  abs: { view: 'anterior', keys: ['ABS', 'OBLIQUES'] },
 };
 
 const NAMES = {
@@ -74,10 +75,11 @@ const NAMES = {
   hamstrings: 'HamstringsIcon',
   calves: 'CalvesIcon',
   forearms: 'ForearmsIcon',
+  abs: 'AbsIcon',
 };
 
 /** How much context to keep around the highlighted muscle. */
-const ZOOM = { chest: 1.4, back: 1.4, shoulders: 1.3, biceps: 1.6, triceps: 1.6, quads: 1.5, hamstrings: 1.45, calves: 1.6, forearms: 1.55 };
+const ZOOM = { chest: 1.4, back: 1.4, shoulders: 1.3, biceps: 1.6, triceps: 1.6, quads: 1.5, hamstrings: 1.45, calves: 1.6, forearms: 1.55, abs: 1.5 };
 
 const parts = [];
 const preview = [];

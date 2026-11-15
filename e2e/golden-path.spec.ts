@@ -199,7 +199,7 @@ test('the exercises open below the muscle on the same page', async ({ page }) =>
   await expect(page.getByTestId('exercise-list')).toHaveCount(0);
 
   // A different muscle swaps the list.
-  await page.locator('[data-muscle="calves"]').click();
+  await page.locator('[data-muscle="abs-calves"]').click();
   await expect(page.getByText('Calf Raises')).toBeVisible();
 });
 
@@ -222,11 +222,31 @@ test('only the muscles that are used are listed', async ({ page }) => {
     'Triceps',
     'Quads',
     'Hamstrings',
-    'Calves',
+    'Abs & Calves',
     'Forearms',
   ]) {
     await expect(page.locator('[data-muscle]').filter({ hasText: muscle })).toHaveCount(1);
   }
+});
+
+test('the muscle grid is in the order it is read in', async ({ page }) => {
+  await signIn(page);
+
+  const order = await page.locator('[data-muscle]').evaluateAll((tiles) =>
+    tiles.map((tile) => tile.getAttribute('data-muscle')),
+  );
+
+  expect(order).toEqual([
+    'back',
+    'chest',
+    'forearms',
+    'biceps',
+    'triceps',
+    'shoulders',
+    'quads',
+    'hamstrings',
+    'abs-calves',
+  ]);
 });
 
 test('suggests the next overload target from what you just lifted', async ({ page }) => {

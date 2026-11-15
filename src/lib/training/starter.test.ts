@@ -3,8 +3,8 @@ import { MUSCLES } from '@/lib/types';
 import { STARTER_EXERCISES, buildStarterExercises } from './starter';
 
 describe('the starter set', () => {
-  it('has fourteen movements', () => {
-    expect(STARTER_EXERCISES).toHaveLength(14);
+  it('has fifteen movements', () => {
+    expect(STARTER_EXERCISES).toHaveLength(15);
   });
 
   it('has no duplicate names', () => {

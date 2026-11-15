@@ -3,13 +3,16 @@ import type { Exercise } from '@/lib/types';
 /**
  * Muscles that are no longer tracked.
  */
-const REMOVED = new Set(['core', 'traps', 'lowerback', 'neck', 'adductors']);
+const REMOVED = new Set(['traps', 'lowerback', 'neck', 'adductors']);
 
 /**
  * Muscles that have been folded into another one.
  */
 const RENAMED: Record<string, string> = {
   glutes: 'hamstrings',
+  core: 'abs',
+  abdominals: 'abs',
+  obliques: 'abs',
 };
 
 const FALLBACK = 'back';

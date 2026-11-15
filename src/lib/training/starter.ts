@@ -26,6 +26,7 @@ export const STARTER_EXERCISES: StarterExercise[] = [
   { name: 'Leg Curl', muscleIds: ['hamstrings'], targetReps: { min: 8, max: 12 }, stepKg: 2.5 },
   { name: 'Hip Thrust', muscleIds: ['hamstrings'], targetReps: { min: 8, max: 12 }, stepKg: 2.5 },
   { name: 'Calf Raise', muscleIds: ['calves'], targetReps: { min: 10, max: 15 }, stepKg: 2.5 },
+  { name: 'Cable Crunch', muscleIds: ['abs'], targetReps: { min: 10, max: 15 }, stepKg: 5 },
   { name: 'Barbell Curl', muscleIds: ['biceps'], targetReps: { min: 8, max: 12 }, stepKg: 2.5 },
   { name: 'Triceps Pushdown', muscleIds: ['triceps'], targetReps: { min: 8, max: 12 }, stepKg: 2.5 },
   { name: 'Lateral Raise', muscleIds: ['shoulders'], targetReps: { min: 12, max: 15 }, stepKg: 1.25 },

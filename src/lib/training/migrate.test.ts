@@ -21,10 +21,18 @@ describe('migrateExercise', () => {
     ).toEqual(['quads', 'hamstrings']);
   });
 
-  it('drops muscles that are no longer tracked', () => {
+  it('folds core into abs', () => {
+    expect(migrateExercise(makeExercise({ muscleIds: ['core'] })).muscleIds).toEqual(['abs']);
     expect(migrateExercise(makeExercise({ muscleIds: ['core', 'chest'] })).muscleIds).toEqual([
+      'abs',
       'chest',
     ]);
+    expect(
+      migrateExercise(makeExercise({ muscleIds: ['obliques', 'abs'] })).muscleIds,
+    ).toEqual(['abs']);
+  });
+
+  it('drops muscles that are no longer tracked', () => {
     expect(migrateExercise(makeExercise({ muscleIds: ['traps'] })).muscleIds).not.toContain('traps');
     expect(migrateExercise(makeExercise({ muscleIds: ['neck'] })).muscleIds).not.toContain('neck');
     expect(

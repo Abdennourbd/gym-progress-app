@@ -17,7 +17,7 @@ import { ExercisePickerList } from './ExercisePickerList';
 import { NewExerciseSheet } from './NewExerciseSheet';
 import { RestTimer } from './RestTimer';
 import { lastSetBefore } from '@/lib/training/history';
-import { MUSCLE_NAMES } from '@/lib/types';
+import { MUSCLE_TILES } from '@/lib/types';
 
 interface SheetState extends SheetValues {
   mode: 'add' | 'edit';
@@ -32,10 +32,13 @@ export function WorkoutTab() {
   const activeSessionId = useStore((s) => s.activeSessionId);
   const setActiveSessionId = useStore((s) => s.setActiveSessionId);
 
-  const [muscle, setMuscle] = useState<string | null>(null);
+  const [tile, setTile] = useState<string | null>(null);
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [creatingIn, setCreatingIn] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  /** The tile that is open, and the muscles it covers. */
+  const openTile = MUSCLE_TILES.find((t) => t.id === tile) ?? null;
 
   const session = useMemo(
     () => currentWorkout(sessions, activeSessionId),
@@ -110,9 +113,9 @@ export function WorkoutTab() {
     // tap away.
   };
 
-  const toggleMuscle = (muscleId: string) => {
-    const next = muscle === muscleId ? null : muscleId;
-    setMuscle(next);
+  const toggleTile = (tileId: string) => {
+    const next = tile === tileId ? null : tileId;
+    setTile(next);
     if (next) {
       // Bring the list under the finger into view.
       requestAnimationFrame(() =>
@@ -193,18 +196,18 @@ export function WorkoutTab() {
         </h2>
         <MuscleGrid
           exercises={exercises.filter((e) => !e.archivedAt)}
-          activeMuscle={muscle}
-          onPick={toggleMuscle}
+          activeTile={tile}
+          onPick={toggleTile}
         />
       </div>
 
-      {muscle ? (
+      {openTile ? (
         <div ref={listRef}>
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
-            {MUSCLE_NAMES[muscle] ?? muscle}
+            {openTile.name}
           </h2>
           <ExercisePickerList
-            muscleId={muscle}
+            muscleIds={openTile.muscles}
             exercises={exercises}
             sessions={sessions}
             loggedIds={loggedIds}
@@ -216,7 +219,7 @@ export function WorkoutTab() {
                 openAdd(exercise.id);
               }
             }}
-            onNew={() => setCreatingIn(muscle)}
+            onNew={() => setCreatingIn(openTile.muscles[0])}
           />
         </div>
       ) : null}

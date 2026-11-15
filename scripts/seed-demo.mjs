@@ -130,6 +130,7 @@ const EXERCISES = [
   { key: 'hammer', name: 'Hammer Curl', muscles: ['biceps'], target: [8, 12], stepKg: 1.25, sets: 3, reps: 9 },
   { key: 'wrist', name: 'Wrist Curls', muscles: ['forearms'], target: [12, 15], stepKg: 2.5, sets: 3, reps: 14 },
   { key: 'farmer', name: 'Farmer Carry', muscles: ['forearms'], target: [30, 60], stepKg: 5, sets: 4, reps: 40, repsLabel: 'm' },
+  { key: 'crunch', name: 'Cable Crunch', muscles: ['abs'], target: [10, 15], stepKg: 5, sets: 3, reps: 12 },
 
   { key: 'squat', name: 'Barbell Squat', muscles: ['quads', 'hamstrings'], target: [5, 8], stepKg: 2.5, sets: 4, reps: 6 },
   { key: 'legpress', name: 'Leg Press', muscles: ['quads'], target: [8, 12], stepKg: 5, sets: 4, reps: 10 },
@@ -142,19 +143,19 @@ const EXERCISES = [
 
 const START = {
   bench: 60, incline: 24, machine: 70, ohp: 40, lateral: 9, pushdown: 32.5, ohext: 27.5,
-  deadlift: 100, row: 65, pulldown: 70, cable: 60, facepull: 35, curl: 22.5, hammer: 25, wrist: 20, farmer: 40,
+  deadlift: 100, row: 65, pulldown: 70, cable: 60, facepull: 35, curl: 22.5, hammer: 25, wrist: 20, farmer: 40, crunch: 40,
   squat: 80, legpress: 180, legext: 70, rdl: 70, legcurl: 55, hipthrust: 110, calf: 60,
 };
 
 // Per-session-type weight gain, in kg. 0 means a plateau, on purpose.
 const GAIN = {
   bench: 2.5, incline: 2, machine: 2.5, ohp: 2.5, lateral: 0, pushdown: 2.5, ohext: 2.5,
-  deadlift: 5, row: 2.5, pulldown: 2.5, cable: 2.5, facepull: 2.5, curl: 0, hammer: 1.25, wrist: 0, farmer: 0,
+  deadlift: 5, row: 2.5, pulldown: 2.5, cable: 2.5, facepull: 2.5, curl: 0, hammer: 1.25, wrist: 0, farmer: 0, crunch: 2.5,
   squat: 2.5, legpress: 5, legext: 2.5, rdl: 2.5, legcurl: 2.5, hipthrust: 5, calf: 0,
 };
 
 const PUSH = ['bench', 'incline', 'machine', 'ohp', 'lateral', 'pushdown', 'ohext'];
-const PULL = ['deadlift', 'row', 'pulldown', 'cable', 'facepull', 'curl', 'hammer', 'wrist', 'farmer'];
+const PULL = ['deadlift', 'row', 'pulldown', 'cable', 'facepull', 'curl', 'hammer', 'wrist', 'farmer', 'crunch'];
 const LEGS = ['squat', 'legpress', 'legext', 'rdl', 'legcurl', 'hipthrust', 'calf'];
 
 const schedule = [
