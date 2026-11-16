@@ -39,8 +39,8 @@ its own workouts to itself.
   with a picture of that muscle, so finding the movement you want is two
   taps.
 - **Progress per muscle and for the whole body.** A 0–100 strength score over
-  7 days, 30 days or 3 months, plus a ranked list of every muscle with the
-  change since you last trained it.
+  7 days, 30 days or 3 months, plus a ranked list of every muscle with each
+  movement measured against the last time you did it.
 - **Nothing to save.** There is no save button anywhere. Every edit is written
   to the device immediately and to the server a moment later. Close the phone
   between exercises and come back to exactly where you were.

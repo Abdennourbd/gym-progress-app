@@ -57,6 +57,33 @@ describe('muscleIndexSeries', () => {
     expect(points[0].index).toBeCloseTo(100, 1);
     expect(points[1].index).toBeCloseTo(50, 1);
   });
+
+  it('judges a bodyweight set against the best bodyweight set, not the best loaded one', () => {
+    const dips = makeExercise({ id: 'ex-dips', muscleIds: ['chest'] });
+    const sessions = [
+      // Bodyweight, then two kilos of assistance.
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-dips', weightKg: 0, reps: 9 })]),
+      makeSession('2026-01-05', [makeEntry({ exerciseId: 'ex-dips', weightKg: 2.5, reps: 9 })]),
+    ];
+    const points = muscleIndexSeries('chest', [dips], sessions, ['2026-01-01', '2026-01-05']);
+
+    // The bodyweight set is the best bodyweight set, so it is at its best. The
+    // assisted one is the best assisted set, so it is too. Neither is crushed
+    // by the other being on a different scale.
+    expect(points[0].index).toBeCloseTo(100, 1);
+    expect(points[1].index).toBeCloseTo(100, 1);
+  });
+
+  it('counts a movement once a day, not once per set of it', () => {
+    const sessions = [
+      makeSession('2026-01-01', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 100, reps: 5 }),
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 50, reps: 5 }),
+      ]),
+    ];
+    const points = muscleIndexSeries('chest', [bench], sessions, ['2026-01-01']);
+    expect(points[0].index).toBeCloseTo(100, 1);
+  });
 });
 
 describe('wholeBodyIndexSeries', () => {
@@ -112,6 +139,51 @@ describe('muscleSummaries', () => {
     const [chest] = muscleSummaries([bench], sessions, ['2026-01-20']);
     expect(chest.changePct).toBeNull();
     expect(chest.index).toBeCloseTo(100, 1);
+  });
+
+  it('compares movement by movement, not session by session', () => {
+    // A session with one movement at your best must not beat a session with
+    // three, or the number would say you got stronger when you did not.
+    const dips = makeExercise({ id: 'ex-dips', muscleIds: ['chest'] });
+    const sessions = [
+      makeSession('2026-01-01', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 100, reps: 5 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 50, reps: 5 }),
+        makeEntry({ exerciseId: 'ex-dips', weightKg: 0, reps: 5 }),
+      ]),
+      makeSession('2026-01-20', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 100, reps: 5 }),
+      ]),
+    ];
+
+    const [chest] = muscleSummaries([bench, fly, dips], sessions, ['2026-01-20']);
+    // The bench press is the same, and the other two have nothing to compare
+    // against on the later day, so there is no change to report.
+    expect(chest.changePct).toBeCloseTo(0, 1);
+  });
+
+  it('leaves out a movement that changed from bodyweight to loaded', () => {
+    const dips = makeExercise({ id: 'ex-dips', muscleIds: ['chest'] });
+    const sessions = [
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-dips', weightKg: 0, reps: 10 })]),
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-dips', weightKg: 10, reps: 9 })]),
+    ];
+    const [chest] = muscleSummaries([dips], sessions, ['2026-01-20']);
+
+    // There is no honest percentage between bodyweight work and loaded work,
+    // so the movement is left out and the muscle reads as new.
+    expect(chest.changePct).toBeNull();
+  });
+
+  it('uses the last time the muscle was trained, not the last day there is', () => {
+    const sessions = [
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 100, reps: 5 })]),
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 120, reps: 5 })]),
+      // A later day that trained something else entirely.
+      makeSession('2026-01-25', [makeEntry({ exerciseId: 'ex-row', weightKg: 100, reps: 5 })]),
+    ];
+    const [chest] = muscleSummaries([bench, row], sessions, ['2026-01-01', '2026-01-25']);
+    expect(chest.changePct).toBeCloseTo(20, 0);
   });
 
   it('shows a session that added reps as progress', () => {

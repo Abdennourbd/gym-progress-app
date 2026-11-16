@@ -109,10 +109,11 @@ export function ProgressTab() {
               One point per workout, the dashed line is the trend
             </p>
             <p className="mt-2 rounded-xl bg-surface-2 px-3 py-2 text-[11px] leading-relaxed text-ink-soft">
-              A set scores its weight, plus a tiny bonus for reps, so more reps at the
-              same weight still counts and going heavier always moves you forward. Each
-              exercise is scored against your strongest moment in the last 90 days, so
-              100 means you are at your best.
+              A set scores the weight it moves, and a rep is worth a percent of
+              that, so more reps at the same weight still counts and going
+              heavier always moves you forward. Each movement is scored against
+              your strongest moment in the last 90 days, so 100 means you are
+              at your best.
             </p>
           </>
         ) : (
@@ -137,7 +138,7 @@ export function ProgressTab() {
             <span className="w-11 text-right">strength</span>
           </div>
           <p className="mb-1.5 px-3.5 text-[11px] text-ink-faint">
-            The change is since you last trained the muscle.
+            Each movement against the last time you did it.
           </p>
           <RankedMuscleList summaries={summaries} onSelect={setMuscle} />
         </section>

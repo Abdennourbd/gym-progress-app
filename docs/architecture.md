@@ -111,18 +111,24 @@ against its own strongest set in the last 90 days, which makes a shoulder
 press and a squat comparable and stops the heaviest lift from drowning out
 the lightest one.
 
-Two details that took a while to get right:
+Three details that took a while to get right:
 
 - **A rep is a share of the load, not a flat number.** The score is
   `weight × (1 + reps / 100)`, so one more rep is worth a percent of what you
   lifted. A flat bonus disappears next to the weight: a rep on a 60 kg lift
   would be a hundredth of a kilo, which rounds to nothing in a chart and makes
   a session that added reps look like nothing happened.
-- **The change of a muscle is measured against the last time that muscle was
-  trained**, not against the first day of the window on screen. The search
-  reaches further back than the chart does, so a muscle trained once in the
-  window still has something to be compared with, and a muscle trained for the
-  first time says "new" rather than a misleading zero.
+- **The change of a muscle is measured movement by movement.** Every movement
+  of the last session of that muscle is compared with the last time that same
+  movement was done, and the answers are averaged. Comparing whole sessions
+  mixes the movements up: a session with one movement at your best would beat
+  a session with three, and the number would say you got stronger when you
+  did not.
+- **Bodyweight work and loaded work are kept apart.** A bodyweight set is
+  scored by its reps and a loaded one by the weight it moves, so they cannot
+  be compared with each other. Each is normalised against the best of its own
+  kind, and a movement that changed from bodyweight to loaded is left out of
+  the change rather than given a percentage that means nothing.
 
 ## Accounts and sessions
 
