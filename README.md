@@ -40,7 +40,7 @@ its own workouts to itself.
   taps.
 - **Progress per muscle and for the whole body.** A 0–100 strength score over
   7 days, 30 days or 3 months, plus a ranked list of every muscle with the
-  change over the period.
+  change since you last trained it.
 - **Nothing to save.** There is no save button anywhere. Every edit is written
   to the device immediately and to the server a moment later. Close the phone
   between exercises and come back to exactly where you were.
@@ -71,16 +71,21 @@ there is saved.
 
 ## How the numbers work
 
-**Set score** — a set scores its weight, plus a small bonus for each rep.
+**Set score** — a set scores its weight, and a rep is worth one percent of it.
 Adding weight always moves the score up, even when the reps drop to make room
 for it:
 
 ```
-10 kg × 10  →  10.10
-12 kg × 6   →  12.06   (heavier, so it still wins)
-80 kg × 8   →  80.08
+10 kg × 10  →  11.00
+12 kg × 6   →  12.72   (heavier, so it still wins)
+80 kg × 8   →  86.40
 0 kg × 12   →  0.12    (bodyweight work, scored by reps)
 ```
+
+A rep is a share of the load rather than a flat number on purpose. One more
+rep on a 60 kg lift used to be a hundredth of a kilo in the score, which is a
+rounding error next to the weight and disappears in a chart. As a share of the
+load it stays in proportion, so a session that adds reps reads as progress.
 
 A bodyweight set is scored by reps divided by 100, so it can never outscore
 real kilograms.

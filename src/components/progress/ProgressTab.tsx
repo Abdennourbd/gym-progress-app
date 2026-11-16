@@ -136,6 +136,9 @@ export function ProgressTab() {
             <span className="flex-1" />
             <span className="w-11 text-right">strength</span>
           </div>
+          <p className="mb-1.5 px-3.5 text-[11px] text-ink-faint">
+            The change is since you last trained the muscle.
+          </p>
           <RankedMuscleList summaries={summaries} onSelect={setMuscle} />
         </section>
       ) : (

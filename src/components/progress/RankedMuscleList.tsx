@@ -12,7 +12,12 @@ export function RankedMuscleList({
 }) {
   const rows = [...summaries]
     .filter((s) => s.index !== null)
-    .sort((a, b) => (a.changePct ?? 0) - (b.changePct ?? 0));
+    .sort((a, b) => {
+      // A muscle with nothing to compare against is new, and goes at the end.
+      if (a.changePct === null) return 1;
+      if (b.changePct === null) return -1;
+      return a.changePct - b.changePct;
+    });
 
   if (!rows.length) {
     return (
@@ -25,9 +30,15 @@ export function RankedMuscleList({
   return (
     <div className="flex flex-col gap-1.5">
       {rows.map((row) => {
-        const pct = row.changePct ?? 0;
+        const pct = row.changePct;
         const colour =
-          pct > 0.5 ? 'text-emerald-600' : pct < -0.5 ? 'text-red-600' : 'text-ink-faint';
+          pct === null
+            ? 'text-ink-faint'
+            : pct > 0.5
+              ? 'text-emerald-600'
+              : pct < -0.5
+                ? 'text-red-600'
+                : 'text-ink-faint';
 
         return (
           <button
@@ -39,7 +50,13 @@ export function RankedMuscleList({
               {MUSCLE_NAMES[row.muscleId] ?? row.muscleId}
             </span>
             <span className={`w-14 shrink-0 text-sm font-semibold tabular-nums ${colour}`}>
-              {pct > 0.5 ? '▲' : pct < -0.5 ? '▼' : '='} {Math.abs(pct).toFixed(0)}%
+              {pct === null ? (
+                'new'
+              ) : (
+                <>
+                  {pct > 0.5 ? '▲' : pct < -0.5 ? '▼' : '='} {Math.abs(pct).toFixed(0)}%
+                </>
+              )}
             </span>
             <span className="flex-1" />
             <span className="w-11 shrink-0 text-right text-sm font-bold tabular-nums">

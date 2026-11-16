@@ -111,6 +111,19 @@ against its own strongest set in the last 90 days, which makes a shoulder
 press and a squat comparable and stops the heaviest lift from drowning out
 the lightest one.
 
+Two details that took a while to get right:
+
+- **A rep is a share of the load, not a flat number.** The score is
+  `weight × (1 + reps / 100)`, so one more rep is worth a percent of what you
+  lifted. A flat bonus disappears next to the weight: a rep on a 60 kg lift
+  would be a hundredth of a kilo, which rounds to nothing in a chart and makes
+  a session that added reps look like nothing happened.
+- **The change of a muscle is measured against the last time that muscle was
+  trained**, not against the first day of the window on screen. The search
+  reaches further back than the chart does, so a muscle trained once in the
+  window still has something to be compared with, and a muscle trained for the
+  first time says "new" rather than a misleading zero.
+
 ## Accounts and sessions
 
 - A password is hashed with scrypt (N=16384, r=8, p=1) and a per password

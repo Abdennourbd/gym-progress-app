@@ -1,6 +1,14 @@
 import type { Exercise, Session, SessionEntry } from '@/lib/types';
 import { strength } from './strength';
-import { daysBetween } from './dates';
+import { daysBetween, widenRange } from './dates';
+
+/**
+ * How far back the search for the previous session of a muscle reaches.
+ *
+ * It is longer than the ninety days the score is measured against, so a
+ * muscle trained once in the window still has something to be compared with.
+ */
+const COMPARE_DAYS = 120;
 
 export interface MusclePoint {
   date: string;
@@ -119,13 +127,26 @@ export function muscleSummaries(
 ): MuscleSummary[] {
   const muscleIds = Array.from(new Set(exercises.flatMap((e) => e.muscleIds)));
 
+  // The change is measured against the last time the muscle was trained, which
+  // can be before the window the chart shows, so the search reaches further
+  // back than the chart does.
+  const wide = widenRange(dates, COMPARE_DAYS);
+
   return muscleIds.map((muscleId) => {
     const points = muscleIndexSeries(muscleId, exercises, sessions, dates);
-    const trained = points.filter((p) => p.index !== null);
-    const first = trained[0]?.index ?? null;
+
+    const trained = muscleIndexSeries(muscleId, exercises, sessions, wide).filter(
+      (p) => p.index !== null,
+    );
     const last = trained[trained.length - 1]?.index ?? null;
+    const previous = trained[trained.length - 2]?.index ?? null;
+
+    // A muscle trained for the first time has nothing to compare against, and
+    // saying zero would read as "nothing happened" rather than "this is new".
     const changePct =
-      first !== null && last !== null && first > 0 ? ((last - first) / first) * 100 : null;
+      last !== null && previous !== null && previous > 0
+        ? ((last - previous) / previous) * 100
+        : null;
 
     return { muscleId, index: last, changePct, points };
   });

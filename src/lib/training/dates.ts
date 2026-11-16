@@ -56,6 +56,24 @@ export function eachDay(startKey: string, endKey: string): string[] {
 }
 
 /**
+ * The range on screen, with more days in front of it.
+ *
+ * The change of a muscle is measured against the last time that muscle was
+ * trained, and that can be before the window the chart shows.
+ */
+export function widenRange(dates: string[], days: number): string[] {
+  if (!dates.length) return dates;
+
+  const first = parseDateKey(dates[0]);
+  const extra: string[] = [];
+  for (let i = days; i >= 1; i -= 1) {
+    const d = new Date(first.getFullYear(), first.getMonth(), first.getDate() - i);
+    extra.push(toDateKey(d));
+  }
+  return [...extra, ...dates];
+}
+
+/**
  * Collapses a daily series into Monday-based weekly buckets. Used by the
  * three-month view, where daily points are too noisy to read.
  */

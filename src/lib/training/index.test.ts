@@ -83,13 +83,44 @@ describe('wholeBodyIndexSeries', () => {
 });
 
 describe('muscleSummaries', () => {
-  it('reports percentage change across the window', () => {
+  it('reports the change since the muscle was last trained', () => {
     const sessions = [
       makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 100, reps: 5 })]),
       makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 120, reps: 5 })]),
     ];
     const [chest] = muscleSummaries([bench], sessions, ['2026-01-01', '2026-01-20']);
     expect(chest.changePct).toBeCloseTo(20, 0);
+  });
+
+  it('compares against the last time it was trained, not the start of the window', () => {
+    const sessions = [
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 100, reps: 5 })]),
+      makeSession('2026-01-10', [makeEntry({ exerciseId: 'ex-bench', weightKg: 110, reps: 5 })]),
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 120, reps: 5 })]),
+    ];
+
+    // The window holds one day only. The comparison reaches back past it, so
+    // the number still says how the last session went.
+    const [chest] = muscleSummaries([bench], sessions, ['2026-01-20']);
+    expect(chest.changePct).toBeGreaterThan(0);
+  });
+
+  it('says new when there is nothing to compare against', () => {
+    const sessions = [
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 120, reps: 5 })]),
+    ];
+    const [chest] = muscleSummaries([bench], sessions, ['2026-01-20']);
+    expect(chest.changePct).toBeNull();
+    expect(chest.index).toBeCloseTo(100, 1);
+  });
+
+  it('shows a session that added reps as progress', () => {
+    const sessions = [
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 8 })]),
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 10 })]),
+    ];
+    const [chest] = muscleSummaries([bench], sessions, ['2026-01-01', '2026-01-20']);
+    expect(chest.changePct).toBeGreaterThan(0);
   });
 
   it('counts a heavier set with fewer reps as stronger', () => {

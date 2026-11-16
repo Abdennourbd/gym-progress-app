@@ -2,9 +2,16 @@ import { describe, it, expect } from 'vitest';
 import { strength } from './strength';
 
 describe('strength', () => {
-  it('scores the weight, with reps only breaking ties', () => {
-    expect(strength(10, 10)).toBeCloseTo(10.1, 5);
+  it('scores the weight, with a rep worth a percent of it', () => {
+    expect(strength(10, 10)).toBeCloseTo(11, 5);
     expect(strength(10, 8)).toBeLessThan(strength(10, 9));
+  });
+
+  it('keeps a rep visible on a heavy lift', () => {
+    // One more rep is worth a percent of the load, so it is a real number
+    // rather than a rounding error next to the weight.
+    expect(strength(60, 10) - strength(60, 9)).toBeCloseTo(0.6, 5);
+    expect(strength(60, 9) / strength(60, 8)).toBeGreaterThan(1.005);
   });
 
   it('counts adding weight with fewer reps as progress', () => {
