@@ -10,6 +10,7 @@ export interface MusclePoint {
 export interface MuscleSummary {
   muscleId: string;
   index: number | null;
+  /** The sum of the movements' changes since each was last done. */
   changePct: number | null;
   points: MusclePoint[];
 }
@@ -162,7 +163,11 @@ export function wholeBodyIndexSeries(
  * How much the muscle moved the last time it was trained.
  *
  * Every movement of that session is compared with the last time that same
- * movement was done, and the answers are averaged.
+ * movement was done, and the answers are added up.
+ *
+ * Adding them up is what makes the number say how much the whole muscle
+ * moved: two movements that each gained a rep are twice the progress of one,
+ * and a movement that lost a rep takes back what another one gained.
  *
  * Comparing whole sessions instead would mix the movements up: a session with
  * one movement at your best would beat a session with three, and the number
@@ -228,7 +233,7 @@ function changeSinceLastTime(
   }
 
   if (!changes.length) return null;
-  return changes.reduce((a, b) => a + b, 0) / changes.length;
+  return changes.reduce((a, b) => a + b, 0);
 }
 
 export function muscleSummaries(

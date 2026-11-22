@@ -2,6 +2,7 @@
 
 import { MUSCLE_NAMES } from '@/lib/types';
 import type { MuscleSummary } from '@/lib/training/index';
+import { changeDisplay } from '@/lib/training/change';
 
 export function RankedMuscleList({
   summaries,
@@ -30,15 +31,13 @@ export function RankedMuscleList({
   return (
     <div className="flex flex-col gap-1.5">
       {rows.map((row) => {
-        const pct = row.changePct;
+        const change = changeDisplay(row.changePct);
         const colour =
-          pct === null
-            ? 'text-ink-faint'
-            : pct > 0.5
-              ? 'text-emerald-600'
-              : pct < -0.5
-                ? 'text-red-600'
-                : 'text-ink-faint';
+          change.kind === 'up'
+            ? 'text-emerald-600'
+            : change.kind === 'down'
+              ? 'text-red-600'
+              : 'text-ink-faint';
 
         return (
           <button
@@ -49,12 +48,15 @@ export function RankedMuscleList({
             <span className="w-24 shrink-0 truncate text-sm font-semibold">
               {MUSCLE_NAMES[row.muscleId] ?? row.muscleId}
             </span>
-            <span className={`w-14 shrink-0 text-sm font-semibold tabular-nums ${colour}`}>
-              {pct === null ? (
+            <span
+              className={`w-20 shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums ${colour}`}
+            >
+              {change.kind === 'new' ? (
                 'new'
               ) : (
                 <>
-                  {pct > 0.5 ? '▲' : pct < -0.5 ? '▼' : '='} {Math.abs(pct).toFixed(0)}%
+                  {change.kind === 'up' ? '▲' : change.kind === 'down' ? '▼' : '='}{' '}
+                  {change.text}
                 </>
               )}
             </span>

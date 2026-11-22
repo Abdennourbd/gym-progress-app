@@ -118,12 +118,13 @@ Three details that took a while to get right:
   lifted. A flat bonus disappears next to the weight: a rep on a 60 kg lift
   would be a hundredth of a kilo, which rounds to nothing in a chart and makes
   a session that added reps look like nothing happened.
-- **The change of a muscle is measured movement by movement.** Every movement
-  of the last session of that muscle is compared with the last time that same
-  movement was done, and the answers are averaged. Comparing whole sessions
-  mixes the movements up: a session with one movement at your best would beat
-  a session with three, and the number would say you got stronger when you
-  did not.
+- **The change of a muscle is measured movement by movement, and added up.**
+  Every movement of the last session of that muscle is compared with the last
+  time that same movement was done, and the changes are added. Averaging them
+  would divide by the number of movements, so two movements that each gained
+  a rep would read the same as one. Adding the changes is not the old
+  session-summing mistake: a movement that did not change adds zero, so only
+  real progress counts.
 - **Bodyweight work and loaded work are kept apart.** A bodyweight set is
   scored by its reps and a loaded one by the weight it moves, so they cannot
   be compared with each other. Each is normalised against the best of its own

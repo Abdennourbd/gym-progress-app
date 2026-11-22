@@ -133,12 +133,12 @@ export function ProgressTab() {
           </h2>
           <div className="mb-1.5 flex gap-3 px-3.5 text-[10px] uppercase tracking-wide text-ink-faint">
             <span className="w-24">muscle</span>
-            <span className="w-14">change</span>
+            <span className="w-20">change</span>
             <span className="flex-1" />
             <span className="w-11 text-right">strength</span>
           </div>
           <p className="mb-1.5 px-3.5 text-[11px] text-ink-faint">
-            Each movement against the last time you did it.
+            Each movement against the last time you did it; the changes add up.
           </p>
           <RankedMuscleList summaries={summaries} onSelect={setMuscle} />
         </section>

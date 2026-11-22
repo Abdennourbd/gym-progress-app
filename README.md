@@ -39,8 +39,8 @@ its own workouts to itself.
   with a picture of that muscle, so finding the movement you want is two
   taps.
 - **Progress per muscle and for the whole body.** A 0–100 strength score over
-  7 days, 30 days or 3 months, plus a ranked list of every muscle with each
-  movement measured against the last time you did it.
+  7 days, 30 days or 3 months, plus a ranked list of every muscle with the
+  changes of its movements added up.
 - **Nothing to save.** There is no save button anywhere. Every edit is written
   to the device immediately and to the server a moment later. Close the phone
   between exercises and come back to exactly where you were.
@@ -100,6 +100,24 @@ strength = 100 × score(today) ÷ best score in the last 90 days
 Because each exercise is normalised against its own baseline, a shoulder press
 and a squat can be compared honestly, and your heaviest lift does not drown
 out your lightest one. 100 means you are at your best.
+
+**Change per muscle** — the change of a muscle is the sum of the changes of
+the movements in its last workout. Each movement is compared with the last
+time you did it, and the percentages are added:
+
+```
+bench 60 kg × 10 → 60 kg × 11   +0.91%
+fly   20 kg × 10 → 20 kg × 11   +0.91%
+chest change                     +1.82%
+```
+
+So two movements that each gained a rep are twice the progress of one, and a
+movement that lost a rep takes back what another gained: +1 rep on one
+movement and −1 on another is zero. A movement with no earlier set, or one
+that switched between bodyweight and loaded, is left out.
+
+Adding the changes is not the same as adding whole sessions. A movement that
+did not change adds zero, so only real progress counts.
 
 **Whole body** — the mean of the strength scores of the muscles you trained
 that day. It answers "am I getting stronger overall" with a single number.

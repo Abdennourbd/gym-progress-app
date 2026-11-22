@@ -214,4 +214,157 @@ describe('muscleSummaries', () => {
     const points = muscleIndexSeries('chest', [bench, fly], sessions, ['2026-01-01']);
     expect(points[0].index).toBeCloseTo(100, 1);
   });
+
+  it('adds up the progress of every movement in the muscle', () => {
+    const sessions = [
+      makeSession('2026-01-01', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 10 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 20, reps: 10 }),
+      ]),
+      makeSession('2026-01-20', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 11 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 20, reps: 11 }),
+      ]),
+    ];
+
+    const [chest] = muscleSummaries([bench, fly], sessions, ['2026-01-20']);
+
+    // A rep is a share of the load, so one more rep is the same percentage
+    // on both movements. The two improvements add up instead of averaging.
+    expect(chest.changePct).toBeCloseTo(1.818, 3);
+  });
+
+  it('rewards progress in two movements more than in one', () => {
+    const oneMovement = [
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 10 })]),
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 11 })]),
+    ];
+    const twoMovements = [
+      makeSession('2026-01-01', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 10 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 20, reps: 10 }),
+      ]),
+      makeSession('2026-01-20', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 11 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 20, reps: 11 }),
+      ]),
+    ];
+
+    const one = muscleSummaries([bench], oneMovement, ['2026-01-20'])[0].changePct ?? 0;
+    const two = muscleSummaries([bench, fly], twoMovements, ['2026-01-20'])[0].changePct ?? 0;
+
+    expect(two).toBeGreaterThan(one);
+    expect(two).toBeCloseTo(one * 2, 3);
+  });
+
+  it('counts four reps the same on one movement or split across two', () => {
+    const oneMovement = [
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 10 })]),
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 14 })]),
+    ];
+    const twoMovements = [
+      makeSession('2026-01-01', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 10 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 60, reps: 10 }),
+      ]),
+      makeSession('2026-01-20', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 12 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 60, reps: 12 }),
+      ]),
+    ];
+
+    const one = muscleSummaries([bench], oneMovement, ['2026-01-20'])[0].changePct ?? 0;
+    const two = muscleSummaries([bench, fly], twoMovements, ['2026-01-20'])[0].changePct ?? 0;
+
+    // Both add the same four reps, and a rep is a share of the load, so the
+    // total is the same whatever the load is. A jump in the weight itself is
+    // what makes one movement pull ahead.
+    expect(one).toBeCloseTo(two, 3);
+  });
+
+  it('adds a gain and a loss instead of averaging them away', () => {
+    const sessions = [
+      makeSession('2026-01-01', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 10 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 20, reps: 10 }),
+      ]),
+      makeSession('2026-01-20', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 12 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 20, reps: 9 }),
+      ]),
+    ];
+
+    const [chest] = muscleSummaries([bench, fly], sessions, ['2026-01-20']);
+
+    // +1.818% on the bench and -0.909% on the fly is +0.909% for the chest.
+    // Averaging would have said +0.455%, and a bigger loss could have hidden
+    // a real gain completely.
+    expect(chest.changePct).toBeCloseTo(0.909, 3);
+  });
+
+  it('cancels a rep gained in one movement against a rep lost in another', () => {
+    const curl = makeExercise({ id: 'ex-curl', muscleIds: ['biceps'] });
+    const hammer = makeExercise({ id: 'ex-hammer', muscleIds: ['biceps'] });
+    const sessions = [
+      makeSession('2026-01-01', [
+        makeEntry({ exerciseId: 'ex-curl', weightKg: 22.5, reps: 10 }),
+        makeEntry({ exerciseId: 'ex-hammer', weightKg: 30, reps: 8 }),
+      ]),
+      makeSession('2026-01-20', [
+        makeEntry({ exerciseId: 'ex-curl', weightKg: 22.5, reps: 11 }),
+        makeEntry({ exerciseId: 'ex-hammer', weightKg: 30, reps: 7 }),
+      ]),
+    ];
+
+    const [biceps] = muscleSummaries([curl, hammer], sessions, ['2026-01-20']);
+
+    // The two rep changes are on different loads and rep counts, so they are
+    // not exactly equal, but they cancel to within a hundredth of a percent.
+    expect(biceps.changePct).toBeCloseTo(0, 1);
+  });
+
+  it('reports a movement that lost a rep as a drop', () => {
+    const sessions = [
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 10 })]),
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 9 })]),
+    ];
+
+    const [chest] = muscleSummaries([bench], sessions, ['2026-01-20']);
+
+    expect(chest.changePct).toBeLessThan(0);
+    expect(chest.changePct).toBeCloseTo(-0.909, 3);
+  });
+
+  it('weighs a big jump in load far above a single rep elsewhere', () => {
+    const weightJump = [
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 20, reps: 10 })]),
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 30, reps: 10 })]),
+    ];
+    const repGain = [
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-row', weightKg: 60, reps: 10 })]),
+      makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-row', weightKg: 60, reps: 11 })]),
+    ];
+
+    const chest = muscleSummaries([bench], weightJump, ['2026-01-20'])[0].changePct ?? 0;
+    const back = muscleSummaries([row], repGain, ['2026-01-20'])[0].changePct ?? 0;
+
+    // 20 kg to 30 kg is a 50% jump. One rep on a 60 kg lift is under one
+    // percent. The jump has to be in a different league.
+    expect(chest).toBeGreaterThan(back * 10);
+  });
+
+  it('leaves a movement with no history out of the sum', () => {
+    const sessions = [
+      makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 10 })]),
+      makeSession('2026-01-20', [
+        makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 11 }),
+        makeEntry({ exerciseId: 'ex-fly', weightKg: 20, reps: 10 }),
+      ]),
+    ];
+
+    const [chest] = muscleSummaries([bench, fly], sessions, ['2026-01-20']);
+
+    // The fly has no earlier set to compare with, so it adds nothing.
+    expect(chest.changePct).toBeCloseTo(0.909, 3);
+  });
 });
