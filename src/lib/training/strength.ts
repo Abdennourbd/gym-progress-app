@@ -1,23 +1,31 @@
 /**
- * The score of one set.
+ * The estimated one-rep max of a set.
  *
- * The weight is the number, and a rep is worth one percent of it. A rep at
- * the same weight still counts, and going heavier always moves you forward,
- * because a plate is worth more than a rep.
+ * A set is scored by the most weight it says you could lift once, not by the
+ * weight on the bar. That is what makes two sessions of the same strength
+ * score the same even when one uses more reps and the other more plates:
+ * 20 kg × 12 and 25 kg × 6 are both about a 29 kg max.
  *
- * 60 kg × 10 = 66, 60 kg × 9 = 65.4, 80 kg × 8 = 86.4.
+ * The estimate is Brzycki's formula, `weight × 36 / (37 − reps)`, the standard
+ * for sets in the 1–12 rep range. It is steep in reps on purpose: at 10 reps
+ * one more rep is worth about 3.8% of the max, which is what a rep is worth
+ * when you are that close to your limit.
  *
- * The rep bonus is a share of the load rather than a flat number on purpose.
- * A flat bonus disappears next to the weight: one more rep on a 60 kg lift
- * would be a hundredth of a kilo in the score, which is nothing you could see
- * in a chart or a percentage. A share of the load keeps the two in the same
- * proportion, so a session that adds reps reads as progress.
+ * Above 12 reps the formula keeps steepening and breaks completely at 37, so
+ * the curve is continued at the slope it has at 12. It stays smooth and
+ * finite, and a farmer carry logged as 40 kg × 41 cannot divide by zero or
+ * claim a max thirty times the load.
  *
- * Bodyweight work has no load to take a share of, so it is scored by the reps
- * and can never outscore real kilograms.
+ * Bodyweight work has no load to estimate a max from, so it is scored by its
+ * reps and can never outscore real kilograms.
  */
 export function strength(weightKg: number, reps: number): number {
   if (reps <= 0) return 0;
   if (weightKg <= 0) return Math.max(0, reps) / 100;
-  return Math.max(0, weightKg) * (1 + Math.max(0, reps) / 100);
+
+  const r = Math.max(0, reps);
+  const capped = Math.min(r, 12);
+  // 36 / (37 − 12) = 1.44, and the slope there is 36 / 25² = 0.0576.
+  const factor = 36 / (37 - capped) + Math.max(0, r - 12) * (36 / 625);
+  return Math.max(0, weightKg) * factor;
 }
