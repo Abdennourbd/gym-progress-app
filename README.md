@@ -26,11 +26,11 @@ Most trackers are good at recording what you did. OPOT is built around the next 
 
 Open an exercise and the sheet already knows what you did last time. It shows a target for today, then two steppers for the weight and reps you actually managed. Beat the target and the next one moves up. Miss it and the same weight waits for you until you hit the reps.
 
-The point is that you never have to remember the last session or do the arithmetic with a plate in each hand.
+You never have to remember the last session or do arithmetic with a plate in each hand.
 
 ### The gym, organised by muscle
 
-The home screen is nine muscle groups, each with its own drawing. Tap the one you are training and you get the exercises you actually do for it, with your last weight and reps on every row. The starter library has 35 exercises, and you can add your own whenever you need one.
+The home screen is nine muscle groups, each with its own drawing. Tap the one you are training and you get the exercises you actually do for it, with your last weight and reps on every row. It starts with the core movements for each muscle, and you can add your own whenever you need one.
 
 <p align="center">
   <img src="docs/screenshots/workout-hamstrings.jpg" width="230" alt="Choosing Hamstrings and seeing the exercises with the last weight and reps" />
@@ -58,13 +58,13 @@ OPOT is a web app. There is no App Store download and no install wizard: open th
 
 | 1. Tap **Share** | 2. Tap **Add to Home Screen** | 3. It is on your home screen |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/install-1-share.jpg" width="220" alt="The Safari share menu with Share at the top" /> | <img src="docs/screenshots/install-2-add-to-home.jpg" width="360" alt="The iOS share sheet with Add to Home Screen highlighted" /> | <img src="docs/screenshots/install-3-home-screen.jpg" width="220" alt="The OPOT icon on an iPhone home screen" /> |
+| <img src="docs/screenshots/install-1-share.jpg" width="180" alt="The Safari share menu with Share at the top" /> | <img src="docs/screenshots/install-2-add-to-home.jpg" width="280" alt="The iOS share sheet with Add to Home Screen highlighted" /> | <img src="docs/screenshots/install-3-home-screen.jpg" width="180" alt="The OPOT icon on an iPhone home screen" /> |
 
 On iPhone, open the site in Safari and use the steps above. On Android, open it in Chrome and choose **Install app** or **Add to Home screen** from the menu.
 
 ## How the numbers work
 
-Every set is converted to the one-rep max it implies, using the Epley formula. That lets a heavy set of 5 and a lighter set of 10 sit on the same scale. Each exercise is then scored against your own best set from the last 90 days, which is where the 0–100 strength number comes from: 100 means you are at your best.
+Each set is scored by the one-rep max it implies, estimated with the Epley formula. That lets a heavy set of 5 and a lighter set of 10 sit on the same scale. Each exercise is then scored against your own best set from the last 90 days, which is where the 0–100 strength number comes from: 100 means you are at your best.
 
 Because every movement is measured against itself, a shoulder press and a squat can share a chart without one drowning out the other. The per-muscle change adds up the movements from your last workout, so two exercises that each gained a rep count as twice the progress.
 
