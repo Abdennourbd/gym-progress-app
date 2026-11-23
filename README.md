@@ -10,85 +10,69 @@
   <img src="docs/screenshots/progress-strength.jpg" width="230" alt="The strength chart for the whole body over 30 days" />
 </p>
 
-> **Open it between sets. Tap the muscle. Tap the exercise. The target is already there.**
+You finish a set of bench press and look at the bar. One question decides the next set: *how much this time?*
 
-OPOT is a gym tracker built for the 30 seconds between sets — when you're sweating,
-locked in, and don't want to fight an app. Most trackers make you dig through
-menus, tabs, and forms to reach the weight and reps for your next set. OPOT gives
-you the answer in two taps.
+OPOT answers it. It remembers what you lifted last session, gives you a target for today, and tracks whether every muscle is actually moving forward. No spreadsheet, no notebook, no guessing from memory.
 
-**No save button. No page hops. No friction.**
+It runs in your phone's browser and installs to your home screen, so it opens full screen, works without a signal, and keeps your training on your own account.
 
 ## Why it exists
 
-Other apps are built around logging what you did. OPOT is built around the next
-set: the weight, the reps, and whether the number is moving in the right
-direction. The whole app exists to make that answer fast enough to use while you're
-still breathing hard.
-
-## Built for the gym, not the desk
-
-- **Two taps to your target.** Muscle → exercise → the number.
-- **Nothing to save.** Every set writes to your phone the instant you log it.
-- **Works with no signal.** The interface is cached and syncs when the bars return.
-- **Big steppers.** Made for a sweaty thumb between sets.
-- **No account needed to look around.** Tap *Look around as a visitor* on the
-  sign-in screen.
+Most trackers are good at recording what you did. OPOT is built around the next set: the weight, the reps, and whether the number is going in the right direction. Everything else in the app exists to make that answer fast enough to use between sets.
 
 ## What it does
 
-- **A target before you touch the bar.** Last time's numbers and today's target,
-  side by side. Beat it and the next one moves up; miss it and the same weight
-  waits for you.
-- **Nine muscle groups** with their own drawings. Tap the one you're training and
-  you get the exercises you actually do, with your last weight and reps on every
-  row. It starts with the core movements for each muscle, and you can add your
-  own.
-- **Progress in one number.** A 0–100 strength score for your whole body and every
-  muscle, over 7 days, 30 days, or 3 months. Green means it's going up, red means
-  it isn't.
-- **Your training stays yours.** Per-account data, export everything as JSON, or
-  delete the account and the data with it.
+### It tells you what to do next
 
-## Screens
+Open an exercise and the sheet already knows what you did last time. It shows a target for today, then two steppers for the weight and reps you actually managed. Beat the target and the next one moves up. Miss it and the same weight waits for you until you hit the reps.
+
+You never have to remember the last session or do arithmetic with a plate in each hand.
+
+### The gym, organised by muscle
+
+The home screen is nine muscle groups, each with its own drawing. Tap the one you are training and you get the exercises you actually do for it, with your last weight and reps on every row. It starts with the core movements for each muscle, and you can add your own whenever you need one.
 
 <p align="center">
   <img src="docs/screenshots/workout-hamstrings.jpg" width="230" alt="Choosing Hamstrings and seeing the exercises with the last weight and reps" />
-  <img src="docs/screenshots/log-set.jpg" width="230" alt="Logging a set: last time, the suggested target, and weight and rep steppers" />
+</p>
+
+### Progress for the whole body and every muscle
+
+The Progress tab turns your sets into a 0–100 strength score over 7 days, 30 days, or 3 months. The top chart is your whole body. The list underneath breaks it down by muscle and shows the change since the last time you trained it. Green means it is going up. Red means it is not.
+
+<p align="center">
   <img src="docs/screenshots/progress-muscles.jpg" width="230" alt="The per-muscle progress list with strength scores and changes" />
 </p>
 
+### No save button, no signal needed
+
+Every set is written to your phone the moment you log it. Lock the screen, take a call, walk to the other end of the gym: when you come back, the set is there. The app is cached, so it opens without a signal and syncs when the bars return.
+
+### Your training stays yours
+
+Each account only sees its own workouts. Export everything as JSON whenever you want, or delete the account and the data with it.
+
 ## Put it on your home screen
 
-OPOT is a web app. No App Store download, no install wizard: open the link on your
-phone, add it to your home screen, and it opens full screen with its own icon.
+OPOT is a web app. There is no App Store download and no install wizard: open the link on your phone, add it to your home screen, and it opens full screen with its own icon.
 
-| 1. Tap **Share** | 2. Tap **Add to Home Screen** | 3. It's on your home screen |
+| 1. Tap **Share** | 2. Tap **Add to Home Screen** | 3. It is on your home screen |
 | :---: | :---: | :---: |
 | <img src="docs/screenshots/install-1-share.jpg" width="180" alt="The Safari share menu with Share at the top" /> | <img src="docs/screenshots/install-2-add-to-home.jpg" width="280" alt="The iOS share sheet with Add to Home Screen highlighted" /> | <img src="docs/screenshots/install-3-home-screen.jpg" width="180" alt="The OPOT icon on an iPhone home screen" /> |
 
-On iPhone, open the site in Safari and use the steps above. On Android, open it in
-Chrome and choose **Install app** or **Add to Home screen** from the menu.
+On iPhone, open the site in Safari and use the steps above. On Android, open it in Chrome and choose **Install app** or **Add to Home screen** from the menu.
 
 ## How the numbers work
 
-Each set is scored by the one-rep max it implies, estimated with the Epley
-formula, so a heavy set of 5 and a lighter set of 10 sit on the same scale. Each
-exercise is then scored against your own best set from the last 90 days, which is
-where the 0–100 strength number comes from: 100 means you're at your best.
+Each set is scored by the one-rep max it implies, estimated with the Epley formula. That lets a heavy set of 5 and a lighter set of 10 sit on the same scale. Each exercise is then scored against your own best set from the last 90 days, which is where the 0–100 strength number comes from: 100 means you are at your best.
 
-Because every movement is measured against itself, a shoulder press and a squat can
-share a chart without one drowning out the other. The per-muscle change adds up
-the movements from your last workout, so two exercises that each gained a rep
-count as twice the progress.
+Because every movement is measured against itself, a shoulder press and a squat can share a chart without one drowning out the other. The per-muscle change adds up the movements from your last workout, so two exercises that each gained a rep count as twice the progress.
 
 ## Try it
 
 [**Open OPOT →**](https://open-progressive-overload-tracker.vercel.app)
 
-If you only want to look around, choose **Look around as a visitor** on the
-sign-in screen. It opens a demo account with a month of training in it. Nothing
-you do there is saved.
+If you only want to look around, choose **Look around as a visitor** on the sign-in screen. It opens a demo account with a month of training in it. Nothing you do there is saved.
 
 ## Built with
 
