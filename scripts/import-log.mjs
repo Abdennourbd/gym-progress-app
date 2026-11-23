@@ -9,7 +9,7 @@
  * The log itself lives in scripts/log-data.json.
  *
  * Environment:
- *   BASE_URL   default https://gym-progress-app-liart.vercel.app
+ *   BASE_URL   default https://open-progressive-overload-tracker.vercel.app
  *   USERNAME   the account to log in with
  *   PASSWORD   the password for that account
  */
@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
-const BASE = process.env.BASE_URL ?? 'https://gym-progress-app-liart.vercel.app';
+const BASE = process.env.BASE_URL ?? 'https://open-progressive-overload-tracker.vercel.app';
 const USERNAME = process.env.USERNAME ?? 'abdennour';
 const PASSWORD = process.env.PASSWORD ?? '';
 

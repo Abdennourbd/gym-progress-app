@@ -5,7 +5,7 @@
  * the cache when the network is gone. Bump the version to throw away a
  * stale shell.
  */
-const VERSION = 'gym-shell-v5';
+const VERSION = 'opot-shell-v6';
 const CACHE = VERSION;
 const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 

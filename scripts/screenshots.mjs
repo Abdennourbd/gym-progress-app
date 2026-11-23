@@ -37,7 +37,7 @@ const shot = async (name) => {
 
 // The sign in screen, before anybody has signed in.
 await page.goto(BASE);
-await page.getByRole('heading', { name: 'Gym Progress' }).waitFor();
+await page.getByRole('heading', { name: 'OPOT' }).waitFor();
 await shot('login');
 
 // The shared demo account, so the screens have a month of training in them.

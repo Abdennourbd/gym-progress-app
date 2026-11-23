@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Gym Progress',
-    short_name: 'Gym',
-    description: 'Track progressive overload and see how every muscle is progressing.',
+    name: 'Open Progressive Overload Tracker',
+    short_name: 'OPOT',
+    description: 'Log a set, see the target for next time, and watch every muscle get stronger.',
     start_url: '/',
     scope: '/',
     display: 'standalone',

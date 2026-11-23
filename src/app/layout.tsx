@@ -14,12 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Gym Progress',
-  description: 'Track progressive overload and see how every muscle is progressing.',
+  title: 'OPOT — Open Progressive Overload Tracker',
+  description:
+    'Log a set, see the target for next time, and watch every muscle get stronger.',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
-    title: 'Gym Progress',
+    title: 'OPOT',
     statusBarStyle: 'default',
   },
   icons: {
