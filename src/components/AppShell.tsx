@@ -10,6 +10,12 @@ import { pullRemote, pushAllLocal, startSyncListeners } from '@/lib/client/sync'
 import { api } from '@/lib/client/api';
 import { applyTheme, readStoredTheme, systemTheme } from '@/lib/client/theme';
 
+/*
+ * The banner that tells a visitor their changes in the demo account are not
+ * saved. It is off for now; flip this to true to bring it back.
+ */
+const SHOW_DEMO_BANNER = false;
+
 export function AppShell() {
   const [tab, setTab] = useState<TabKey>('workout');
   const userId = useStore((s) => s.userId);
@@ -56,7 +62,7 @@ export function AppShell() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-canvas">
-      {username === 'demo' ? (
+      {SHOW_DEMO_BANNER && username === 'demo' ? (
         <div
           role="status"
           className="border-b border-amber-500/40 bg-amber-400 px-4 py-1.5 text-center text-xs font-medium text-amber-950"

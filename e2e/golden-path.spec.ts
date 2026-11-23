@@ -128,7 +128,8 @@ test('a visitor can look around without an account', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Look around as a visitor' }).click();
   await expect(page.getByRole('heading', { name: 'Workout' })).toBeVisible();
-  await expect(page.getByText(/nothing you change is saved/)).toBeVisible();
+  // The banner that warns a visitor nothing is saved is off for now. When it
+  // comes back, put the assertion here.
 });
 
 test('logging again the same day picks the workout back up', async ({ page }) => {
