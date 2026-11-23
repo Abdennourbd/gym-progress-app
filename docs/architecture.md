@@ -113,23 +113,22 @@ the lightest one.
 
 Three details that took a while to get right:
 
-- **A set is scored by the max it implies.** The score is Brzycki's estimate,
-  `weight × 36 / (37 − reps)`. A heavier set with fewer reps and a lighter set
-  with more reps land in the same place when they are the same strength:
-  20 kg × 12 and 25 kg × 6 are both about a 29 kg max. The old score,
-  `weight × (1 + reps / 100)`, was almost all weight, so a 5 kg jump with six
-  fewer reps read as an 18% strength gain when the max had barely moved.
-  Above 12 reps the formula is continued at the slope it has at 12, so a
-  41-rep carry stays finite.
+- **A set is scored by the max it implies.** The score is Epley's estimate,
+  `weight × (1 + reps / 30)`. A heavier set with fewer reps and a lighter set
+  with more reps land close together when they are similar in strength:
+  20 kg × 12 and 25 kg × 6 are 7% apart, not the 18% the old score gave. The
+  old score, `weight × (1 + reps / 100)`, was almost all weight, so a 5 kg
+  jump with six fewer reps read as a large strength gain when the max had
+  barely moved.
 - **The change of a muscle is measured movement by movement, and added up.**
   Every movement of the last session of that muscle is compared with the last
   time that same movement was done, and the changes are added. Averaging them
   would divide by the number of movements, so two movements that each gained
   a rep would read the same as one. Adding the changes is not the old
   session-summing mistake: a movement that did not change adds zero, so only
-  real progress counts. A gain and a loss on two movements nearly cancel; a
-  max estimate is convex in reps, so +1 rep on one and −1 on another can
-  leave a few tenths of a percent rather than exactly zero.
+  real progress counts. A gain and a loss on two movements cancel to within a
+  fifth of a percent; four reps are worth the same in one movement or split
+  across two, because the estimate is linear in reps.
 - **Bodyweight work and loaded work are kept apart.** A bodyweight set is
   scored by its reps and a loaded one by the weight it moves, so they cannot
   be compared with each other. Each is normalised against the best of its own

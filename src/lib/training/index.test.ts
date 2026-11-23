@@ -229,9 +229,9 @@ describe('muscleSummaries', () => {
 
     const [chest] = muscleSummaries([bench, fly], sessions, ['2026-01-20']);
 
-    // One more rep at 10 reps is a 3.85% better max, whatever the load is.
+    // One more rep at 10 reps is a 2.5% better max, whatever the load is.
     // The two improvements add up instead of averaging.
-    expect(chest.changePct).toBeCloseTo(7.692, 3);
+    expect(chest.changePct).toBeCloseTo(5, 3);
   });
 
   it('rewards progress in two movements more than in one', () => {
@@ -257,7 +257,7 @@ describe('muscleSummaries', () => {
     expect(two).toBeCloseTo(one * 2, 3);
   });
 
-  it('rewards four reps in one movement above two and two', () => {
+  it('counts four reps the same on one movement or split across two', () => {
     const oneMovement = [
       makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 10 })]),
       makeSession('2026-01-20', [makeEntry({ exerciseId: 'ex-bench', weightKg: 60, reps: 14 })]),
@@ -276,10 +276,10 @@ describe('muscleSummaries', () => {
     const one = muscleSummaries([bench], oneMovement, ['2026-01-20'])[0].changePct ?? 0;
     const two = muscleSummaries([bench, fly], twoMovements, ['2026-01-20'])[0].changePct ?? 0;
 
-    // A max estimate is convex in reps, so four reps in one movement is worth
-    // more than two reps in each of two. The two movements still add up, so
-    // the gap is small, but it is the right way round.
-    expect(one).toBeGreaterThan(two);
+    // Epley is linear in reps, so four reps cost the same whether they are in
+    // one movement or split across two. A jump in the weight itself is what
+    // makes one movement pull ahead.
+    expect(one).toBeCloseTo(two, 3);
   });
 
   it('adds a gain and a loss instead of averaging them away', () => {
@@ -296,10 +296,10 @@ describe('muscleSummaries', () => {
 
     const [chest] = muscleSummaries([bench, fly], sessions, ['2026-01-20']);
 
-    // +8.0% on the bench and -3.57% on the fly is +4.43% for the chest.
-    // Averaging would have said +2.21%, and a bigger loss could have hidden
+    // +5.0% on the bench and -2.5% on the fly is +2.5% for the chest.
+    // Averaging would have said +1.25%, and a bigger loss could have hidden
     // a real gain completely.
-    expect(chest.changePct).toBeCloseTo(4.429, 3);
+    expect(chest.changePct).toBeCloseTo(2.5, 3);
   });
 
   it('cancels a rep gained in one movement against a rep lost in another', () => {
@@ -318,9 +318,9 @@ describe('muscleSummaries', () => {
 
     const [biceps] = muscleSummaries([curl, hammer], sessions, ['2026-01-20']);
 
-    // The two rep changes are on different loads and rep counts, so a max
-    // estimate does not cancel them exactly. They cancel to within a percent.
-    expect(Math.abs(biceps.changePct ?? 0)).toBeLessThan(1);
+    // The two rep changes are on different loads and rep counts, so they are
+    // not exactly equal, but they cancel to within a fifth of a percent.
+    expect(Math.abs(biceps.changePct ?? 0)).toBeLessThan(0.5);
   });
 
   it('reports a movement that lost a rep as a drop', () => {
@@ -332,7 +332,7 @@ describe('muscleSummaries', () => {
     const [chest] = muscleSummaries([bench], sessions, ['2026-01-20']);
 
     expect(chest.changePct).toBeLessThan(0);
-    expect(chest.changePct).toBeCloseTo(-3.571, 3);
+    expect(chest.changePct).toBeCloseTo(-2.5, 3);
   });
 
   it('weighs a big jump in load far above a single rep elsewhere', () => {
@@ -348,7 +348,7 @@ describe('muscleSummaries', () => {
     const chest = muscleSummaries([bench], weightJump, ['2026-01-20'])[0].changePct ?? 0;
     const back = muscleSummaries([row], repGain, ['2026-01-20'])[0].changePct ?? 0;
 
-    // 20 kg to 30 kg is a 50% jump. One rep on a 60 kg lift is under four
+    // 20 kg to 30 kg is a 50% jump. One rep on a 60 kg lift is under three
     // percent. The jump has to be in a different league.
     expect(chest).toBeGreaterThan(back * 10);
   });
@@ -365,10 +365,10 @@ describe('muscleSummaries', () => {
     const [chest] = muscleSummaries([bench, fly], sessions, ['2026-01-20']);
 
     // The fly has no earlier set to compare with, so it adds nothing.
-    expect(chest.changePct).toBeCloseTo(3.846, 3);
+    expect(chest.changePct).toBeCloseTo(2.5, 3);
   });
 
-  it('reads a heavier set in a lower rep range as the same strength', () => {
+  it('reads a heavier set in a lower rep range as a small gain', () => {
     const curl = makeExercise({ id: 'ex-curl', muscleIds: ['biceps'] });
     const sessions = [
       makeSession('2026-01-01', [makeEntry({ exerciseId: 'ex-curl', weightKg: 20, reps: 12 })]),
@@ -377,8 +377,8 @@ describe('muscleSummaries', () => {
 
     const [biceps] = muscleSummaries([curl], sessions, ['2026-01-20']);
 
-    // 20 kg × 12 and 25 kg × 6 are both about a 29 kg max, so the change is
-    // under one percent instead of the eighteen percent the old score gave.
-    expect(biceps.changePct).toBeCloseTo(0.806, 3);
+    // 20 kg × 12 and 25 kg × 6 are close in strength. Epley puts them 7%
+    // apart instead of the eighteen percent the old score gave.
+    expect(biceps.changePct).toBeCloseTo(7.143, 3);
   });
 });

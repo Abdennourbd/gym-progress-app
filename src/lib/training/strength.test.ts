@@ -3,11 +3,11 @@ import { strength } from './strength';
 
 describe('strength', () => {
   it('estimates a one-rep max from the weight and reps', () => {
-    // Brzycki: weight × 36 / (37 − reps).
+    // Epley: weight × (1 + reps / 30).
     expect(strength(60, 10)).toBeCloseTo(80, 5);
-    expect(strength(60, 9)).toBeCloseTo(77.142857, 5);
-    expect(strength(20, 12)).toBeCloseTo(28.8, 5);
-    expect(strength(25, 6)).toBeCloseTo(29.032258, 5);
+    expect(strength(60, 9)).toBeCloseTo(78, 5);
+    expect(strength(20, 12)).toBeCloseTo(28, 5);
+    expect(strength(25, 6)).toBeCloseTo(30, 5);
   });
 
   it('scores more reps at the same weight as stronger', () => {
@@ -20,10 +20,12 @@ describe('strength', () => {
     expect(strength(85, 6)).toBeGreaterThan(strength(77.5, 8));
   });
 
-  it('treats a heavier set in a lower rep range as the same strength', () => {
-    // 20 kg × 12 and 25 kg × 6 are both about a 29 kg max. The old score
-    // called the second one 18% stronger; a max estimate does not.
-    expect(strength(25, 6)).toBeCloseTo(strength(20, 12), 0);
+  it('reads a heavier set in a lower rep range as a small gain, not a jump', () => {
+    // 20 kg × 12 and 25 kg × 6 are close in strength. Epley puts them 7%
+    // apart, not the 18% the old score gave.
+    const change = ((strength(25, 6) - strength(20, 12)) / strength(20, 12)) * 100;
+    expect(change).toBeCloseTo(7.143, 3);
+    expect(change).toBeLessThan(10);
   });
 
   it('treats zero weight as bodyweight and progresses with reps', () => {
@@ -45,8 +47,8 @@ describe('strength', () => {
   });
 
   it('keeps a very high rep set finite and still worth more than a low one', () => {
-    // The raw formula divides by 37 − reps, so it breaks at 37 reps. A farmer
-    // carry logged as 40 kg × 41 must not divide by zero or run away.
+    // Epley is linear in reps, so even a 41-rep carry stays finite and keeps
+    // counting, with no division to guard.
     const high = strength(40, 41);
     expect(Number.isFinite(high)).toBe(true);
     expect(high).toBeGreaterThan(strength(40, 12));

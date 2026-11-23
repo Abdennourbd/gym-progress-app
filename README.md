@@ -72,21 +72,19 @@ there is saved.
 ## How the numbers work
 
 **Set score** — a set is scored by the one-rep max it implies, not by the
-weight on the bar. Two sessions of the same strength then land in the same
-place even when one uses more reps and the other more plates:
+weight on the bar. Two sessions of similar strength then land close together
+even when one uses more reps and the other more plates:
 
 ```
 10 kg × 10  →  13.33   (≈ 13 kg max)
-12 kg × 6   →  13.94   (a little ahead)
-80 kg × 8   →  99.31
+12 kg × 6   →  14.40   (a little ahead)
+80 kg × 8   →  101.33
 0 kg × 12   →  0.12    (bodyweight work, scored by reps)
 ```
 
-The estimate is Brzycki's formula, `weight × 36 / (37 − reps)`. It is steep in
-reps on purpose: at 10 reps one more rep is worth about 3.8% of the max, which
-is what a rep is worth when you are that close to your limit. Above 12 reps
-the formula is continued at the same slope, so a very high-rep set stays
-finite and does not run away.
+The estimate is Epley's formula, `weight × (1 + reps / 30)`. It is linear in
+reps: at 10 reps one more rep is worth 2.5% of the max, and four reps are
+worth the same whether they are in one movement or split across two.
 
 A bodyweight set is scored by reps divided by 100, so it can never outscore
 real kilograms.
@@ -107,16 +105,16 @@ the movements in its last workout. Each movement is compared with the last
 time you did it, and the percentages are added:
 
 ```
-bench 60 kg × 10 → 60 kg × 11   +3.85%
-fly   20 kg × 10 → 20 kg × 11   +3.85%
-chest change                     +7.69%
+bench 60 kg × 10 → 60 kg × 11   +2.50%
+fly   20 kg × 10 → 20 kg × 11   +2.50%
+chest change                     +5.00%
 ```
 
 So two movements that each gained a rep are twice the progress of one, and a
 movement that lost a rep takes back what another gained: +1 rep on one
-movement and −1 on another is nearly zero. Four reps in one movement count
-for a little more than two reps in each of two, because a max estimate is
-convex in reps. A movement with no earlier set, or one that switched between
+movement and −1 on another is nearly zero. Four reps count the same whether
+they are in one movement or split across two, because the max estimate is
+linear in reps. A movement with no earlier set, or one that switched between
 bodyweight and loaded, is left out.
 
 Adding the changes is not the same as adding whole sessions. A movement that

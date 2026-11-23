@@ -8,8 +8,8 @@ export interface ChangeDisplay {
 
 /**
  * Anything inside this many percent is noise from floating point and the
- * rounding of the score, not a change worth pointing at. A rep is worth a few
- * percent, so the threshold is far below the smallest real gain.
+ * rounding of the score, not a change worth pointing at. A rep is worth a
+ * couple of percent, so the threshold is far below the smallest real gain.
  */
 const NOISE = 0.05;
 

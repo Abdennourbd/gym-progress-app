@@ -109,10 +109,10 @@ export function ProgressTab() {
               One point per workout, the dashed line is the trend
             </p>
             <p className="mt-2 rounded-xl bg-surface-2 px-3 py-2 text-[11px] leading-relaxed text-ink-soft">
-              A set is scored by the one-rep max it implies, so 20 kg × 12 and
-              25 kg × 6 land in the same place when they are the same strength.
-              Each movement is scored against your strongest moment in the last
-              90 days, so 100 means you are at your best.
+              A set is scored by the one-rep max it implies, so a heavier set
+              with fewer reps is not automatically a big jump. Each movement is
+              scored against your strongest moment in the last 90 days, so 100
+              means you are at your best.
             </p>
           </>
         ) : (
